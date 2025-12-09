@@ -2,8 +2,9 @@
 Param(
     # gather permission requests but don't create any AppId nor ServicePrincipal
     [switch] $DryRun = $false,
-    # other possible Azure environments, see: https://docs.microsoft.com/en-us/powershell/module/azuread/connect-azuread?view=azureadps-2.0#parameters
-    [string] $AzureEnvironment = "AzureCloud",
+    # Azure environment name for Microsoft Graph
+    [ValidateSet("Global", "USGov", "USGovDoD", "Germany", "China")]
+    [string] $AzureEnvironment = "Global",
 
     [ValidateSet(
         "UnitedStates",
@@ -24,15 +25,22 @@ Param(
 
 function ensureModules {
     $dependencies = @(
-        # the more general and modern "Az" a "AzureRM" do not have proper support to manage permissions
-        @{ Name = "AzureAD"; Version = [Version]"2.0.2.137"; "InstallWith" = "Install-Module -Name AzureAD -AllowClobber -Scope CurrentUser" }
+        @{ 
+            Name = "Microsoft.Graph.Applications"
+            Version = [Version]"2.0.0"
+            InstallWith = "Install-Module -Name Microsoft.Graph.Applications -Scope CurrentUser -Force"
+        },
+        @{ 
+            Name = "Microsoft.Graph.Authentication"
+            Version = [Version]"2.0.0"
+            InstallWith = "Install-Module -Name Microsoft.Graph.Authentication -Scope CurrentUser -Force"
+        }
     )
     $missingDependencies = $false
     $dependencies | ForEach-Object -Process {
         $moduleName = $_.Name
-        $deps = (Get-Module -ListAvailable -Name $moduleName `
-            | Sort-Object -Descending -Property Version)
-        if ($deps -eq $null) {
+        $deps = (Get-Module -ListAvailable -Name $moduleName | Sort-Object -Descending -Property Version)
+        if ($null -eq $deps) {
             Write-Host @"
 ERROR: Required module not installed; install from PowerShell prompt with:
 >>  $($_.InstallWith) -MinimumVersion $($_.Version)
@@ -68,70 +76,87 @@ function checkIsElevated {
     }
 }
 
-function connectAAD {
+function connectGraph {
     Write-Host @"
 
-Connecting to AzureAD: Please log in, using your Dynamics365 / Power Platform tenant ADMIN credentials:
+Connecting to Microsoft Graph: Please log in using your Dynamics365 / Power Platform tenant ADMIN credentials:
 
 "@
     try {
-        Connect-AzureAD -AzureEnvironmentName $AzureEnvironment -ErrorAction Stop | Out-Null
+        # Required scopes for creating service principals
+        Connect-MgGraph -Scopes "Application.ReadWrite.All", "Directory.ReadWrite.All" -Environment $AzureEnvironment -NoWelcome -ErrorAction Stop
     }
     catch {
         throw "Failed to login: $($_.Exception.Message)"
     }
-    return Get-AzureADCurrentSessionInfo
+    return Get-MgContext
 }
 
-function reconnectAAD {
-    # for tenantID, see DirectoryID here: https://aad.portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview
+function reconnectGraph {
     try {
-        $session = Get-AzureADCurrentSessionInfo -ErrorAction SilentlyContinue
-        if ($session.Environment.Name -ne $AzureEnvironment) {
-            Disconnect-AzureAd
-            $session = connectAAD
+        $context = Get-MgContext
+        if ($null -eq $context) {
+            $context = connectGraph
+        }
+        elseif ($context.Environment -ne $AzureEnvironment) {
+            Disconnect-MgGraph | Out-Null
+            $context = connectGraph
         }
     }
-    catch [Microsoft.Open.Azure.AD.CommonLibrary.AadNeedAuthenticationException] {
-        $session = connectAAD
+    catch {
+        $context = connectGraph
     }
-    $tenantId = $session.TenantId
+    
+    $tenantId = $context.TenantId
 
     Write-Host @"
-Connected to AAD tenant: $($session.TenantDomain) ($($tenantId))
+Connected to tenant: $($tenantId)
 
 "@
     return $tenantId
 }
 
-function getAppConsentUri($tenantDomain) {
-    "https://login.microsoftonline.com/$tenantDomain/oauth2/authorize?client_id=63b6e8df-e035-446b-938e-5173ebe4ac69&response_type=code&redirect_uri=https://akoyago.com&nonce=doesntmatter&resource=https://graph.microsoft.com&prompt=admin_consent"
+function getAppConsentUri($tenantId) {
+    "https://login.microsoftonline.com/$tenantId/oauth2/authorize?client_id=63b6e8df-e035-446b-938e-5173ebe4ac69&response_type=code&redirect_uri=https://akoyago.com&nonce=doesntmatter&resource=https://graph.microsoft.com&prompt=admin_consent"
 }
 
-
-
+# Main script execution
 
 $hasAdmin = checkIsElevated
 if (!$hasAdmin) {
     throw "This action requires administrator privileges."
 }
 
-if ($PSVersionTable.PSEdition -ne "Desktop") {
-    throw "This script must be run on PowerShell Desktop/Windows; the AzureAD module is not supported for PowershellCore yet!"
-}
-
 ensureModules
 
 $ErrorActionPreference = "Stop"
 
-$tenantId = reconnectAAD
-$session = Get-AzureADCurrentSessionInfo -ErrorAction SilentlyContinue
+$tenantId = reconnectGraph
+$context = Get-MgContext
 $spnDisplayName = "BCO akoyaGO GOmanager User Connector"
+$appId = "63b6e8df-e035-446b-938e-5173ebe4ac69"
 
 if (!$DryRun) {
-    $spn = New-AzureADServicePrincipal -AccountEnabled $true -AppId "63b6e8df-e035-446b-938e-5173ebe4ac69" -AppRoleAssignmentRequired $true -DisplayName "$spnDisplayName" -Tags {WindowsAzureActiveDirectoryIntegratedApp}
-    $spnId = $spn.ObjectId
-    Write-Host "Created SPN '$spnDisplayName' with objectId: $spnId"
+    # Check if SPN already exists
+    $existingSpn = Get-MgServicePrincipal -Filter "appId eq '$appId'" -ErrorAction SilentlyContinue
+    
+    if ($null -ne $existingSpn) {
+        Write-Host "Service Principal already exists with objectId: $($existingSpn.Id)"
+        $spnId = $existingSpn.Id
+    }
+    else {
+        $spnParams = @{
+            AppId = $appId
+            DisplayName = $spnDisplayName
+            AccountEnabled = $true
+            AppRoleAssignmentRequired = $true
+            Tags = @("WindowsAzureActiveDirectoryIntegratedApp")
+        }
+        
+        $spn = New-MgServicePrincipal -BodyParameter $spnParams
+        $spnId = $spn.Id
+        Write-Host "Created SPN '$spnDisplayName' with objectId: $spnId"
+    }
 }
 else {
     Write-Host "Skipping SPN creation because DryRun is 'true'"
@@ -143,10 +168,13 @@ Copy and paste the following URL in a browser to grant consent.
 
 "@
 
-Write-Host $(getAppConsentUri $session.TenantDomain)
+Write-Host $(getAppConsentUri $tenantId)
 
 Write-Host @"
 
 Done.
 
 "@
+
+# Disconnect when finished
+Disconnect-MgGraph | Out-Null

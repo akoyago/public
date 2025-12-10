@@ -117,7 +117,7 @@ Connected to tenant: $($tenantId)
 }
 
 function getAppConsentUri($tenantId) {
-    "https://login.microsoftonline.com/$tenantId/oauth2/authorize?client_id=63b6e8df-e035-446b-938e-5173ebe4ac69&response_type=code&redirect_uri=https://akoyago.com&nonce=doesntmatter&resource=https://graph.microsoft.com&prompt=admin_consent"
+    "https://login.microsoftonline.com/$tenantId/oauth2/authorize?client_id=63b6e8df-e035-446b-938e-5173ebe4ac69&response_type=code&redirect_uri=https://manager.onakoyago.com/AdminConsent&nonce=doesntmatter&resource=https://graph.microsoft.com&prompt=admin_consent"
 }
 
 # Main script execution

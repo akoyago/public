@@ -38,8 +38,24 @@ param(
     [string]$ClientSecret,
     
     [Parameter(Mandatory=$false)]
-    [string]$PluginStepsJsonPath = "$(System.ArtifactsDirectory)/drop/plugin-steps.json"
+    [string]$PluginStepsJsonPath
 )
+
+# =============================================================================
+# HANDLE DEFAULT PATH
+# =============================================================================
+
+if ([string]::IsNullOrEmpty($PluginStepsJsonPath)) {
+    # Use Azure DevOps default path if not specified
+    if ($env:SYSTEM_ARTIFACTSDIRECTORY) {
+        $PluginStepsJsonPath = Join-Path $env:SYSTEM_ARTIFACTSDIRECTORY "drop\plugin-steps.json"
+        Write-Host "Using default artifact path: $PluginStepsJsonPath" -ForegroundColor Gray
+    }
+    else {
+        Write-Error "PluginStepsJsonPath parameter is required when not running in Azure DevOps pipeline"
+        exit 1
+    }
+}
 
 # =============================================================================
 # SCRIPT START

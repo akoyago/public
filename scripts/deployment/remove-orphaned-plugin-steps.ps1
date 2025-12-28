@@ -54,14 +54,23 @@ Write-Host ""
 # IMPORT REQUIRED MODULES
 # =============================================================================
 
-try {
-    Import-Module Microsoft.Xrm.Data.PowerShell -ErrorAction Stop
-    Write-Host "[OK] Microsoft.Xrm.Data.PowerShell module loaded successfully" -ForegroundColor Green
+
+# Check if module is installed, and install if not found
+if (-not (Get-Module -ListAvailable -Name Microsoft.Xrm.Data.PowerShell)) {
+    Write-Host "Microsoft.Xrm.Data.PowerShell module not found. Installing..." -ForegroundColor Yellow
+    try {
+        Install-Module Microsoft.Xrm.Data.PowerShell -Scope CurrentUser -Force -AllowClobber
+        Write-Host "Microsoft.Xrm.Data.PowerShell module installed successfully." -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Failed to install Microsoft.Xrm.Data.PowerShell module: $_" -ForegroundColor Red
+        Write-Host "You may need to run: Install-Module Microsoft.Xrm.Data.PowerShell -Scope CurrentUser" -ForegroundColor Yellow
+        exit 1
+    }
 }
-catch {
-    Write-Error "Failed to load Microsoft.Xrm.Data.PowerShell module. Please install it using: Install-Module Microsoft.Xrm.Data.PowerShell"
-    exit 1
-}
+
+Import-Module Microsoft.Xrm.Data.PowerShell
+
 
 # =============================================================================
 # CONNECT TO DYNAMICS 365

@@ -62,12 +62,9 @@ function Connect-ToCRM {
     try {
         Write-Host "Connecting to Dynamics 365 environment: $Url" -ForegroundColor Cyan
         
-        # Create secure string for client secret
-        $SecureSecret = ConvertTo-SecureString $Secret -AsPlainText -Force
-        
         # Connect WITHOUT TenantId - it will be auto-discovered from the URL
         $conn = Connect-CrmOnline -ServerUrl $Url `
-            -ClientSecret $SecureSecret `
+            -ClientSecret $Secret `
             -OAuthClientId $AppId
         
         if ($conn.IsReady) {
@@ -75,7 +72,7 @@ function Connect-ToCRM {
             return $conn
         }
         else {
-            throw "Connection is not ready"
+            throw $conn.LastCrmError
         }
     }
     catch {

@@ -16,9 +16,6 @@
 .PARAMETER ClientSecret
     The Client Secret for the service principal
 
-.PARAMETER TenantId
-    The Azure AD Tenant ID
-
 .PARAMETER PluginStepsJsonPath
     Path to the plugin-steps.json file (defaults to looking in artifacts directory)
 
@@ -26,7 +23,6 @@
     .\Remove-OrphanedPluginSteps.ps1 -EnvironmentUrl "https://org.crm.dynamics.com" `
         -ClientId "your-client-id" `
         -ClientSecret "your-client-secret" `
-        -TenantId "your-tenant-id" `
         -PluginStepsJsonPath "$(System.ArtifactsDirectory)/drop/plugin-steps.json"
 #>
 

@@ -41,7 +41,19 @@ param(
     [string]$PluginStepsJsonPath = "$(System.ArtifactsDirectory)/drop/plugin-steps.json"
 )
 
-# Import required modules
+# =============================================================================
+# SCRIPT START
+# =============================================================================
+
+Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host "  Remove Orphaned Plugin Steps" -ForegroundColor Cyan
+Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host ""
+
+# =============================================================================
+# IMPORT REQUIRED MODULES
+# =============================================================================
+
 try {
     Import-Module Microsoft.Xrm.Data.PowerShell -ErrorAction Stop
     Write-Host "✓ Microsoft.Xrm.Data.PowerShell module loaded successfully" -ForegroundColor Green
@@ -51,103 +63,96 @@ catch {
     exit 1
 }
 
-# Function to connect to Dynamics 365
-function Connect-ToCRM {
-    param(
-        [string]$Url,
-        [string]$AppId,
-        [string]$Secret
-    )
+# =============================================================================
+# CONNECT TO DYNAMICS 365
+# =============================================================================
+
+try {
+    Write-Host "`nConnecting to Dynamics 365 environment: $EnvironmentUrl" -ForegroundColor Cyan
     
-    try {
-        Write-Host "Connecting to Dynamics 365 environment: $Url" -ForegroundColor Cyan
-        
-        # Connect WITHOUT TenantId - it will be auto-discovered from the URL
-        $conn = Connect-CrmOnline -ServerUrl $Url `
-            -ClientSecret $Secret `
-            -OAuthClientId $AppId
-        
-        if ($conn.IsReady) {
-            Write-Host "✓ Successfully connected to Dynamics 365" -ForegroundColor Green
-            return $conn
-        }
-        else {
-            throw $conn.LastCrmError
-        }
+    # Connect using service principal (no TenantId required)
+    $connection = Connect-CrmOnline -ServerUrl $EnvironmentUrl `
+        -ClientSecret $ClientSecret `
+        -OAuthClientId $ClientId
+    
+    if ($connection.IsReady) {
+        Write-Host "✓ Successfully connected to Dynamics 365" -ForegroundColor Green
     }
-    catch {
-        Write-Error "Failed to connect to Dynamics 365: $_"
-        exit 1
+    else {
+        throw "Connection is not ready"
     }
 }
-
-# Function to load plugin steps from JSON
-function Get-PluginStepsFromJson {
-    param([string]$JsonPath)
-    
-    try {
-        Write-Host "Loading plugin steps from JSON file: $JsonPath" -ForegroundColor Cyan
-        
-        if (-not (Test-Path $JsonPath)) {
-            throw "Plugin steps JSON file not found at: $JsonPath"
-        }
-        
-        $jsonContent = Get-Content $JsonPath -Raw | ConvertFrom-Json
-        
-        $assemblyName = $jsonContent.metadata.assemblyName
-        Write-Host "✓ Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
-        Write-Host "  Total steps in export: $($jsonContent.metadata.totalSteps)" -ForegroundColor Gray
-        
-        # Extract step IDs
-        $stepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid }
-        
-        return @{
-            AssemblyName = $assemblyName
-            StepIds = $stepIds
-            Steps = $jsonContent.pluginSteps
-        }
-    }
-    catch {
-        Write-Error "Failed to load plugin steps from JSON: $_"
-        exit 1
-    }
+catch {
+    Write-Error "Failed to connect to Dynamics 365: $_"
+    exit 1
 }
 
-# Function to get plugin steps from target environment
-function Get-PluginStepsFromEnvironment {
-    param(
-        [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$Connection,
-        [string]$AssemblyName
-    )
+# =============================================================================
+# LOAD PLUGIN STEPS FROM JSON FILE
+# =============================================================================
+
+try {
+    Write-Host "`nLoading plugin steps from JSON file: $PluginStepsJsonPath" -ForegroundColor Cyan
     
-    try {
-        Write-Host "Retrieving plugin steps from target environment for assembly: $AssemblyName" -ForegroundColor Cyan
-        
-        # Query for plugin assembly
-        $assemblyQuery = @"
+    if (-not (Test-Path $PluginStepsJsonPath)) {
+        throw "Plugin steps JSON file not found at: $PluginStepsJsonPath"
+    }
+    
+    $jsonContent = Get-Content $PluginStepsJsonPath -Raw | ConvertFrom-Json
+    
+    $assemblyName = $jsonContent.metadata.assemblyName
+    $totalStepsInExport = $jsonContent.metadata.totalSteps
+    
+    Write-Host "✓ Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
+    Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray
+    
+    # Extract step IDs from JSON
+    $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid }
+    
+    Write-Host "  Extracted $($exportedStepIds.Count) step IDs from JSON" -ForegroundColor Gray
+}
+catch {
+    Write-Error "Failed to load plugin steps from JSON: $_"
+    if ($connection -and $connection.IsReady) {
+        $connection.Dispose()
+    }
+    exit 1
+}
+
+# =============================================================================
+# GET PLUGIN STEPS FROM TARGET ENVIRONMENT
+# =============================================================================
+
+try {
+    Write-Host "`nRetrieving plugin steps from target environment for assembly: $assemblyName" -ForegroundColor Cyan
+    
+    # Query for plugin assembly
+    $assemblyQuery = @"
 <fetch>
   <entity name='pluginassembly'>
     <attribute name='pluginassemblyid' />
     <attribute name='name' />
     <filter>
-      <condition attribute='name' operator='eq' value='$AssemblyName' />
+      <condition attribute='name' operator='eq' value='$assemblyName' />
     </filter>
   </entity>
 </fetch>
 "@
-        
-        $assemblyResult = Get-CrmRecordsByFetch -conn $Connection -Fetch $assemblyQuery
-        
-        if ($assemblyResult.CrmRecords.Count -eq 0) {
-            Write-Warning "Assembly '$AssemblyName' not found in target environment"
-            return @()
-        }
-        
-        $assemblyId = $assemblyResult.CrmRecords[0].pluginassemblyid
-        Write-Host "  Found assembly ID: $assemblyId" -ForegroundColor Gray
-        
-        # Query for plugin types in this assembly
-        $pluginTypeQuery = @"
+    
+    $assemblyResult = Get-CrmRecordsByFetch -conn $connection -Fetch $assemblyQuery
+    
+    if ($assemblyResult.CrmRecords.Count -eq 0) {
+        Write-Warning "Assembly '$assemblyName' not found in target environment"
+        Write-Host "`n✓ Script completed - No assembly found to process" -ForegroundColor Green
+        $connection.Dispose()
+        exit 0
+    }
+    
+    $assemblyId = $assemblyResult.CrmRecords[0].pluginassemblyid
+    Write-Host "  Found assembly ID: $assemblyId" -ForegroundColor Gray
+    
+    # Query for plugin types in this assembly
+    $pluginTypeQuery = @"
 <fetch>
   <entity name='plugintype'>
     <attribute name='plugintypeid' />
@@ -158,21 +163,24 @@ function Get-PluginStepsFromEnvironment {
   </entity>
 </fetch>
 "@
-        
-        $pluginTypes = Get-CrmRecordsByFetch -conn $Connection -Fetch $pluginTypeQuery
-        
-        if ($pluginTypes.CrmRecords.Count -eq 0) {
-            Write-Warning "No plugin types found for assembly '$AssemblyName'"
-            return @()
-        }
-        
-        $pluginTypeIds = $pluginTypes.CrmRecords | ForEach-Object { $_.plugintypeid }
-        Write-Host "  Found $($pluginTypeIds.Count) plugin type(s)" -ForegroundColor Gray
-        
-        # Query for all steps related to these plugin types
-        $pluginTypeIdFilter = ($pluginTypeIds | ForEach-Object { "<value>$_</value>" }) -join ""
-        
-        $stepsQuery = @"
+    
+    $pluginTypes = Get-CrmRecordsByFetch -conn $connection -Fetch $pluginTypeQuery
+    
+    if ($pluginTypes.CrmRecords.Count -eq 0) {
+        Write-Warning "No plugin types found for assembly '$assemblyName'"
+        Write-Host "`n✓ Script completed - No plugin types found" -ForegroundColor Green
+        $connection.Dispose()
+        exit 0
+    }
+    
+    $pluginTypeIds = $pluginTypes.CrmRecords | ForEach-Object { $_.plugintypeid }
+    Write-Host "  Found $($pluginTypeIds.Count) plugin type(s)" -ForegroundColor Gray
+    
+    # Build filter for plugin types
+    $pluginTypeIdFilter = ($pluginTypeIds | ForEach-Object { "<value>$_</value>" }) -join ""
+    
+    # Query for all steps related to these plugin types
+    $stepsQuery = @"
 <fetch>
   <entity name='sdkmessageprocessingstep'>
     <attribute name='sdkmessageprocessingstepid' />
@@ -189,133 +197,108 @@ function Get-PluginStepsFromEnvironment {
   </entity>
 </fetch>
 "@
-        
-        $stepsResult = Get-CrmRecordsByFetch -conn $Connection -Fetch $stepsQuery
-        
-        Write-Host "✓ Found $($stepsResult.CrmRecords.Count) plugin step(s) in target environment" -ForegroundColor Green
-        
-        return $stepsResult.CrmRecords
-    }
-    catch {
-        Write-Error "Failed to retrieve plugin steps from environment: $_"
-        throw
-    }
-}
-
-# Function to remove orphaned plugin steps
-function Remove-OrphanedSteps {
-    param(
-        [Microsoft.Xrm.Tooling.Connector.CrmServiceClient]$Connection,
-        [array]$TargetSteps,
-        [array]$ExportedStepIds
-    )
     
-    Write-Host "`nAnalyzing plugin steps..." -ForegroundColor Cyan
+    $stepsResult = Get-CrmRecordsByFetch -conn $connection -Fetch $stepsQuery
     
-    $orphanedSteps = @()
+    Write-Host "✓ Found $($stepsResult.CrmRecords.Count) plugin step(s) in target environment" -ForegroundColor Green
     
-    foreach ($step in $TargetSteps) {
-        $stepId = $step.sdkmessageprocessingstepid
-        
-        if ($stepId -notin $ExportedStepIds) {
-            $orphanedSteps += $step
-        }
-    }
-    
-    if ($orphanedSteps.Count -eq 0) {
-        Write-Host "✓ No orphaned plugin steps found. All steps in target match the export." -ForegroundColor Green
-        return @{
-            Total = 0
-            Removed = 0
-            Failed = 0
-        }
-    }
-    
-    Write-Host "`nFound $($orphanedSteps.Count) orphaned plugin step(s) to remove:" -ForegroundColor Yellow
-    
-    $removed = 0
-    $failed = 0
-    
-    foreach ($step in $orphanedSteps) {
-        Write-Host "  - $($step.name) (ID: $($step.sdkmessageprocessingstepid))" -ForegroundColor Yellow
-        
-        try {
-            Remove-CrmRecord -conn $Connection `
-                -EntityLogicalName "sdkmessageprocessingstep" `
-                -Id $step.sdkmessageprocessingstepid `
-                -ErrorAction Stop
-            
-            Write-Host "    ✓ Removed successfully" -ForegroundColor Green
-            $removed++
-        }
-        catch {
-            Write-Host "    ✗ Failed to remove: $_" -ForegroundColor Red
-            $failed++
-        }
-    }
-    
-    return @{
-        Total = $orphanedSteps.Count
-        Removed = $removed
-        Failed = $failed
-    }
-}
-
-# Main script execution
-try {
-    Write-Host "==================================================" -ForegroundColor Cyan
-    Write-Host "  Remove Orphaned Plugin Steps" -ForegroundColor Cyan
-    Write-Host "==================================================" -ForegroundColor Cyan
-    Write-Host ""
-    
-    # Connect to Dynamics 365
-    $connection = Connect-ToCRM -Url $EnvironmentUrl `
-        -AppId $ClientId `
-        -Secret $ClientSecret `
-        -Tenant $TenantId
-    
-    Write-Host ""
-    
-    # Load exported plugin steps
-    $exportData = Get-PluginStepsFromJson -JsonPath $PluginStepsJsonPath
-    
-    Write-Host ""
-    
-    # Get current plugin steps from target environment
-    $targetSteps = Get-PluginStepsFromEnvironment -Connection $connection `
-        -AssemblyName $exportData.AssemblyName
-    
-    Write-Host ""
-    
-    # Remove orphaned steps
-    $result = Remove-OrphanedSteps -Connection $connection `
-        -TargetSteps $targetSteps `
-        -ExportedStepIds $exportData.StepIds
-    
-    Write-Host ""
-    Write-Host "==================================================" -ForegroundColor Cyan
-    Write-Host "  Summary" -ForegroundColor Cyan
-    Write-Host "==================================================" -ForegroundColor Cyan
-    Write-Host "Total orphaned steps found: $($result.Total)" -ForegroundColor $(if ($result.Total -gt 0) { "Yellow" } else { "Green" })
-    Write-Host "Successfully removed: $($result.Removed)" -ForegroundColor Green
-    Write-Host "Failed to remove: $($result.Failed)" -ForegroundColor $(if ($result.Failed -gt 0) { "Red" } else { "Green" })
-    Write-Host ""
-    
-    if ($result.Failed -gt 0) {
-        Write-Warning "Some plugin steps could not be removed. Check the logs above for details."
-        exit 1
-    }
-    
-    Write-Host "✓ Script completed successfully" -ForegroundColor Green
+    $targetSteps = $stepsResult.CrmRecords
 }
 catch {
-    Write-Error "Script failed with error: $_"
-    Write-Error $_.ScriptStackTrace
+    Write-Error "Failed to retrieve plugin steps from environment: $_"
+    if ($connection -and $connection.IsReady) {
+        $connection.Dispose()
+    }
     exit 1
 }
-finally {
+
+# =============================================================================
+# ANALYZE AND REMOVE ORPHANED STEPS
+# =============================================================================
+
+Write-Host "`nAnalyzing plugin steps..." -ForegroundColor Cyan
+
+$orphanedSteps = @()
+
+foreach ($step in $targetSteps) {
+    $stepId = $step.sdkmessageprocessingstepid
+    
+    if ($stepId -notin $exportedStepIds) {
+        $orphanedSteps += $step
+    }
+}
+
+if ($orphanedSteps.Count -eq 0) {
+    Write-Host "✓ No orphaned plugin steps found. All steps in target match the export." -ForegroundColor Green
+    
+    Write-Host "`n==================================================" -ForegroundColor Cyan
+    Write-Host "  Summary" -ForegroundColor Cyan
+    Write-Host "==================================================" -ForegroundColor Cyan
+    Write-Host "Total orphaned steps found: 0" -ForegroundColor Green
+    Write-Host "Successfully removed: 0" -ForegroundColor Green
+    Write-Host "Failed to remove: 0" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "✓ Script completed successfully" -ForegroundColor Green
+    
     if ($connection -and $connection.IsReady) {
         Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray
         $connection.Dispose()
     }
+    exit 0
 }
+
+# Orphaned steps found - proceed with removal
+Write-Host "`nFound $($orphanedSteps.Count) orphaned plugin step(s) to remove:" -ForegroundColor Yellow
+
+$removed = 0
+$failed = 0
+
+foreach ($step in $orphanedSteps) {
+    Write-Host "  - $($step.name) (ID: $($step.sdkmessageprocessingstepid))" -ForegroundColor Yellow
+    
+    try {
+        Remove-CrmRecord -conn $connection `
+            -EntityLogicalName "sdkmessageprocessingstep" `
+            -Id $step.sdkmessageprocessingstepid `
+            -ErrorAction Stop
+        
+        Write-Host "    ✓ Removed successfully" -ForegroundColor Green
+        $removed++
+    }
+    catch {
+        Write-Host "    ✗ Failed to remove: $_" -ForegroundColor Red
+        $failed++
+    }
+}
+
+# =============================================================================
+# SUMMARY AND CLEANUP
+# =============================================================================
+
+Write-Host ""
+Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host "  Summary" -ForegroundColor Cyan
+Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host "Total orphaned steps found: $($orphanedSteps.Count)" -ForegroundColor $(if ($orphanedSteps.Count -gt 0) { "Yellow" } else { "Green" })
+Write-Host "Successfully removed: $removed" -ForegroundColor Green
+Write-Host "Failed to remove: $failed" -ForegroundColor $(if ($failed -gt 0) { "Red" } else { "Green" })
+Write-Host ""
+
+if ($failed -gt 0) {
+    Write-Warning "Some plugin steps could not be removed. Check the logs above for details."
+    
+    if ($connection -and $connection.IsReady) {
+        Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray
+        $connection.Dispose()
+    }
+    exit 1
+}
+
+Write-Host "✓ Script completed successfully" -ForegroundColor Green
+
+if ($connection -and $connection.IsReady) {
+    Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray
+    $connection.Dispose()
+}
+
+exit 0

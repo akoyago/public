@@ -41,9 +41,6 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$ClientSecret,
     
-    [Parameter(Mandatory=$true)]
-    [string]$TenantId,
-    
     [Parameter(Mandatory=$false)]
     [string]$PluginStepsJsonPath = "$(System.ArtifactsDirectory)/drop/plugin-steps.json"
 )
@@ -63,8 +60,7 @@ function Connect-ToCRM {
     param(
         [string]$Url,
         [string]$AppId,
-        [string]$Secret,
-        [string]$Tenant
+        [string]$Secret
     )
     
     try {
@@ -73,11 +69,10 @@ function Connect-ToCRM {
         # Create secure string for client secret
         $SecureSecret = ConvertTo-SecureString $Secret -AsPlainText -Force
         
-        # Connect using service principal
+        # Connect WITHOUT TenantId - it will be auto-discovered from the URL
         $conn = Connect-CrmOnline -ServerUrl $Url `
             -ClientSecret $SecureSecret `
-            -OAuthClientId $AppId `
-            -TenantId $Tenant
+            -OAuthClientId $AppId
         
         if ($conn.IsReady) {
             Write-Host "✓ Successfully connected to Dynamics 365" -ForegroundColor Green

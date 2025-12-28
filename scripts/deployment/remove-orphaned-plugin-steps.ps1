@@ -42,20 +42,62 @@ param(
 )
 
 # =============================================================================
-# HANDLE DEFAULT PATH
+# HANDLE DEFAULT PATH WITH BETTER DETECTION
 # =============================================================================
 
 if ([string]::IsNullOrEmpty($PluginStepsJsonPath)) {
-    # Use Azure DevOps default path if not specified
-    if ($env:SYSTEM_ARTIFACTSDIRECTORY) {
-        $PluginStepsJsonPath = Join-Path $env:SYSTEM_ARTIFACTSDIRECTORY "drop\plugin-steps.json"
-        Write-Host "Using default artifact path: $PluginStepsJsonPath" -ForegroundColor Gray
+    Write-Host "No explicit path provided, searching for plugin-steps.json..." -ForegroundColor Gray
+    
+    # Try multiple common locations
+    $searchPaths = @(
+        "$env:SYSTEM_ARTIFACTSDIRECTORY\drop\plugin-steps.json",
+        "$env:SYSTEM_ARTIFACTSDIRECTORY\plugin-steps.json",
+        "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\drop\plugin-steps.json",
+        "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\plugin-steps.json",
+        "$env:AGENT_RELEASEDIRECTORY\drop\plugin-steps.json",
+        "$env:BUILD_ARTIFACTSTAGINGDIRECTORY\plugin-steps.json"
+    )
+    
+    $foundPath = $null
+    
+    foreach ($path in $searchPaths) {
+        if ($path -and (Test-Path $path)) {
+            $foundPath = $path
+            Write-Host "Found plugin-steps.json at: $foundPath" -ForegroundColor Green
+            break
+        }
+    }
+    
+    if (-not $foundPath) {
+        # Last resort: search recursively
+        Write-Host "Standard paths not found, searching recursively..." -ForegroundColor Yellow
+        
+        $searchRoots = @($env:SYSTEM_ARTIFACTSDIRECTORY, $env:SYSTEM_DEFAULTWORKINGDIRECTORY, "D:\a")
+        
+        foreach ($root in $searchRoots) {
+            if ($root -and (Test-Path $root)) {
+                $found = Get-ChildItem -Path $root -Recurse -Filter "plugin-steps.json" -ErrorAction SilentlyContinue | Select-Object -First 1
+                if ($found) {
+                    $foundPath = $found.FullName
+                    Write-Host "Found plugin-steps.json at: $foundPath" -ForegroundColor Green
+                    break
+                }
+            }
+        }
+    }
+    
+    if ($foundPath) {
+        $PluginStepsJsonPath = $foundPath
     }
     else {
-        Write-Error "PluginStepsJsonPath parameter is required when not running in Azure DevOps pipeline"
+        Write-Error "Could not find plugin-steps.json in any standard location."
+        Write-Host "`nSearched paths:" -ForegroundColor Yellow
+        $searchPaths | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
         exit 1
     }
 }
+
+Write-Host "Using plugin-steps.json path: $PluginStepsJsonPath" -ForegroundColor Cyan
 
 # =============================================================================
 # SCRIPT START

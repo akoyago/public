@@ -56,7 +56,7 @@ Write-Host ""
 
 try {
     Import-Module Microsoft.Xrm.Data.PowerShell -ErrorAction Stop
-    Write-Host "✓ Microsoft.Xrm.Data.PowerShell module loaded successfully" -ForegroundColor Green
+    Write-Host "[OK] Microsoft.Xrm.Data.PowerShell module loaded successfully" -ForegroundColor Green
 }
 catch {
     Write-Error "Failed to load Microsoft.Xrm.Data.PowerShell module. Please install it using: Install-Module Microsoft.Xrm.Data.PowerShell"
@@ -76,7 +76,7 @@ try {
         -OAuthClientId $ClientId
     
     if ($connection.IsReady) {
-        Write-Host "✓ Successfully connected to Dynamics 365" -ForegroundColor Green
+        Write-Host "[OK] Successfully connected to Dynamics 365" -ForegroundColor Green
     }
     else {
         throw "Connection is not ready"
@@ -103,7 +103,7 @@ try {
     $assemblyName = $jsonContent.metadata.assemblyName
     $totalStepsInExport = $jsonContent.metadata.totalSteps
     
-    Write-Host "✓ Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
+    Write-Host "[OK] Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
     Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray
     
     # Extract step IDs from JSON
@@ -143,7 +143,7 @@ try {
     
     if ($assemblyResult.CrmRecords.Count -eq 0) {
         Write-Warning "Assembly '$assemblyName' not found in target environment"
-        Write-Host "`n✓ Script completed - No assembly found to process" -ForegroundColor Green
+        Write-Host "`n[OK] Script completed - No assembly found to process" -ForegroundColor Green
         $connection.Dispose()
         exit 0
     }
@@ -168,7 +168,7 @@ try {
     
     if ($pluginTypes.CrmRecords.Count -eq 0) {
         Write-Warning "No plugin types found for assembly '$assemblyName'"
-        Write-Host "`n✓ Script completed - No plugin types found" -ForegroundColor Green
+        Write-Host "`n[OK] Script completed - No plugin types found" -ForegroundColor Green
         $connection.Dispose()
         exit 0
     }
@@ -200,7 +200,7 @@ try {
     
     $stepsResult = Get-CrmRecordsByFetch -conn $connection -Fetch $stepsQuery
     
-    Write-Host "✓ Found $($stepsResult.CrmRecords.Count) plugin step(s) in target environment" -ForegroundColor Green
+    Write-Host "[OK] Found $($stepsResult.CrmRecords.Count) plugin step(s) in target environment" -ForegroundColor Green
     
     $targetSteps = $stepsResult.CrmRecords
 }
@@ -229,7 +229,7 @@ foreach ($step in $targetSteps) {
 }
 
 if ($orphanedSteps.Count -eq 0) {
-    Write-Host "✓ No orphaned plugin steps found. All steps in target match the export." -ForegroundColor Green
+    Write-Host "[OK] No orphaned plugin steps found. All steps in target match the export." -ForegroundColor Green
     
     Write-Host "`n==================================================" -ForegroundColor Cyan
     Write-Host "  Summary" -ForegroundColor Cyan
@@ -238,7 +238,7 @@ if ($orphanedSteps.Count -eq 0) {
     Write-Host "Successfully removed: 0" -ForegroundColor Green
     Write-Host "Failed to remove: 0" -ForegroundColor Green
     Write-Host ""
-    Write-Host "✓ Script completed successfully" -ForegroundColor Green
+    Write-Host "[OK] Script completed successfully" -ForegroundColor Green
     
     if ($connection -and $connection.IsReady) {
         Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray
@@ -262,11 +262,11 @@ foreach ($step in $orphanedSteps) {
             -Id $step.sdkmessageprocessingstepid `
             -ErrorAction Stop
         
-        Write-Host "    ✓ Removed successfully" -ForegroundColor Green
+        Write-Host "    [OK] Removed successfully" -ForegroundColor Green
         $removed++
     }
     catch {
-        Write-Host "    ✗ Failed to remove: $_" -ForegroundColor Red
+        Write-Host "    [FAIL] Failed to remove: $_" -ForegroundColor Red
         $failed++
     }
 }
@@ -294,7 +294,7 @@ if ($failed -gt 0) {
     exit 1
 }
 
-Write-Host "✓ Script completed successfully" -ForegroundColor Green
+Write-Host "[OK] Script completed successfully" -ForegroundColor Green
 
 if ($connection -and $connection.IsReady) {
     Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray

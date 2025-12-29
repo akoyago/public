@@ -340,7 +340,7 @@ foreach ($step in $steps.CrmRecords) {
         name = $step.name
         pluginTypeName = $step.'type.typename'
         plugintypeid = $step.plugintypeid
-        primaryEntity = if ($step.'filter.primaryobjecttypecode') { $step.'filter.primaryobjecttypecode' } else { "none" }
+        primaryEntity = if ($step.'filter.primaryobjecttypecode') { $step.'filter.primaryobjecttypecode' } else { "" }
         message = $step.'message.name'
         stage = $stageName
         mode = $modeName
@@ -387,3 +387,4 @@ foreach ($group in $stepsByEntity | Sort-Object Name) {
     Write-Host "  $($group.Name): $($group.Count) steps" -ForegroundColor White
 
 }
+

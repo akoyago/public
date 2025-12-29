@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Health check script to validate Dynamics 365 deployment.
 
@@ -839,8 +839,19 @@ function Compare-PluginSteps {
         $targetStep = Get-PluginStepFromEnvironment -Connection $Connection -StepId $stepId
 
         if ($null -eq $targetStep) {
-            Add-Failure "Plugin step '$($sourceStep.name)' (ID: $stepId) not found in target environment - cannot auto-create plugin steps"
-            continue
+            Add-Warning "Plugin step '$($sourceStep.name)' (ID: $stepId) not found in target environment - attempting to create"
+            
+            # Attempt to create the plugin step
+            $created = New-PluginStepInEnvironment -Connection $Connection -SourceStep $sourceStep
+            
+            if ($created) {
+                # Successfully created, move to next step
+                continue
+            }
+            else {
+                # Creation failed, error already logged
+                continue
+            }
         }
         
         # ===== VALIDATE IMMUTABLE PROPERTIES =====
@@ -944,7 +955,7 @@ function Compare-PluginSteps {
                 }
             }
             else {
-                Add-Warning "Could not find service user with applicationId: $($sourceStep.runAsUser.applicationId) for step: $($sourceStep.name)"
+                Add-Warning "Could not find service user with applicationId: $($sourceStep.runAsUser.applicationId) for step: $($SourceStep.name)"
             }
         }
         elseif ($sourceStep.runAsUser.systemUserId) {
@@ -989,6 +1000,99 @@ function Compare-PluginSteps {
         }
 
     }
+}
+
+function Get-SdkMessageId {
+    param(
+        [object]$Connection,
+        [string]$MessageName
+    )
+    
+    $fetchXml = @"
+<fetch top='1'>
+  <entity name='sdkmessage'>
+    <attribute name='sdkmessageid' />
+    <attribute name='name' />
+    <filter>
+      <condition attribute='name' operator='eq' value='$MessageName' />
+    </filter>
+  </entity>
+</fetch>
+"@
+    
+    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    
+    if ($result.CrmRecords.Count -gt 0) {
+        return $result.CrmRecords[0].sdkmessageid
+    }
+    
+    return $null
+}
+
+function Get-SdkMessageFilterId {
+    param(
+        [object]$Connection,
+        [string]$MessageName,
+        [string]$PrimaryEntity
+    )
+    
+    # For messages that don't have entity filters (like custom actions on "none")
+    if ([string]::IsNullOrEmpty($PrimaryEntity) -or $PrimaryEntity -eq 'none') {
+        return $null
+    }
+    
+    $fetchXml = @"
+<fetch top='1'>
+  <entity name='sdkmessagefilter'>
+    <attribute name='sdkmessagefilterid' />
+    <attribute name='primaryobjecttypecode' />
+    <link-entity name='sdkmessage' from='sdkmessageid' to='sdkmessageid' alias='msg'>
+      <filter>
+        <condition attribute='name' operator='eq' value='$MessageName' />
+      </filter>
+    </link-entity>
+    <filter>
+      <condition attribute='primaryobjecttypecode' operator='eq' value='$PrimaryEntity' />
+    </filter>
+  </entity>
+</fetch>
+"@
+    
+    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    
+    if ($result.CrmRecords.Count -gt 0) {
+        return $result.CrmRecords[0].sdkmessagefilterid
+    }
+    
+    return $null
+}
+
+function Get-PluginTypeId {
+    param(
+        [object]$Connection,
+        [string]$PluginTypeIdFromJson
+    )
+    
+    # If we have the GUID from JSON, try to look up directly
+    $fetchXml = @"
+<fetch top='1'>
+  <entity name='plugintype'>
+    <attribute name='plugintypeid' />
+    <attribute name='typename' />
+    <filter>
+      <condition attribute='plugintypeid' operator='eq' value='$PluginTypeIdFromJson' />
+    </filter>
+  </entity>
+</fetch>
+"@
+    
+    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    
+    if ($result.CrmRecords.Count -gt 0) {
+        return $result.CrmRecords[0].plugintypeid
+    }
+    
+    return $null
 }
 
 # =============================================================================
@@ -1120,4 +1224,153 @@ if ($script:failures.Count -gt 0) {
 else {
     Write-Host "`n[OK] Health check completed successfully" -ForegroundColor Green
 
+}
+
+function New-PluginStepInEnvironment {
+    param(
+        [object]$Connection,
+        [object]$SourceStep
+    )
+    
+    Write-StatusMessage "  Creating new plugin step: $($SourceStep.name)" -Type Info
+    
+    try {
+        # Get SDK Message ID
+        $sdkMessageId = Get-SdkMessageId -Connection $Connection -MessageName $SourceStep.message
+        if (-not $sdkMessageId) {
+            throw "SDK Message '$($SourceStep.message)' not found"
+        }
+        
+        # Get SDK Message Filter ID (if applicable)
+        $sdkMessageFilterId = $null
+        if (![string]::IsNullOrEmpty($SourceStep.primaryEntity) -and $SourceStep.primaryEntity -ne 'none') {
+            $sdkMessageFilterId = Get-SdkMessageFilterId -Connection $Connection -MessageName $SourceStep.message -PrimaryEntity $SourceStep.primaryEntity
+            if (-not $sdkMessageFilterId) {
+                throw "SDK Message Filter for message '$($SourceStep.message)' and entity '$($SourceStep.primaryEntity)' not found"
+            }
+        }
+        
+        # Verify Plugin Type exists
+        $pluginTypeId = Get-PluginTypeId -Connection $Connection -PluginTypeIdFromJson $SourceStep.plugintypeid
+        if (-not $pluginTypeId) {
+            throw "Plugin Type with ID '$($SourceStep.plugintypeid)' not found in target environment"
+        }
+        
+        # Build the step fields
+        $stepFields = @{
+            name = $SourceStep.name
+            sdkmessageid = New-CrmEntityReference -EntityLogicalName 'sdkmessage' -Id $sdkMessageId
+            plugintypeid = New-CrmEntityReference -EntityLogicalName 'plugintype' -Id $pluginTypeId
+        }
+        
+        # Add optional fields
+        if ($SourceStep.description) {
+            $stepFields['description'] = $SourceStep.description
+        }
+        
+        if ($SourceStep.configuration) {
+            $stepFields['configuration'] = $SourceStep.configuration
+        }
+        
+        # Add rank
+        $stepFields['rank'] = [int]$SourceStep.rank
+        
+        # Add mode (Synchronous = 0, Asynchronous = 1)
+        $modeValue = if ($SourceStep.mode -eq 'Synchronous') { 0 } else { 1 }
+        $stepFields['mode'] = New-CrmOptionSetValue -Value $modeValue
+        
+        # Add stage
+        $stageValue = switch ($SourceStep.stage) {
+            'Pre-validation' { 10 }
+            'Pre-operation' { 20 }
+            'Post-operation' { 40 }
+            default { 40 }
+        }
+        $stepFields['stage'] = New-CrmOptionSetValue -Value $stageValue
+        
+        # Add message filter if applicable
+        if ($sdkMessageFilterId) {
+            $stepFields['sdkmessagefilterid'] = New-CrmEntityReference -EntityLogicalName 'sdkmessagefilter' -Id $sdkMessageFilterId
+        }
+        
+        # Add asyncAutoDelete for async steps
+        if ($SourceStep.mode -eq 'Asynchronous' -and $SourceStep.asyncAutoDelete) {
+            $stepFields['asyncautodelete'] = if ($SourceStep.asyncAutoDelete -eq 'Yes') { $true } else { $false }
+        }
+        
+        # Handle RunAsUser (impersonation)
+        if ($SourceStep.runAsUser.applicationId) {
+            $expectedUser = Get-SystemUserByApplicationId -Connection $Connection -ApplicationId $SourceStep.runAsUser.applicationId
+            if ($expectedUser) {
+                $stepFields['impersonatinguserid'] = New-CrmEntityReference -EntityLogicalName 'systemuser' -Id $expectedUser.systemuserid
+            }
+            else {
+                Add-Warning "Could not find service user with applicationId: $($SourceStep.runAsUser.applicationId) for new step: $($SourceStep.name)"
+            }
+        }
+        elseif ($SourceStep.runAsUser.systemUserId) {
+            $stepFields['impersonatinguserid'] = New-CrmEntityReference -EntityLogicalName 'systemuser' -Id $SourceStep.runAsUser.systemUserId
+        }
+        
+        # Create the step with the specific GUID from JSON
+        $newStepId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstep -Fields $stepFields -Guid $SourceStep.sdkmessageprocessingstepid
+        
+        Write-StatusMessage "  Created plugin step with ID: $newStepId" -Type Success
+        
+        # Create images if defined
+        if ($SourceStep.images -and $SourceStep.images.Count -gt 0) {
+            foreach ($sourceImage in $SourceStep.images) {
+                Write-StatusMessage "  Creating image '$($sourceImage.name)' for new step" -Type Info
+                
+                try {
+                    # Convert imageType text to numeric value
+                    $imageTypeValue = switch ($sourceImage.imageType) {
+                        'PreImage' { 0 }
+                        'PostImage' { 1 }
+                        'Both' { 2 }
+                        default { 0 }
+                    }
+                    
+                    $imageFields = @{
+                        sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $newStepId
+                        name = $sourceImage.name
+                        entityalias = $sourceImage.entityAlias
+                        imagetype = New-CrmOptionSetValue -Value $imageTypeValue
+                        messagepropertyname = $sourceImage.messagePropertyName
+                        attributes = ""  # Empty string for all attributes
+                    }
+                    
+                    $newImageId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Fields $imageFields
+                    Write-StatusMessage "  Created image '$($sourceImage.name)'" -Type Success
+                }
+                catch {
+                    Add-Warning "Failed to create image '$($sourceImage.name)' for new step '$($SourceStep.name)': $_"
+                }
+            }
+        }
+        
+        # Set the state (Enabled/Disabled) after creation
+        if ($SourceStep.state -eq 'Disabled') {
+            try {
+                $setStateRequest = @{
+                    EntityMoniker = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $newStepId
+                    State = 1  # Disabled
+                    Status = 2  # Disabled status
+                }
+                
+                Set-CrmRecordState -conn $Connection -EntityLogicalName sdkmessageprocessingstep -Id $newStepId -StateCode 1 -StatusCode 2
+                Write-StatusMessage "  Set step state to Disabled" -Type Success
+            }
+            catch {
+                Add-Warning "Failed to set state to Disabled for new step '$($SourceStep.name)': $_"
+            }
+        }
+        
+        Add-Fix "Created new plugin step: $($SourceStep.name)"
+        return $true
+    }
+    catch {
+        Add-Failure "Failed to create plugin step '$($SourceStep.name)': $_"
+        return $false
+    }
 }

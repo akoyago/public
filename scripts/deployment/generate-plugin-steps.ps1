@@ -263,18 +263,17 @@ foreach ($step in $steps.CrmRecords) {
     $stageName = if ($step.stage -is [int]) {
         # Numeric value
         switch ($step.stage) {
-            10 { "PreValidation" }
-            20 { "PreOperation" }
-            40 { "PostOperation" }
-            50 { "PostOperationDeprecated" }
+            10 { "Pre-validation" }
+            20 { "Pre-operation" }
+            40 { "Post-operation" }
             default { "Unknown" }
         }
     } else {
         # String label - normalize to consistent format
         switch ($step.stage) {
-            "Pre-validation" { "PreValidation" }
-            "Pre-operation" { "PreOperation" }
-            "Post-operation" { "PostOperation" }
+            "Pre-validation" { "Pre-validation" }
+            "Pre-operation" { "Pre-operation" }
+            "Post-operation" { "Post-operation" }
             "MainOperation" { "MainOperation" }
             default { $step.stage }  # Keep original value if not recognized
         }
@@ -386,4 +385,5 @@ $stepsByEntity = $pluginStepsData.pluginSteps | Group-Object -Property primaryEn
 Write-Host "Steps by Entity:" -ForegroundColor Yellow
 foreach ($group in $stepsByEntity | Sort-Object Name) {
     Write-Host "  $($group.Name): $($group.Count) steps" -ForegroundColor White
+
 }

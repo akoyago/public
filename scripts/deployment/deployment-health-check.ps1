@@ -854,14 +854,13 @@ function Compare-PluginSteps {
             Add-Failure "CRITICAL: Plugin Type ID mismatch on step '$($sourceStep.name)': Expected '$($sourceStep.plugintypeid)', Found '$($targetStep.plugintypeid)' - STEP MUST BE RECREATED"
         }
         
-        # Compare primaryEntity (immutable) - treat null and empty string as equal
-        $sourcePrimaryEntity = if ([string]::IsNullOrEmpty($sourceStep.primaryEntity)) { "" } else { $sourceStep.primaryEntity }
-        $targetPrimaryEntity = if ([string]::IsNullOrEmpty($targetStep.primaryentityname)) { "" } else { $targetStep.primaryentityname }
-
+        # Compare primaryEntity (immutable) - treat null, empty string, and "none" as equal
+        $sourcePrimaryEntity = if ([string]::IsNullOrEmpty($sourceStep.primaryEntity) -or $sourceStep.primaryEntity -eq 'none') { "" } else { $sourceStep.primaryEntity }
+        $targetPrimaryEntity = if ([string]::IsNullOrEmpty($targetStep.primaryentityname) -or $targetStep.primaryentityname -eq 'none') { "" } else { $targetStep.primaryentityname }
         if ($sourcePrimaryEntity -ne $targetPrimaryEntity) {
             $immutableMismatch = $true
             Add-Failure "CRITICAL: Primary Entity mismatch on step '$($sourceStep.name)': Expected '$($sourceStep.primaryEntity)', Found '$($targetStep.primaryentityname)' - STEP MUST BE RECREATED"
-        }        
+        }
 
         # Compare message (immutable) - need to get message name from target
         # The target returns the message name, JSON has the message name
@@ -1120,4 +1119,5 @@ if ($script:failures.Count -gt 0) {
 }
 else {
     Write-Host "`n[OK] Health check completed successfully" -ForegroundColor Green
+
 }

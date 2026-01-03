@@ -808,8 +808,8 @@ function New-PluginStepInEnvironment {
             $stepFields['impersonatinguserid'] = New-CrmEntityReference -EntityLogicalName 'systemuser' -Id $SourceStep.runAsUser.systemUserId
         }
         
-        # Create the step with the specific GUID from JSON
-        $newStepId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstep -Fields $stepFields -Guid $SourceStep.sdkmessageprocessingstepid
+        # Create the step - let Dynamics 365 assign a new GUID
+        $newStepId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstep -Fields $stepFields
         
         Write-StatusMessage "  Created plugin step with ID: $newStepId" -Type Success
         

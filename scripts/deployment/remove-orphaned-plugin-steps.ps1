@@ -174,14 +174,15 @@ try {
     Write-Host "[OK] Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
     Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray
     
-    # Extract step IDs from JSON
-    $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid }
+    # Extract step IDs from JSON and convert to lowercase strings for comparison
+    $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid.ToString().ToLower() }
     
     Write-Host "  Extracted $($exportedStepIds.Count) step IDs from JSON" -ForegroundColor Gray
     
-    # Extract unique plugin type IDs from JSON
+    # Extract unique plugin type IDs from JSON and convert to lowercase strings for comparison
     $exportedPluginTypeIds = $jsonContent.pluginSteps | 
-        Select-Object -ExpandProperty plugintypeid -Unique
+        Select-Object -ExpandProperty plugintypeid -Unique |
+        ForEach-Object { $_.ToString().ToLower() }
     
     Write-Host "  Extracted $($exportedPluginTypeIds.Count) unique plugin type IDs from JSON" -ForegroundColor Gray
 }
@@ -295,7 +296,8 @@ Write-Host "`nAnalyzing plugin steps..." -ForegroundColor Cyan
 $orphanedSteps = @()
 
 foreach ($step in $targetSteps) {
-    $stepId = $step.sdkmessageprocessingstepid
+    # Convert GUID to lowercase string for comparison
+    $stepId = $step.sdkmessageprocessingstepid.ToString().ToLower()
     
     if ($stepId -notin $exportedStepIds) {
         $orphanedSteps += $step
@@ -340,7 +342,8 @@ Write-Host "`nAnalyzing plugin types..." -ForegroundColor Cyan
 $orphanedPluginTypes = @()
 
 foreach ($pluginType in $pluginTypes.CrmRecords) {
-    $typeId = $pluginType.plugintypeid
+    # Convert GUID to lowercase string for comparison
+    $typeId = $pluginType.plugintypeid.ToString().ToLower()
     
     if ($typeId -notin $exportedPluginTypeIds) {
         $orphanedPluginTypes += $pluginType

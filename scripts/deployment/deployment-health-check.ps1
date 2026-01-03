@@ -1190,7 +1190,47 @@ function Get-SdkMessageFilterId {
         return $null
     }
     
+    # First, get the entity metadata to retrieve the ObjectTypeCode
+    try {
+        $entityMetadata = Get-CrmEntityMetadata -conn $Connection -EntityLogicalName $PrimaryEntity
+        $objectTypeCode = $entityMetadata.ObjectTypeCode
+        
+        Write-StatusMessage "  Resolved entity '$PrimaryEntity' to ObjectTypeCode: $objectTypeCode" -Type Info
+    }
+    catch {
+        Write-StatusMessage "  Failed to retrieve metadata for entity '$PrimaryEntity': $_" -Type Warning
+        return $null
+    }
+    
+    # Now query using the integer ObjectTypeCode
     $fetchXml = @"
+<fetch>
+  <entity name='sdkmessagefilter'>
+    <attribute name='sdkmessagefilterid' />
+    <attribute name='primaryobjecttypecode' />
+    <link-entity name='sdkmessage' from='sdkmessageid' to='sdkmessageid' alias='msg'>
+      <filter>
+        <condition attribute='name' operator='eq' value='$MessageName' />
+      </filter>
+    </link-entity>
+    <filter>
+      <condition attribute='primaryobjecttypecode' operator='eq' value='$objectTypeCode' />
+    </filter>
+  </entity>
+</fetch>
+"@
+    
+    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    
+    if ($result.CrmRecords.Count -gt 0) {
+        return $result.CrmRecords[0].sdkmessagefilterid
+    }
+    
+    # If not found by ObjectTypeCode, try by logical name as fallback
+    # (some environments may store the logical name)
+    Write-StatusMessage "  SDK Message Filter not found by ObjectTypeCode, trying logical name as fallback" -Type Info
+    
+    $fetchXml2 = @"
 <fetch>
   <entity name='sdkmessagefilter'>
     <attribute name='sdkmessagefilterid' />
@@ -1207,10 +1247,10 @@ function Get-SdkMessageFilterId {
 </fetch>
 "@
     
-    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    $result2 = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml2
     
-    if ($result.CrmRecords.Count -gt 0) {
-        return $result.CrmRecords[0].sdkmessagefilterid
+    if ($result2.CrmRecords.Count -gt 0) {
+        return $result2.CrmRecords[0].sdkmessagefilterid
     }
     
     return $null

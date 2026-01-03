@@ -1,10 +1,11 @@
 <#
 .SYNOPSIS
-    Removes orphaned plugin steps from Dynamics 365 environment.
+    Removes orphaned plugin steps and plugin types from Dynamics 365 environment.
 
 .DESCRIPTION
     This script compares plugin steps in the exported plugin-steps.json file with the target
     Dynamics 365 environment and removes any steps that exist in the target but not in the export.
+    Also removes orphaned plugin types that exist in the target but not in the export.
     Only processes steps for the AkoyaGo.Plugins assembly.
 
 .PARAMETER EnvironmentUrl
@@ -104,7 +105,7 @@ Write-Host "Using plugin-steps.json path: $PluginStepsJsonPath" -ForegroundColor
 # =============================================================================
 
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "  Remove Orphaned Plugin Steps" -ForegroundColor Cyan
+Write-Host "  Remove Orphaned Plugin Steps and Types" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -177,6 +178,12 @@ try {
     $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid }
     
     Write-Host "  Extracted $($exportedStepIds.Count) step IDs from JSON" -ForegroundColor Gray
+    
+    # Extract unique plugin type IDs from JSON
+    $exportedPluginTypeIds = $jsonContent.pluginSteps | 
+        Select-Object -ExpandProperty plugintypeid -Unique
+    
+    Write-Host "  Extracted $($exportedPluginTypeIds.Count) unique plugin type IDs from JSON" -ForegroundColor Gray
 }
 catch {
     Write-Error "Failed to load plugin steps from JSON: $_"
@@ -297,28 +304,14 @@ foreach ($step in $targetSteps) {
 
 if ($orphanedSteps.Count -eq 0) {
     Write-Host "[OK] No orphaned plugin steps found. All steps in target match the export." -ForegroundColor Green
-    
-    Write-Host "`n==================================================" -ForegroundColor Cyan
-    Write-Host "  Summary" -ForegroundColor Cyan
-    Write-Host "==================================================" -ForegroundColor Cyan
-    Write-Host "Total orphaned steps found: 0" -ForegroundColor Green
-    Write-Host "Successfully removed: 0" -ForegroundColor Green
-    Write-Host "Failed to remove: 0" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "[OK] Script completed successfully" -ForegroundColor Green
-    
-    if ($connection -and $connection.IsReady) {
-        Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray
-        $connection.Dispose()
-    }
-    exit 0
+}
+else {
+    # Orphaned steps found - proceed with removal
+    Write-Host "`nFound $($orphanedSteps.Count) orphaned plugin step(s) to remove:" -ForegroundColor Yellow
 }
 
-# Orphaned steps found - proceed with removal
-Write-Host "`nFound $($orphanedSteps.Count) orphaned plugin step(s) to remove:" -ForegroundColor Yellow
-
-$removed = 0
-$failed = 0
+$stepsRemoved = 0
+$stepsFailed = 0
 
 foreach ($step in $orphanedSteps) {
     Write-Host "  - $($step.name) (ID: $($step.sdkmessageprocessingstepid))" -ForegroundColor Yellow
@@ -330,11 +323,56 @@ foreach ($step in $orphanedSteps) {
             -ErrorAction Stop
         
         Write-Host "    [OK] Removed successfully" -ForegroundColor Green
-        $removed++
+        $stepsRemoved++
     }
     catch {
         Write-Host "    [FAIL] Failed to remove: $_" -ForegroundColor Red
-        $failed++
+        $stepsFailed++
+    }
+}
+
+# =============================================================================
+# ANALYZE AND REMOVE ORPHANED PLUGIN TYPES
+# =============================================================================
+
+Write-Host "`nAnalyzing plugin types..." -ForegroundColor Cyan
+
+$orphanedPluginTypes = @()
+
+foreach ($pluginType in $pluginTypes.CrmRecords) {
+    $typeId = $pluginType.plugintypeid
+    
+    if ($typeId -notin $exportedPluginTypeIds) {
+        $orphanedPluginTypes += $pluginType
+    }
+}
+
+if ($orphanedPluginTypes.Count -eq 0) {
+    Write-Host "[OK] No orphaned plugin types found. All types in target match the export." -ForegroundColor Green
+}
+else {
+    # Orphaned types found - proceed with removal
+    Write-Host "`nFound $($orphanedPluginTypes.Count) orphaned plugin type(s) to remove:" -ForegroundColor Yellow
+}
+
+$typesRemoved = 0
+$typesFailed = 0
+
+foreach ($pluginType in $orphanedPluginTypes) {
+    Write-Host "  - $($pluginType.typename) (ID: $($pluginType.plugintypeid))" -ForegroundColor Yellow
+    
+    try {
+        Remove-CrmRecord -conn $connection `
+            -EntityLogicalName "plugintype" `
+            -Id $pluginType.plugintypeid `
+            -ErrorAction Stop
+        
+        Write-Host "    [OK] Removed successfully" -ForegroundColor Green
+        $typesRemoved++
+    }
+    catch {
+        Write-Host "    [FAIL] Failed to remove: $_" -ForegroundColor Red
+        $typesFailed++
     }
 }
 
@@ -346,13 +384,22 @@ Write-Host ""
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host "  Summary" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host "Total orphaned steps found: $($orphanedSteps.Count)" -ForegroundColor $(if ($orphanedSteps.Count -gt 0) { "Yellow" } else { "Green" })
-Write-Host "Successfully removed: $removed" -ForegroundColor Green
-Write-Host "Failed to remove: $failed" -ForegroundColor $(if ($failed -gt 0) { "Red" } else { "Green" })
+Write-Host ""
+Write-Host "Plugin Steps:" -ForegroundColor Cyan
+Write-Host "  Total orphaned steps found: $($orphanedSteps.Count)" -ForegroundColor $(if ($orphanedSteps.Count -gt 0) { "Yellow" } else { "Green" })
+Write-Host "  Successfully removed: $stepsRemoved" -ForegroundColor Green
+Write-Host "  Failed to remove: $stepsFailed" -ForegroundColor $(if ($stepsFailed -gt 0) { "Red" } else { "Green" })
+Write-Host ""
+Write-Host "Plugin Types:" -ForegroundColor Cyan
+Write-Host "  Total orphaned types found: $($orphanedPluginTypes.Count)" -ForegroundColor $(if ($orphanedPluginTypes.Count -gt 0) { "Yellow" } else { "Green" })
+Write-Host "  Successfully removed: $typesRemoved" -ForegroundColor Green
+Write-Host "  Failed to remove: $typesFailed" -ForegroundColor $(if ($typesFailed -gt 0) { "Red" } else { "Green" })
 Write-Host ""
 
-if ($failed -gt 0) {
-    Write-Warning "Some plugin steps could not be removed. Check the logs above for details."
+$totalFailures = $stepsFailed + $typesFailed
+
+if ($totalFailures -gt 0) {
+    Write-Warning "Some plugin steps or types could not be removed. Check the logs above for details."
     
     if ($connection -and $connection.IsReady) {
         Write-Host "`nDisconnecting from Dynamics 365..." -ForegroundColor Gray

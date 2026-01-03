@@ -7,6 +7,7 @@
     Dynamics 365 environment and removes any steps that exist in the target but not in the export.
     Also removes orphaned plugin types that exist in the target but not in the export.
     Only processes steps for the AkoyaGo.Plugins assembly.
+    Comparison is done based on logical names/properties, not GUIDs.
 
 .PARAMETER EnvironmentUrl
     The URL of the target Dynamics 365 environment (e.g., https://org.crm.dynamics.com)
@@ -174,19 +175,23 @@ try {
     Write-Host "[OK] Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
     Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray
     
-    # Extract step IDs from JSON and convert to lowercase strings for comparison
-    $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid.ToString().ToLower() }
+    # Build lookup sets based on logical identifiers (not GUIDs)
+    $exportedStepKeys = @{}
+    foreach ($step in $jsonContent.pluginSteps) {
+        # Create a unique key for each step based on logical properties
+        $stepKey = "$($step.pluginTypeName)|$($step.primaryEntity)|$($step.message)|$($step.stage)|$($step.rank)"
+        $exportedStepKeys[$stepKey] = $true
+    }
     
-    Write-Host "  Extracted $($exportedStepIds.Count) step IDs from JSON" -ForegroundColor Gray
+    Write-Host "  Extracted $($exportedStepKeys.Count) unique step identifiers from JSON" -ForegroundColor Gray
     
-    # Extract unique plugin type IDs from JSON and convert to lowercase strings for comparison
-    $exportedPluginTypeIds = $jsonContent.pluginSteps | 
-        Select-Object -ExpandProperty plugintypeid -Unique |
-        ForEach-Object { $_.ToString().ToLower() }
+    # Extract unique plugin type names (not IDs)
+    $exportedPluginTypeNames = @{}
+    foreach ($step in $jsonContent.pluginSteps) {
+        $exportedPluginTypeNames[$step.pluginTypeName] = $true
+    }
     
-    Write-Host "  Extracted $($exportedPluginTypeIds.Count) unique plugin type IDs from JSON" -ForegroundColor Gray
-
-Write-Host " ExportedPluginTypeIds: $exportedPluginTypeIds" -ForegroundColor Gray
+    Write-Host "  Extracted $($exportedPluginTypeNames.Count) unique plugin type names from JSON" -ForegroundColor Gray
 }
 catch {
     Write-Error "Failed to load plugin steps from JSON: $_"
@@ -256,7 +261,7 @@ try {
     # Build filter for plugin types
     $pluginTypeIdFilter = ($pluginTypeIds | ForEach-Object { "<value>$_</value>" }) -join ""
     
-    # Query for all steps related to these plugin types
+    # Query for all steps related to these plugin types - need to get more attributes for comparison
     $stepsQuery = @"
 <fetch>
   <entity name='sdkmessageprocessingstep'>
@@ -266,6 +271,15 @@ try {
     <attribute name='stage' />
     <attribute name='mode' />
     <attribute name='rank' />
+    <link-entity name='plugintype' from='plugintypeid' to='plugintypeid' alias='pt'>
+      <attribute name='typename' />
+    </link-entity>
+    <link-entity name='sdkmessagefilter' from='sdkmessagefilterid' to='sdkmessagefilterid' link-type='outer' alias='smf'>
+      <attribute name='primaryobjecttypecode' />
+    </link-entity>
+    <link-entity name='sdkmessage' from='sdkmessageid' to='sdkmessageid' alias='sm'>
+      <attribute name='name' />
+    </link-entity>
     <filter>
       <condition attribute='plugintypeid' operator='in'>
         $pluginTypeIdFilter
@@ -295,14 +309,33 @@ catch {
 
 Write-Host "`nAnalyzing plugin steps..." -ForegroundColor Cyan
 
+# Helper function to convert stage value to text
+function Get-StageText {
+    param($stageValue)
+    switch ($stageValue) {
+        10 { return "Pre-validation" }
+        20 { return "Pre-operation" }
+        40 { return "Post-operation" }
+        default { return "Unknown" }
+    }
+}
+
 $orphanedSteps = @()
 
 foreach ($step in $targetSteps) {
-    # Convert GUID to lowercase string for comparison
-    $stepId = $step.sdkmessageprocessingstepid.ToString().ToLower()
+    # Build the same key format as the export
+    $typename = $step."pt.typename"
+    $primaryEntity = $step."smf.primaryobjecttypecode"
+    if ([string]::IsNullOrEmpty($primaryEntity)) { $primaryEntity = "" }
+    $message = $step."sm.name"
+    $stageText = Get-StageText -stageValue $step.stage
+    $rank = $step.rank
     
-    if ($stepId -notin $exportedStepIds) {
+    $stepKey = "$typename|$primaryEntity|$message|$stageText|$rank"
+    
+    if (-not $exportedStepKeys.ContainsKey($stepKey)) {
         $orphanedSteps += $step
+        Write-Verbose "Orphaned step found: $stepKey"
     }
 }
 
@@ -344,13 +377,11 @@ Write-Host "`nAnalyzing plugin types..." -ForegroundColor Cyan
 $orphanedPluginTypes = @()
 
 foreach ($pluginType in $pluginTypes.CrmRecords) {
-    # Convert GUID to lowercase string for comparison
-    $typeId = $pluginType.plugintypeid.ToString().ToLower()
-
-Write-Host " PluginTypeId: $typeId" -ForegroundColor Gray
+    $typename = $pluginType.typename
     
-    if ($typeId -notin $exportedPluginTypeIds) {
+    if (-not $exportedPluginTypeNames.ContainsKey($typename)) {
         $orphanedPluginTypes += $pluginType
+        Write-Verbose "Orphaned type found: $typename"
     }
 }
 

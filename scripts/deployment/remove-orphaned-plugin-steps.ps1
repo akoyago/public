@@ -185,6 +185,8 @@ try {
         ForEach-Object { $_.ToString().ToLower() }
     
     Write-Host "  Extracted $($exportedPluginTypeIds.Count) unique plugin type IDs from JSON" -ForegroundColor Gray
+
+Write-Host " ExportedPluginTypeIds: $exportedPluginTypeIds" -ForegroundColor Gray
 }
 catch {
     Write-Error "Failed to load plugin steps from JSON: $_"
@@ -344,6 +346,8 @@ $orphanedPluginTypes = @()
 foreach ($pluginType in $pluginTypes.CrmRecords) {
     # Convert GUID to lowercase string for comparison
     $typeId = $pluginType.plugintypeid.ToString().ToLower()
+
+Write-Host " PluginTypeId: $typeId" -ForegroundColor Gray
     
     if ($typeId -notin $exportedPluginTypeIds) {
         $orphanedPluginTypes += $pluginType

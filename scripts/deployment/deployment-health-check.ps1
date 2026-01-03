@@ -746,10 +746,10 @@ function New-PluginStepInEnvironment {
             }
         }
         
-        # Verify Plugin Type exists
-        $pluginTypeId = Get-PluginTypeId -Connection $Connection -PluginTypeIdFromJson $SourceStep.plugintypeid
+        # Verify Plugin Type exists - NOW USING TYPENAME
+        $pluginTypeId = Get-PluginTypeId -Connection $Connection -PluginTypeIdFromJson $SourceStep.plugintypeid -PluginTypeName $SourceStep.pluginTypeName
         if (-not $pluginTypeId) {
-            throw "Plugin Type with ID '$($SourceStep.plugintypeid)' not found in target environment"
+            throw "Plugin Type '$($SourceStep.pluginTypeName)' not found in target environment"
         }
         
         # Build the step fields
@@ -1259,11 +1259,43 @@ function Get-SdkMessageFilterId {
 function Get-PluginTypeId {
     param(
         [object]$Connection,
-        [string]$PluginTypeIdFromJson
+        [string]$PluginTypeIdFromJson,
+        [string]$PluginTypeName
     )
     
-    # If we have the GUID from JSON, try to look up directly
-    $fetchXml = @"
+    # First, try to look up by the typename (logical name)
+    # This is the reliable way to find the plugin type across environments
+    if (![string]::IsNullOrEmpty($PluginTypeName)) {
+        Write-StatusMessage "  Looking up plugin type by typename: $PluginTypeName" -Type Info
+        
+        $fetchXml = @"
+<fetch>
+  <entity name='plugintype'>
+    <attribute name='plugintypeid' />
+    <attribute name='typename' />
+    <filter>
+      <condition attribute='typename' operator='eq' value='$PluginTypeName' />
+    </filter>
+  </entity>
+</fetch>
+"@
+        
+        $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+        
+        if ($result.CrmRecords.Count -gt 0) {
+            Write-StatusMessage "  Found plugin type by typename: $($result.CrmRecords[0].plugintypeid)" -Type Info
+            return $result.CrmRecords[0].plugintypeid
+        }
+        else {
+            Write-StatusMessage "  Plugin type not found by typename: $PluginTypeName" -Type Warning
+        }
+    }
+    
+    # Fallback: Try to look up by GUID (may work if same environment or GUID was preserved)
+    if (![string]::IsNullOrEmpty($PluginTypeIdFromJson)) {
+        Write-StatusMessage "  Trying fallback lookup by GUID: $PluginTypeIdFromJson" -Type Info
+        
+        $fetchXml2 = @"
 <fetch>
   <entity name='plugintype'>
     <attribute name='plugintypeid' />
@@ -1274,11 +1306,13 @@ function Get-PluginTypeId {
   </entity>
 </fetch>
 "@
-    
-    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
-    
-    if ($result.CrmRecords.Count -gt 0) {
-        return $result.CrmRecords[0].plugintypeid
+        
+        $result2 = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml2
+        
+        if ($result2.CrmRecords.Count -gt 0) {
+            Write-StatusMessage "  Found plugin type by GUID: $($result2.CrmRecords[0].plugintypeid)" -Type Info
+            return $result2.CrmRecords[0].plugintypeid
+        }
     }
     
     return $null

@@ -7,7 +7,7 @@
     Dynamics 365 environment and removes any steps that exist in the target but not in the export.
     Also removes orphaned plugin types that exist in the target but not in the export.
     Only processes steps for the AkoyaGo.Plugins assembly.
-    Comparison is done based on logical names/properties, not GUIDs.
+    Steps are compared by GUID, plugin types are compared by typename.
 
 .PARAMETER EnvironmentUrl
     The URL of the target Dynamics 365 environment (e.g., https://org.crm.dynamics.com)
@@ -175,17 +175,12 @@ try {
     Write-Host "[OK] Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
     Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray
     
-    # Build lookup sets based on logical identifiers (not GUIDs)
-    $exportedStepKeys = @{}
-    foreach ($step in $jsonContent.pluginSteps) {
-        # Create a unique key for each step based on logical properties
-        $stepKey = "$($step.pluginTypeName)|$($step.primaryEntity)|$($step.message)|$($step.stage)|$($step.rank)"
-        $exportedStepKeys[$stepKey] = $true
-    }
+    # Extract step IDs from JSON and convert to lowercase strings for comparison
+    $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid.ToString().ToLower() }
     
-    Write-Host "  Extracted $($exportedStepKeys.Count) unique step identifiers from JSON" -ForegroundColor Gray
+    Write-Host "  Extracted $($exportedStepIds.Count) step IDs from JSON" -ForegroundColor Gray
     
-    # Extract unique plugin type names (not IDs)
+    # Extract unique plugin type names (not IDs) for comparison by logical name
     $exportedPluginTypeNames = @{}
     foreach ($step in $jsonContent.pluginSteps) {
         $exportedPluginTypeNames[$step.pluginTypeName] = $true
@@ -261,7 +256,7 @@ try {
     # Build filter for plugin types
     $pluginTypeIdFilter = ($pluginTypeIds | ForEach-Object { "<value>$_</value>" }) -join ""
     
-    # Query for all steps related to these plugin types - need to get more attributes for comparison
+    # Query for all steps related to these plugin types
     $stepsQuery = @"
 <fetch>
   <entity name='sdkmessageprocessingstep'>
@@ -271,15 +266,6 @@ try {
     <attribute name='stage' />
     <attribute name='mode' />
     <attribute name='rank' />
-    <link-entity name='plugintype' from='plugintypeid' to='plugintypeid' alias='pt'>
-      <attribute name='typename' />
-    </link-entity>
-    <link-entity name='sdkmessagefilter' from='sdkmessagefilterid' to='sdkmessagefilterid' link-type='outer' alias='smf'>
-      <attribute name='primaryobjecttypecode' />
-    </link-entity>
-    <link-entity name='sdkmessage' from='sdkmessageid' to='sdkmessageid' alias='sm'>
-      <attribute name='name' />
-    </link-entity>
     <filter>
       <condition attribute='plugintypeid' operator='in'>
         $pluginTypeIdFilter
@@ -309,33 +295,14 @@ catch {
 
 Write-Host "`nAnalyzing plugin steps..." -ForegroundColor Cyan
 
-# Helper function to convert stage value to text
-function Get-StageText {
-    param($stageValue)
-    switch ($stageValue) {
-        10 { return "Pre-validation" }
-        20 { return "Pre-operation" }
-        40 { return "Post-operation" }
-        default { return "Unknown" }
-    }
-}
-
 $orphanedSteps = @()
 
 foreach ($step in $targetSteps) {
-    # Build the same key format as the export
-    $typename = $step."pt.typename"
-    $primaryEntity = $step."smf.primaryobjecttypecode"
-    if ([string]::IsNullOrEmpty($primaryEntity)) { $primaryEntity = "" }
-    $message = $step."sm.name"
-    $stageText = Get-StageText -stageValue $step.stage
-    $rank = $step.rank
+    # Convert GUID to lowercase string for comparison
+    $stepId = $step.sdkmessageprocessingstepid.ToString().ToLower()
     
-    $stepKey = "$typename|$primaryEntity|$message|$stageText|$rank"
-    
-    if (-not $exportedStepKeys.ContainsKey($stepKey)) {
+    if ($stepId -notin $exportedStepIds) {
         $orphanedSteps += $step
-        Write-Verbose "Orphaned step found: $stepKey"
     }
 }
 

@@ -1158,7 +1158,7 @@ function Get-SdkMessageId {
     )
     
     $fetchXml = @"
-<fetch top='1'>
+<fetch>
   <entity name='sdkmessage'>
     <attribute name='sdkmessageid' />
     <attribute name='name' />
@@ -1191,7 +1191,7 @@ function Get-SdkMessageFilterId {
     }
     
     $fetchXml = @"
-<fetch top='1'>
+<fetch>
   <entity name='sdkmessagefilter'>
     <attribute name='sdkmessagefilterid' />
     <attribute name='primaryobjecttypecode' />
@@ -1224,7 +1224,7 @@ function Get-PluginTypeId {
     
     # If we have the GUID from JSON, try to look up directly
     $fetchXml = @"
-<fetch top='1'>
+<fetch>
   <entity name='plugintype'>
     <attribute name='plugintypeid' />
     <attribute name='typename' />

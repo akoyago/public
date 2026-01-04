@@ -374,7 +374,6 @@ if ($missingPluginTypes.Count -gt 0) {
                 [System.IO.Compression.ZipFile]::ExtractToDirectory($solutionZipPath, $tempExtractPath)
                 
                 # Search for the DLL with either naming convention
-                # AkoyaGo.Plugins.dll or AkoyaGoPlugins.dll
                 $possibleDllNames = @("AkoyaGo.Plugins.dll", "AkoyaGoPlugins.dll")
                 $possiblePaths = @(
                     "PluginAssemblies",
@@ -441,49 +440,70 @@ if ($missingPluginTypes.Count -gt 0) {
                     $dllBytes = [System.IO.File]::ReadAllBytes($pluginDllPath)
                     $dllBase64 = [System.Convert]::ToBase64String($dllBytes)
                     
-                    Write-Host "  Updating plugin assembly in target environment..." -ForegroundColor Cyan
-                    Write-Host "  Note: Forcing re-scan by temporarily modifying version to trigger type discovery" -ForegroundColor Gray
+                    Write-Host "  Re-registering plugin assembly using delete and recreate approach..." -ForegroundColor Cyan
+                    Write-Host "  WARNING: This will temporarily remove the assembly and all its steps" -ForegroundColor Yellow
                     
-                    # Parse the version to increment the last part temporarily
-                    $versionParts = $targetAssemblyVersion.Split('.')
-                    $lastPart = [int]$versionParts[$versionParts.Length - 1]
-                    $versionParts[$versionParts.Length - 1] = ($lastPart + 1).ToString()
-                    $tempVersion = $versionParts -join '.'
+                    # Get all current plugin type IDs before deletion
+                    $currentTypeIds = $pluginTypes.CrmRecords | ForEach-Object { $_.plugintypeid }
                     
-                    # Step 1: Update with temporary version to force re-scan
-                    Write-Host "  Step 1/3: Updating to temporary version $tempVersion to trigger re-scan..." -ForegroundColor Gray
-                    $tempUpdateFields = @{
-                        "content" = $dllBase64
-                        "version" = $tempVersion
+                    # Delete all SDK message processing steps first
+                    Write-Host "  Step 1/5: Removing all plugin steps..." -ForegroundColor Gray
+                    foreach ($typeId in $currentTypeIds) {
+                        $stepDeleteQuery = @"
+<fetch>
+  <entity name='sdkmessageprocessingstep'>
+    <attribute name='sdkmessageprocessingstepid' />
+    <filter>
+      <condition attribute='plugintypeid' operator='eq' value='$typeId' />
+    </filter>
+  </entity>
+</fetch>
+"@
+                        $stepsToDelete = Get-CrmRecordsByFetch -conn $connection -Fetch $stepDeleteQuery
+                        foreach ($stepToDelete in $stepsToDelete.CrmRecords) {
+                            Remove-CrmRecord -conn $connection -EntityLogicalName "sdkmessageprocessingstep" -Id $stepToDelete.sdkmessageprocessingstepid
+                        }
                     }
                     
-                    Set-CrmRecord -conn $connection `
-                        -EntityLogicalName "pluginassembly" `
-                        -Id $assemblyId `
-                        -Fields $tempUpdateFields
+                    Write-Host "  Step 2/5: Removing all plugin types..." -ForegroundColor Gray
+                    foreach ($typeId in $currentTypeIds) {
+                        Remove-CrmRecord -conn $connection -EntityLogicalName "plugintype" -Id $typeId
+                    }
                     
-                    # Small delay to allow processing
-                    Start-Sleep -Seconds 2
+                    Write-Host "  Step 3/5: Removing plugin assembly..." -ForegroundColor Gray
+                    Remove-CrmRecord -conn $connection -EntityLogicalName "pluginassembly" -Id $assemblyId
                     
-                    # Step 2: Update back to original version with the same DLL content
-                    Write-Host "  Step 2/3: Reverting to original version $targetAssemblyVersion..." -ForegroundColor Gray
-                    $finalUpdateFields = @{
+                    # Wait for deletion to complete
+                    Start-Sleep -Seconds 5
+                    
+                    Write-Host "  Step 4/5: Creating new plugin assembly..." -ForegroundColor Gray
+                    $newAssemblyFields = @{
+                        "name" = $assemblyName
                         "content" = $dllBase64
+                        "isolationmode" = New-CrmOptionSetValue -Value 2  # Sandbox
+                        "sourcetype" = New-CrmOptionSetValue -Value 0     # Database
                         "version" = $targetAssemblyVersion
                     }
                     
-                    Set-CrmRecord -conn $connection `
-                        -EntityLogicalName "pluginassembly" `
-                        -Id $assemblyId `
-                        -Fields $finalUpdateFields
+                    $newAssemblyId = (New-CrmRecord -conn $connection -EntityLogicalName "pluginassembly" -Fields $newAssemblyFields).Guid
                     
-                    # Another delay to ensure processing completes
-                    Start-Sleep -Seconds 2
+                    # Wait for assembly registration and type discovery
+                    Write-Host "  Step 5/5: Waiting for type discovery to complete..." -ForegroundColor Gray
+                    Start-Sleep -Seconds 10
                     
-                    Write-Host "  Step 3/3: Verifying plugin types were registered..." -ForegroundColor Gray
-                    
-                    # Query again to verify the types were added
-                    $verifyPluginTypes = Get-CrmRecordsByFetch -conn $connection -Fetch $pluginTypeQuery
+                    # Verify the types were registered
+                    $verifyQuery = @"
+<fetch>
+  <entity name='plugintype'>
+    <attribute name='plugintypeid' />
+    <attribute name='typename' />
+    <filter>
+      <condition attribute='pluginassemblyid' operator='eq' value='$newAssemblyId' />
+    </filter>
+  </entity>
+</fetch>
+"@
+                    $verifyPluginTypes = Get-CrmRecordsByFetch -conn $connection -Fetch $verifyQuery
                     $verifyTypeNames = @{}
                     foreach ($pt in $verifyPluginTypes.CrmRecords) {
                         $verifyTypeNames[$pt.typename] = $true
@@ -498,17 +518,20 @@ if ($missingPluginTypes.Count -gt 0) {
                     
                     if ($stillMissing.Count -eq 0) {
                         Write-Host "  [OK] Plugin assembly re-registered successfully" -ForegroundColor Green
-                        Write-Host "  [OK] All missing plugin types are now registered in the target environment" -ForegroundColor Green
+                        Write-Host "  [OK] All missing plugin types are now registered (ID: $newAssemblyId)" -ForegroundColor Green
+                        Write-Host "  NOTE: All plugin steps will need to be re-registered from plugin-steps.json" -ForegroundColor Yellow
                         
-                        # Refresh the plugin types collection for the rest of the script
+                        # Update assembly ID for rest of script
+                        $assemblyId = $newAssemblyId
+                        # Refresh the plugin types collection
                         $pluginTypes = $verifyPluginTypes
                     }
                     else {
-                        Write-Warning "  Plugin assembly was updated, but $($stillMissing.Count) type(s) are still missing:"
+                        Write-Warning "  Plugin assembly was recreated, but $($stillMissing.Count) type(s) are still missing:"
                         foreach ($stillMissingType in $stillMissing) {
                             Write-Host "    - $stillMissingType" -ForegroundColor Yellow
                         }
-                        Write-Host "  This may require manual intervention or a different approach" -ForegroundColor Yellow
+                        Write-Host "  This may indicate an issue with the DLL itself" -ForegroundColor Yellow
                     }
                 }
                 
@@ -517,6 +540,7 @@ if ($missingPluginTypes.Count -gt 0) {
             }
             catch {
                 Write-Warning "  Failed to re-register plugin assembly: $_"
+                Write-Host "  Error details: $($_.Exception.Message)" -ForegroundColor Red
                 Write-Host "  Continuing with orphaned step/type removal..." -ForegroundColor Yellow
             }
         }

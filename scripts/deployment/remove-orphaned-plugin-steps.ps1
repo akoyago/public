@@ -364,8 +364,8 @@ if ($missingPluginTypes.Count -gt 0) {
         
         if ($solutionZipPath) {
             try {
-                # Extract AkoyaGo.Plugins.dll from solution-managed.zip
-                Write-Host "  Extracting plugin assembly from solution archive..." -ForegroundColor Cyan
+                # Extract and search for AkoyaGo.Plugins.dll from solution-managed.zip
+                Write-Host "  Extracting solution archive to locate plugin assembly..." -ForegroundColor Cyan
                 
                 Add-Type -AssemblyName System.IO.Compression.FileSystem
                 $tempExtractPath = Join-Path $env:TEMP "PluginExtract_$(Get-Date -Format 'yyyyMMddHHmmss')"
@@ -373,13 +373,54 @@ if ($missingPluginTypes.Count -gt 0) {
                 
                 [System.IO.Compression.ZipFile]::ExtractToDirectory($solutionZipPath, $tempExtractPath)
                 
-                $pluginDllPath = Join-Path $tempExtractPath "PluginAssemblies\AkoyaGo.Plugins.dll"
+                # Search for the DLL in multiple possible locations within the solution
+                $possiblePaths = @(
+                    "PluginAssemblies\AkoyaGo.Plugins.dll",
+                    "PluginAssemblies\AkoyaGo.Plugins\AkoyaGo.Plugins.dll",
+                    "Plugins\AkoyaGo.Plugins.dll"
+                )
                 
-                if (-not (Test-Path $pluginDllPath)) {
+                $pluginDllPath = $null
+                
+                foreach ($relativePath in $possiblePaths) {
+                    $testPath = Join-Path $tempExtractPath $relativePath
+                    if (Test-Path $testPath) {
+                        $pluginDllPath = $testPath
+                        Write-Host "  Found DLL at: $relativePath" -ForegroundColor Gray
+                        break
+                    }
+                }
+                
+                # If not found in standard locations, search recursively
+                if (-not $pluginDllPath) {
+                    Write-Host "  Searching recursively for AkoyaGo.Plugins.dll..." -ForegroundColor Gray
+                    $foundDll = Get-ChildItem -Path $tempExtractPath -Recurse -Filter "AkoyaGo.Plugins.dll" -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($foundDll) {
+                        $pluginDllPath = $foundDll.FullName
+                        $relativePath = $pluginDllPath.Substring($tempExtractPath.Length + 1)
+                        Write-Host "  Found DLL at: $relativePath" -ForegroundColor Gray
+                    }
+                }
+                
+                if (-not $pluginDllPath) {
                     Write-Warning "  AkoyaGo.Plugins.dll not found in solution-managed.zip"
+                    Write-Host "  Searched locations:" -ForegroundColor Gray
+                    foreach ($path in $possiblePaths) {
+                        Write-Host "    - $path" -ForegroundColor Gray
+                    }
+                    
+                    # List contents of PluginAssemblies folder if it exists
+                    $pluginAssembliesPath = Join-Path $tempExtractPath "PluginAssemblies"
+                    if (Test-Path $pluginAssembliesPath) {
+                        Write-Host "  Contents of PluginAssemblies folder:" -ForegroundColor Gray
+                        Get-ChildItem -Path $pluginAssembliesPath -Recurse | ForEach-Object {
+                            $relativePath = $_.FullName.Substring($tempExtractPath.Length + 1)
+                            Write-Host "    - $relativePath" -ForegroundColor Gray
+                        }
+                    }
                 }
                 else {
-                    Write-Host "  [OK] Extracted AkoyaGo.Plugins.dll" -ForegroundColor Green
+                    Write-Host "  [OK] Located AkoyaGo.Plugins.dll" -ForegroundColor Green
                     
                     # Read DLL as base64
                     $dllBytes = [System.IO.File]::ReadAllBytes($pluginDllPath)

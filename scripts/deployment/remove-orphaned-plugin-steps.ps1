@@ -442,19 +442,74 @@ if ($missingPluginTypes.Count -gt 0) {
                     $dllBase64 = [System.Convert]::ToBase64String($dllBytes)
                     
                     Write-Host "  Updating plugin assembly in target environment..." -ForegroundColor Cyan
+                    Write-Host "  Note: Forcing re-scan by temporarily modifying version to trigger type discovery" -ForegroundColor Gray
                     
-                    # Update the plugin assembly record with new content
-                    $updateFields = @{
+                    # Parse the version to increment the last part temporarily
+                    $versionParts = $targetAssemblyVersion.Split('.')
+                    $lastPart = [int]$versionParts[$versionParts.Length - 1]
+                    $versionParts[$versionParts.Length - 1] = ($lastPart + 1).ToString()
+                    $tempVersion = $versionParts -join '.'
+                    
+                    # Step 1: Update with temporary version to force re-scan
+                    Write-Host "  Step 1/3: Updating to temporary version $tempVersion to trigger re-scan..." -ForegroundColor Gray
+                    $tempUpdateFields = @{
                         "content" = $dllBase64
+                        "version" = $tempVersion
                     }
                     
                     Set-CrmRecord -conn $connection `
                         -EntityLogicalName "pluginassembly" `
                         -Id $assemblyId `
-                        -Fields $updateFields
+                        -Fields $tempUpdateFields
                     
-                    Write-Host "  [OK] Plugin assembly re-registered successfully" -ForegroundColor Green
-                    Write-Host "  Missing plugin types should now be available in the target environment" -ForegroundColor Green
+                    # Small delay to allow processing
+                    Start-Sleep -Seconds 2
+                    
+                    # Step 2: Update back to original version with the same DLL content
+                    Write-Host "  Step 2/3: Reverting to original version $targetAssemblyVersion..." -ForegroundColor Gray
+                    $finalUpdateFields = @{
+                        "content" = $dllBase64
+                        "version" = $targetAssemblyVersion
+                    }
+                    
+                    Set-CrmRecord -conn $connection `
+                        -EntityLogicalName "pluginassembly" `
+                        -Id $assemblyId `
+                        -Fields $finalUpdateFields
+                    
+                    # Another delay to ensure processing completes
+                    Start-Sleep -Seconds 2
+                    
+                    Write-Host "  Step 3/3: Verifying plugin types were registered..." -ForegroundColor Gray
+                    
+                    # Query again to verify the types were added
+                    $verifyPluginTypes = Get-CrmRecordsByFetch -conn $connection -Fetch $pluginTypeQuery
+                    $verifyTypeNames = @{}
+                    foreach ($pt in $verifyPluginTypes.CrmRecords) {
+                        $verifyTypeNames[$pt.typename] = $true
+                    }
+                    
+                    $stillMissing = @()
+                    foreach ($typeName in $exportedPluginTypeNames.Keys) {
+                        if (-not $verifyTypeNames.ContainsKey($typeName)) {
+                            $stillMissing += $typeName
+                        }
+                    }
+                    
+                    if ($stillMissing.Count -eq 0) {
+                        Write-Host "  [OK] Plugin assembly re-registered successfully" -ForegroundColor Green
+                        Write-Host "  [OK] All missing plugin types are now registered in the target environment" -ForegroundColor Green
+                        
+                        # Refresh the plugin types collection for the rest of the script
+                        $pluginTypes = $verifyPluginTypes
+                    }
+                    else {
+                        Write-Warning "  Plugin assembly was updated, but $($stillMissing.Count) type(s) are still missing:"
+                        foreach ($stillMissingType in $stillMissing) {
+                            Write-Host "    - $stillMissingType" -ForegroundColor Yellow
+                        }
+                        Write-Host "  This may require manual intervention or a different approach" -ForegroundColor Yellow
+                    }
                 }
                 
                 # Cleanup temp directory

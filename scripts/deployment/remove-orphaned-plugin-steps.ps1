@@ -174,7 +174,7 @@ try {
     
     $assemblyName = $jsonContent.metadata.assemblyName
     $totalStepsInExport = $jsonContent.metadata.totalSteps
-    $exportedAssemblyVersion = $jsonContent.metadata.version
+    $exportedAssemblyVersion = $jsonContent.metadata.assemblyVersion
     
     Write-Host "[OK] Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
     Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray

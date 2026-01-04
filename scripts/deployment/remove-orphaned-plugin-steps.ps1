@@ -8,6 +8,9 @@
     Also removes orphaned plugin types that exist in the target but not in the export.
     Only processes steps for the AkoyaGo.Plugins assembly.
     Steps are compared by GUID, plugin types are compared by typename.
+    
+    Additionally, if the assembly version matches AND there are missing plugin types in the target,
+    the script will re-register the assembly from solution-managed.zip.
 
 .PARAMETER EnvironmentUrl
     The URL of the target Dynamics 365 environment (e.g., https://org.crm.dynamics.com)
@@ -171,9 +174,11 @@ try {
     
     $assemblyName = $jsonContent.metadata.assemblyName
     $totalStepsInExport = $jsonContent.metadata.totalSteps
+    $exportedAssemblyVersion = $jsonContent.metadata.version
     
     Write-Host "[OK] Loaded plugin steps for assembly: $assemblyName" -ForegroundColor Green
     Write-Host "  Total steps in export: $totalStepsInExport" -ForegroundColor Gray
+    Write-Host "  Assembly version in export: $exportedAssemblyVersion" -ForegroundColor Gray
     
     # Extract step IDs from JSON and convert to lowercase strings for comparison
     $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid.ToString().ToLower() }
@@ -209,6 +214,7 @@ try {
   <entity name='pluginassembly'>
     <attribute name='pluginassemblyid' />
     <attribute name='name' />
+    <attribute name='version' />
     <filter>
       <condition attribute='name' operator='eq' value='$assemblyName' />
     </filter>
@@ -226,7 +232,9 @@ try {
     }
     
     $assemblyId = $assemblyResult.CrmRecords[0].pluginassemblyid
+    $targetAssemblyVersion = $assemblyResult.CrmRecords[0].version
     Write-Host "  Found assembly ID: $assemblyId" -ForegroundColor Gray
+    Write-Host "  Assembly version in target: $targetAssemblyVersion" -ForegroundColor Gray
     
     # Query for plugin types in this assembly
     $pluginTypeQuery = @"
@@ -287,6 +295,132 @@ catch {
         $connection.Dispose()
     }
     exit 1
+}
+
+# =============================================================================
+# CHECK FOR MISSING PLUGIN TYPES AND RE-REGISTER IF NEEDED
+# =============================================================================
+
+Write-Host "`nChecking for missing plugin types..." -ForegroundColor Cyan
+
+# Build hashtable of existing plugin types in target
+$targetPluginTypeNames = @{}
+foreach ($pluginType in $pluginTypes.CrmRecords) {
+    $targetPluginTypeNames[$pluginType.typename] = $true
+}
+
+# Find missing plugin types
+$missingPluginTypes = @()
+foreach ($typeName in $exportedPluginTypeNames.Keys) {
+    if (-not $targetPluginTypeNames.ContainsKey($typeName)) {
+        $missingPluginTypes += $typeName
+    }
+}
+
+if ($missingPluginTypes.Count -gt 0) {
+    Write-Host "  Found $($missingPluginTypes.Count) missing plugin type(s) in target:" -ForegroundColor Yellow
+    foreach ($missingType in $missingPluginTypes) {
+        Write-Host "    - $missingType" -ForegroundColor Yellow
+    }
+    
+    # Check if versions match
+    if ($targetAssemblyVersion -eq $exportedAssemblyVersion) {
+        Write-Host "`n  Version match detected: Target=$targetAssemblyVersion, Export=$exportedAssemblyVersion" -ForegroundColor Yellow
+        Write-Host "  Initiating assembly re-registration..." -ForegroundColor Yellow
+        
+        # Find solution-managed.zip
+        $solutionZipPath = $null
+        $searchPaths = @(
+            "$env:SYSTEM_ARTIFACTSDIRECTORY\drop\solution-managed.zip",
+            "$env:SYSTEM_ARTIFACTSDIRECTORY\solution-managed.zip",
+            "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\drop\solution-managed.zip",
+            "$env:SYSTEM_DEFAULTWORKINGDIRECTORY\solution-managed.zip",
+            "$env:AGENT_RELEASEDIRECTORY\drop\solution-managed.zip",
+            "$env:BUILD_ARTIFACTSTAGINGDIRECTORY\solution-managed.zip"
+        )
+        
+        foreach ($path in $searchPaths) {
+            if ($path -and (Test-Path $path)) {
+                $solutionZipPath = $path
+                Write-Host "  Found solution-managed.zip at: $solutionZipPath" -ForegroundColor Green
+                break
+            }
+        }
+        
+        if (-not $solutionZipPath) {
+            # Search recursively
+            $searchRoots = @($env:SYSTEM_ARTIFACTSDIRECTORY, $env:SYSTEM_DEFAULTWORKINGDIRECTORY, "D:\a")
+            foreach ($root in $searchRoots) {
+                if ($root -and (Test-Path $root)) {
+                    $found = Get-ChildItem -Path $root -Recurse -Filter "solution-managed.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($found) {
+                        $solutionZipPath = $found.FullName
+                        Write-Host "  Found solution-managed.zip at: $solutionZipPath" -ForegroundColor Green
+                        break
+                    }
+                }
+            }
+        }
+        
+        if ($solutionZipPath) {
+            try {
+                # Extract AkoyaGo.Plugins.dll from solution-managed.zip
+                Write-Host "  Extracting plugin assembly from solution archive..." -ForegroundColor Cyan
+                
+                Add-Type -AssemblyName System.IO.Compression.FileSystem
+                $tempExtractPath = Join-Path $env:TEMP "PluginExtract_$(Get-Date -Format 'yyyyMMddHHmmss')"
+                New-Item -ItemType Directory -Path $tempExtractPath -Force | Out-Null
+                
+                [System.IO.Compression.ZipFile]::ExtractToDirectory($solutionZipPath, $tempExtractPath)
+                
+                $pluginDllPath = Join-Path $tempExtractPath "PluginAssemblies\AkoyaGo.Plugins.dll"
+                
+                if (-not (Test-Path $pluginDllPath)) {
+                    Write-Warning "  AkoyaGo.Plugins.dll not found in solution-managed.zip"
+                }
+                else {
+                    Write-Host "  [OK] Extracted AkoyaGo.Plugins.dll" -ForegroundColor Green
+                    
+                    # Read DLL as base64
+                    $dllBytes = [System.IO.File]::ReadAllBytes($pluginDllPath)
+                    $dllBase64 = [System.Convert]::ToBase64String($dllBytes)
+                    
+                    Write-Host "  Updating plugin assembly in target environment..." -ForegroundColor Cyan
+                    
+                    # Update the plugin assembly record with new content
+                    $updateFields = @{
+                        "content" = $dllBase64
+                    }
+                    
+                    Set-CrmRecord -conn $connection `
+                        -EntityLogicalName "pluginassembly" `
+                        -Id $assemblyId `
+                        -Fields $updateFields
+                    
+                    Write-Host "  [OK] Plugin assembly re-registered successfully" -ForegroundColor Green
+                    Write-Host "  Missing plugin types should now be available in the target environment" -ForegroundColor Green
+                }
+                
+                # Cleanup temp directory
+                Remove-Item -Path $tempExtractPath -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            catch {
+                Write-Warning "  Failed to re-register plugin assembly: $_"
+                Write-Host "  Continuing with orphaned step/type removal..." -ForegroundColor Yellow
+            }
+        }
+        else {
+            Write-Warning "  solution-managed.zip not found in artifacts - cannot re-register assembly"
+            Write-Host "  Continuing with orphaned step/type removal..." -ForegroundColor Yellow
+        }
+    }
+    else {
+        Write-Host "  Version mismatch detected: Target=$targetAssemblyVersion, Export=$exportedAssemblyVersion" -ForegroundColor Gray
+        Write-Host "  Skipping re-registration (versions must match)" -ForegroundColor Gray
+    }
+}
+else {
+    Write-Host "  [OK] All plugin types from export exist in target environment" -ForegroundColor Green
 }
 
 # =============================================================================
@@ -389,6 +523,12 @@ Write-Host ""
 Write-Host "==================================================" -ForegroundColor Cyan
 Write-Host "  Summary" -ForegroundColor Cyan
 Write-Host "==================================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Assembly Re-registration:" -ForegroundColor Cyan
+Write-Host "  Missing plugin types detected: $($missingPluginTypes.Count)" -ForegroundColor $(if ($missingPluginTypes.Count -gt 0) { "Yellow" } else { "Green" })
+if ($missingPluginTypes.Count -gt 0 -and $targetAssemblyVersion -eq $exportedAssemblyVersion) {
+    Write-Host "  Re-registration attempted: Yes" -ForegroundColor Yellow
+}
 Write-Host ""
 Write-Host "Plugin Steps:" -ForegroundColor Cyan
 Write-Host "  Total orphaned steps found: $($orphanedSteps.Count)" -ForegroundColor $(if ($orphanedSteps.Count -gt 0) { "Yellow" } else { "Green" })

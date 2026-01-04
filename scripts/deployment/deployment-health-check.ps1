@@ -446,100 +446,211 @@ function Get-PluginAssemblyInfo {
     return $null
 }
 
-function Get-PluginStepFromEnvironment {
+function Get-MissingPluginTypes {
     param(
         [object]$Connection,
-        [string]$StepId
+        [string]$AssemblyName,
+        [array]$ExpectedPluginTypeNames
     )
     
+    Write-StatusMessage "Checking for missing plugin types in assembly '$AssemblyName'..." -Type Info
+    
+    # Get all plugin types for this assembly
     $fetchXml = @"
 <fetch>
-  <entity name='sdkmessageprocessingstep'>
-    <attribute name='sdkmessageprocessingstepid' />
-    <attribute name='name' />
-    <attribute name='description' />
-    <attribute name='configuration' />
-    <attribute name='mode' />
-    <attribute name='rank' />
-    <attribute name='stage' />
-    <attribute name='statecode' />
-    <attribute name='impersonatinguserid' />
-    <attribute name='asyncautodelete'/>
+  <entity name='plugintype'>
     <attribute name='plugintypeid' />
-    <filter>
-      <condition attribute='sdkmessageprocessingstepid' operator='eq' value='$StepId' />
-    </filter>
-    <link-entity name='systemuser' from='systemuserid' to='impersonatinguserid' link-type='outer' alias='impuser'>
-      <attribute name='systemuserid' />
-    </link-entity>
-    <link-entity name='sdkmessagefilter' from='sdkmessagefilterid' to='sdkmessagefilterid' link-type='outer' alias='filter'>
-      <attribute name='primaryobjecttypecode' />
-    </link-entity>
-    <link-entity name='sdkmessage' from='sdkmessageid' to='sdkmessageid' link-type='inner' alias='message'>
-      <attribute name='name' />
-    </link-entity>
-    <link-entity name='sdkmessageprocessingstepimage' from='sdkmessageprocessingstepid' to='sdkmessageprocessingstepid' link-type='outer' alias='image'>
-      <attribute name='sdkmessageprocessingstepimageid' />
-      <attribute name='name' />
-      <attribute name='entityalias' />
-      <attribute name='imagetype' />
-      <attribute name='messagepropertyname' />
+    <attribute name='typename' />
+    <link-entity name='pluginassembly' from='pluginassemblyid' to='pluginassemblyid' alias='assembly'>
+      <filter>
+        <condition attribute='name' operator='eq' value='$AssemblyName' />
+      </filter>
     </link-entity>
   </entity>
 </fetch>
 "@
     
-    try {
-        $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
-        
-        if ($result.CrmRecords.Count -gt 0) {
-            $record = $result.CrmRecords[0]
-            
-            # Extract the impersonating user ID from the linked entity
-            if ($record.'impuser.systemuserid') {
-                $record | Add-Member -NotePropertyName "impersonatinguserid_value" -NotePropertyValue $record.'impuser.systemuserid' -Force
-            }
-            
-            # Extract primary entity name
-            if ($record.'filter.primaryobjecttypecode') {
-                $record | Add-Member -NotePropertyName "primaryentityname" -NotePropertyValue $record.'filter.primaryobjecttypecode' -Force
-            }
-            
-            # Extract SDK message name
-            if ($record.'message.name') {
-                $record | Add-Member -NotePropertyName "sdkmessagename" -NotePropertyValue $record.'message.name' -Force
-            }
-            
-            # Build the images array from linked entity results
-            $images = @()
-            foreach ($rec in $result.CrmRecords) {
-                if ($rec.'image.sdkmessageprocessingstepimageid') {
-                    $image = @{
-                        sdkmessageprocessingstepimageid = $rec.'image.sdkmessageprocessingstepimageid'
-                        name = $rec.'image.name'
-                        entityAlias = $rec.'image.entityalias'
-                        imageType = $rec.'image.imagetype'
-                        messagePropertyName = $rec.'image.messagepropertyname'
-                    }
-                    
-                    # Only add unique images (in case of multiple link-entity matches)
-                    if (-not ($images | Where-Object { $_.sdkmessageprocessingstepimageid -eq $image.sdkmessageprocessingstepimageid })) {
-                        $images += $image
-                    }
-                }
-            }
-
-            # Add images array to the record
-            $record | Add-Member -NotePropertyName "images" -NotePropertyValue $images -Force
-            
-            return $record
-        }
+    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    
+    # Build a hashtable of existing types
+    $existingTypes = @{
     }
-    catch {
-        # Step doesn't exist
+    foreach ($type in $result.CrmRecords) {
+        $existingTypes[$type.typename] = $true
     }
     
-    return $null
+    # Find missing types
+    $missingTypes = @()
+    foreach ($expectedTypeName in $ExpectedPluginTypeNames) {
+        if (-not $existingTypes.ContainsKey($expectedTypeName)) {
+            $missingTypes += $expectedTypeName
+            Write-StatusMessage "  Missing plugin type: $expectedTypeName" -Type Warning
+        }
+    }
+    
+    return $missingTypes
+}
+
+function Extract-PluginAssemblyFromSolution {
+    param([string]$SolutionPath)
+    
+    Write-StatusMessage "Extracting plugin assembly from solution file..." -Type Info
+    
+    $tempExtractPath = Join-Path $env:TEMP "SolutionExtract_Plugin_$(Get-Random)"
+    New-Item -ItemType Directory -Path $tempExtractPath -Force | Out-Null
+    
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($SolutionPath, $tempExtractPath)
+        
+        # Look for PluginAssemblies folder
+        $pluginAssembliesPath = Join-Path $tempExtractPath "PluginAssemblies"
+        
+        if (-not (Test-Path $pluginAssembliesPath)) {
+            Write-StatusMessage "No PluginAssemblies folder found in solution" -Type Warning
+            return $null
+        }
+        
+        # Look for AkoyaGo.Plugins.dll
+        $pluginDllPath = Join-Path $pluginAssembliesPath "AkoyaGo.Plugins.dll"
+        
+        if (-not (Test-Path $pluginDllPath)) {
+            Write-StatusMessage "AkoyaGo.Plugins.dll not found in solution" -Type Warning
+            return $null
+        }
+        
+        Write-StatusMessage "Found AkoyaGo.Plugins.dll in solution" -Type Success
+        
+        # Read the DLL content
+        $dllContent = [System.IO.File]::ReadAllBytes($pluginDllPath)
+        
+        return @{
+            FileName = "AkoyaGo.Plugins.dll"
+            Content = [Convert]::ToBase64String($dllContent)
+            FilePath = $pluginDllPath
+        }
+    }
+    finally {
+        if (Test-Path $tempExtractPath) {
+            Remove-Item -Path $tempExtractPath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Update-PluginAssembly {
+    param(
+        [object]$Connection,
+        [string]$AssemblyId,
+        [string]$Base64Content
+    )
+    
+    Write-StatusMessage "Re-registering plugin assembly..." -Type Info
+    
+    try {
+        $updateFields = @{
+            pluginassemblyid = $AssemblyId
+            content = $Base64Content
+        }
+        
+        Set-CrmRecord -conn $Connection -EntityLogicalName pluginassembly -Id $AssemblyId -Fields $updateFields
+        Write-StatusMessage "Plugin assembly re-registered successfully" -Type Success
+        return $true
+    }
+    catch {
+        Write-StatusMessage "Failed to re-register plugin assembly: $_" -Type Error
+        return $false
+    }
+}
+
+function Add-ImageCustomizations {
+    param(
+        [object]$Connection,
+        [string]$StepId,
+        [array]$Images
+    )
+    
+    if (-not $Images -or $Images.Count -eq 0) {
+        return $true
+    }
+    
+    Write-StatusMessage "Adding/Updating images for step..." -Type Info
+    
+    foreach ($image in $Images) {
+        try {
+            $imageId = $null
+            
+            # Check if this image already exists
+            if ($image.sdkmessageprocessingstepimageid) {
+                $imageId = $image.sdkmessageprocessingstepimageid
+            }
+            else {
+                # Attempt to find an existing image by name
+                $existingImage = $null
+                
+                $fetchXml = @"
+<fetch>
+  <entity name='sdkmessageprocessingstepimage'>
+    <attribute name='sdkmessageprocessingstepimageid' />
+    <attribute name='name' />
+    <filter>
+      <condition attribute='name' operator='eq' value='$($image.name)' />
+      <condition attribute='sdkmessageprocessingstepid' operator='eq' value='$StepId' />
+    </filter>
+  </entity>
+</fetch>
+"@
+                
+                $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+                
+                if ($result.CrmRecords.Count -gt 0) {
+                    $existingImage = $result.CrmRecords[0]
+                }
+                
+                if ($existingImage) {
+                    $imageId = $existingImage.sdkmessageprocessingstepimageid
+                }
+            }
+            
+            if ($imageId) {
+                # Update existing image
+                $updateFields = @{
+                    sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $StepId
+                    name = $image.name
+                    entityalias = $image.entityAlias
+                    imagetype = New-CrmOptionSetValue -Value $image.imageType
+                    messagepropertyname = $image.messagePropertyName
+                    attributes = ""  # Empty string for all attributes
+                }
+                
+                Set-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Id $imageId -Fields $updateFields
+                Add-Fix "Updated image '$($image.name)' for step"
+            }
+            else {
+                # Create new image
+                $imageTypeValue = switch ($image.imagetype) {
+                    'PreImage' { 0 }
+                    'PostImage' { 1 }
+                    'Both' { 2 }
+                    default { 0 }  # Default to PreImage
+                }
+                
+                $imageFields = @{
+                    sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $StepId
+                    name = $image.name
+                    entityalias = $image.entityAlias
+                    imagetype = New-CrmOptionSetValue -Value $imageTypeValue
+                    messagepropertyname = $image.messagePropertyName
+                    attributes = ""  # Empty string for all attributes
+                }
+                
+                $newImageId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Fields $imageFields
+                Add-Fix "Created image '$($image.name)' for step"
+            }
+        }
+        catch {
+            Add-Failure "Failed to add/update image '$($image.name)' for step: $_"
+        }
+    }
 }
 
 function Get-SystemUserByApplicationId {
@@ -695,7 +806,7 @@ function Update-PluginStepInEnvironment {
                 
                 try {
                     # Convert imageType text to numeric value
-                    $imageTypeValue = switch ($sourceImage.imageType) {
+                    $imageTypeValue = switch ($sourceImage.imagetype) {
                         'PreImage' { 0 }
                         'PostImage' { 1 }
                         'Both' { 2 }
@@ -703,7 +814,7 @@ function Update-PluginStepInEnvironment {
                     }
                     
                     $imageFields = @{
-                        sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $TargetStep.sdkmessageprocessingstepid
+                        sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $newStepId
                         name = $sourceImage.name
                         entityalias = $sourceImage.entityAlias
                         imagetype = New-CrmOptionSetValue -Value $imageTypeValue
@@ -948,7 +1059,8 @@ function Compare-PluginSteps {
     param(
         [object]$Connection,
         [string]$PluginStepsJsonPath,
-        [string]$AssemblyName
+        [string]$AssemblyName,
+        [string]$SolutionPath
     )
     
     Write-StatusMessage "`nValidating Plugin Steps..." -Type Info
@@ -956,6 +1068,19 @@ function Compare-PluginSteps {
     # Load JSON
     $jsonContent = Get-Content $PluginStepsJsonPath -Raw | ConvertFrom-Json
     $expectedVersion = $jsonContent.metadata.assemblyVersion
+    
+    # Extract unique plugin type names from JSON
+    $expectedPluginTypeNames = @()
+    $pluginTypeNamesHash = @{
+    }
+    foreach ($step in $jsonContent.pluginSteps) {
+        if (-not $pluginTypeNamesHash.ContainsKey($step.pluginTypeName)) {
+            $pluginTypeNamesHash[$step.pluginTypeName] = $true
+            $expectedPluginTypeNames += $step.pluginTypeName
+        }
+    }
+    
+    Write-StatusMessage "Expected plugin types from JSON: $($expectedPluginTypeNames.Count)" -Type Info
     
     # Check assembly exists and version matches
     $assembly = Get-PluginAssemblyInfo -Connection $Connection -AssemblyName $AssemblyName
@@ -965,12 +1090,64 @@ function Compare-PluginSteps {
         return
     }
     
-    if ($assembly.version -ne $expectedVersion) {
-        Add-Failure "Plugin assembly version mismatch. Expected: $expectedVersion, Found: $($assembly.version)"
+    $currentVersion = $assembly.version
+    Write-StatusMessage "Current assembly version: $currentVersion" -Type Info
+    Write-StatusMessage "Expected assembly version: $expectedVersion" -Type Info
+    
+    # Check if version matches
+    if ($currentVersion -eq $expectedVersion) {
+        Write-StatusMessage "Assembly version matches - checking for missing plugin types..." -Type Info
+        
+        # Check for missing plugin types
+        $missingTypes = Get-MissingPluginTypes -Connection $Connection -AssemblyName $AssemblyName -ExpectedPluginTypeNames $expectedPluginTypeNames
+        
+        if ($missingTypes.Count -gt 0) {
+            Add-Warning "Assembly version matches ($currentVersion) but $($missingTypes.Count) plugin type(s) are missing"
+            Write-StatusMessage "Missing types: $($missingTypes -join ', ')" -Type Warning
+            
+            # Extract plugin assembly from solution
+            $pluginAssembly = Extract-PluginAssemblyFromSolution -SolutionPath $SolutionPath
+            
+            if ($null -ne $pluginAssembly) {
+                Write-StatusMessage "Attempting to re-register assembly to restore missing plugin types..." -Type Warning
+                
+                $updated = Update-PluginAssembly -Connection $Connection -AssemblyId $assembly.pluginassemblyid -Base64Content $pluginAssembly.Content
+                
+                if ($updated) {
+                    Add-Fix "Re-registered plugin assembly to restore $($missingTypes.Count) missing plugin type(s)"
+                    
+                    # Wait a moment for the system to process
+                    Write-StatusMessage "Waiting for system to process assembly update..." -Type Info
+                    Start-Sleep -Seconds 5
+                    
+                    # Verify the types are now present
+                    $stillMissingTypes = Get-MissingPluginTypes -Connection $Connection -AssemblyName $AssemblyName -ExpectedPluginTypeNames $expectedPluginTypeNames
+                    
+                    if ($stillMissingTypes.Count -eq 0) {
+                        Add-Fix "All plugin types successfully restored after re-registration"
+                    }
+                    else {
+                        Add-Warning "Re-registration completed but $($stillMissingTypes.Count) type(s) still missing: $($stillMissingTypes -join ', ')"
+                    }
+                }
+                else {
+                    Add-Failure "Failed to re-register plugin assembly"
+                }
+            }
+            else {
+                Add-Failure "Could not extract plugin assembly from solution - unable to restore missing types"
+            }
+        }
+        else {
+            Write-StatusMessage "All expected plugin types are present" -Type Success
+        }
+    }
+    elseif ($currentVersion -ne $expectedVersion) {
+        Add-Failure "Plugin assembly version mismatch. Expected: $expectedVersion, Found: $currentVersion"
         return
     }
     
-    Write-StatusMessage "Assembly '$AssemblyName' version $($assembly.version) validated" -Type Success
+    Write-StatusMessage "Assembly '$AssemblyName' version $currentVersion validated" -Type Success
     
     # Check each step
     foreach ($sourceStep in $jsonContent.pluginSteps) {
@@ -1104,7 +1281,7 @@ function Compare-PluginSteps {
                 }
             }
             else {
-                Add-Warning "Could not find service user with applicationId: $($sourceStep.runAsUser.applicationId) for step: $($sourceStep.name)"
+                Add-Warning "Could not find service user with applicationId: $($SourceStep.runAsUser.applicationId) for step: $($SourceStep.name)"
             }
         }
         elseif ($sourceStep.runAsUser.systemUserId) {
@@ -1114,14 +1291,14 @@ function Compare-PluginSteps {
     
             if ($actualUserId -ne $expectedUserId) {
                 $runAsUserMismatch = $true
-                Add-Warning "RunAsUser mismatch on step '$($sourceStep.name)': Expected systemUserId $expectedUserId, Found: $actualUserId"
+                Add-Warning "RunAsUser mismatch on step '$($SourceStep.name)': Expected systemUserId $expectedUserId, Found: $actualUserId"
             }
         }
         else {
             # Running as calling user - impersonatinguserid should be null or empty
             if ($targetStep.impersonatinguserid_value) {
                 $runAsUserMismatch = $true
-                Add-Warning "RunAsUser mismatch on step '$($sourceStep.name)': Should run as calling user (no impersonation), but found userId: $($targetStep.impersonatinguserid_value)"
+                Add-Warning "RunAsUser mismatch on step '$($SourceStep.name)': Should run as calling user (no impersonation), but found userId: $($targetStep.impersonatinguserid_value)"
             }
         }
 
@@ -1396,7 +1573,7 @@ catch {
 
 # Validate plugin steps
 try {
-    Compare-PluginSteps -Connection $connection -PluginStepsJsonPath $pluginStepsPath -AssemblyName "AkoyaGo.Plugins"
+    Compare-PluginSteps -Connection $connection -PluginStepsJsonPath $pluginStepsPath -AssemblyName "AkoyaGo.Plugins" -SolutionPath $solutionPath
 }
 catch {
     Write-StatusMessage "Error during plugin step validation: $_" -Type Error

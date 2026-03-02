@@ -101,6 +101,89 @@ function Add-Fix {
     Write-StatusMessage $Message -Type Success
 }
 
+function Convert-FilteringAttributesToCommaString {
+    param([object]$FilteringAttributes)
+    
+    # Converts the JSON filteringAttributes (empty object {}, single string, or array)
+    # into a sorted comma-separated string for comparison with Dataverse's format.
+    # Returns empty string if no filtering attributes are set.
+    
+    if ($null -eq $FilteringAttributes) {
+        return ""
+    }
+    
+    # Single string value
+    if ($FilteringAttributes -is [string]) {
+        if ([string]::IsNullOrWhiteSpace($FilteringAttributes)) { return "" }
+        # Could be a single attribute or already comma-separated
+        $attrs = $FilteringAttributes -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' } | Sort-Object
+        return ($attrs -join ',')
+    }
+    
+    # Array of strings
+    if ($FilteringAttributes -is [array]) {
+        if ($FilteringAttributes.Count -eq 0) { return "" }
+        $attrs = $FilteringAttributes | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' } | Sort-Object
+        return ($attrs -join ',')
+    }
+    
+    # PSCustomObject (empty {} from JSON) - check if it has any properties
+    if ($FilteringAttributes -is [PSCustomObject]) {
+        $propCount = @($FilteringAttributes.PSObject.Properties).Count
+        if ($propCount -eq 0) { return "" }
+    }
+    
+    return ""
+}
+
+function Convert-ImageAttributesToCommaString {
+    param([object]$Attributes)
+    
+    # Converts image attributes from JSON (empty object {}, single string, or array)
+    # into a sorted comma-separated string for comparison with Dataverse's format.
+    # Returns empty string if no specific attributes are set (meaning "all attributes").
+    
+    if ($null -eq $Attributes) {
+        return ""
+    }
+    
+    # Single string value
+    if ($Attributes -is [string]) {
+        if ([string]::IsNullOrWhiteSpace($Attributes)) { return "" }
+        $attrs = $Attributes -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' } | Sort-Object
+        return ($attrs -join ',')
+    }
+    
+    # Array of strings
+    if ($Attributes -is [array]) {
+        if ($Attributes.Count -eq 0) { return "" }
+        $attrs = $Attributes | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' } | Sort-Object
+        return ($attrs -join ',')
+    }
+    
+    # PSCustomObject (empty {} from JSON)
+    if ($Attributes -is [PSCustomObject]) {
+        $propCount = @($Attributes.PSObject.Properties).Count
+        if ($propCount -eq 0) { return "" }
+    }
+    
+    return ""
+}
+
+function Normalize-DataverseAttributeString {
+    param([string]$AttributeString)
+    
+    # Normalizes a comma-separated attribute string from Dataverse
+    # into a sorted, trimmed, lowercased comma-separated string.
+    
+    if ([string]::IsNullOrWhiteSpace($AttributeString)) {
+        return ""
+    }
+    
+    $attrs = $AttributeString -split ',' | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ -ne '' } | Sort-Object
+    return ($attrs -join ',')
+}
+
 function Find-ArtifactDirectory {
     if ([string]::IsNullOrEmpty($ArtifactDirectory)) {
         Write-StatusMessage "No artifact directory provided, searching for artifacts..." -Type Info
@@ -466,6 +549,7 @@ function Get-PluginStepFromEnvironment {
     <attribute name='impersonatinguserid' />
     <attribute name='asyncautodelete'/>
     <attribute name='plugintypeid' />
+    <attribute name='filteringattributes' />
     <filter>
       <condition attribute='sdkmessageprocessingstepid' operator='eq' value='$StepId' />
     </filter>
@@ -484,6 +568,7 @@ function Get-PluginStepFromEnvironment {
       <attribute name='entityalias' />
       <attribute name='imagetype' />
       <attribute name='messagepropertyname' />
+      <attribute name='attributes' />
     </link-entity>
   </entity>
 </fetch>
@@ -520,6 +605,7 @@ function Get-PluginStepFromEnvironment {
                         entityAlias = $rec.'image.entityalias'
                         imageType = $rec.'image.imagetype'
                         messagePropertyName = $rec.'image.messagepropertyname'
+                        attributes = $rec.'image.attributes'
                     }
                     
                     # Only add unique images (in case of multiple link-entity matches)
@@ -653,9 +739,38 @@ function Update-PluginStepInEnvironment {
         $updateFields['impersonatinguserid'] = $null
     }
     
+    # Map filteringAttributes (comma-separated string)
+    $filteringAttrsString = Convert-FilteringAttributesToCommaString -FilteringAttributes $SourceStep.filteringAttributes
+    $updateFields['filteringattributes'] = $filteringAttrsString
+    
     Set-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstep -Id $TargetStep.sdkmessageprocessingstepid -Fields $updateFields
     
     # Handle images synchronization
+    # 2a. Update attributes on existing images that match by name
+    if ($SourceStep.images -and $SourceStep.images.Count -gt 0 -and $TargetStep.images -and $TargetStep.images.Count -gt 0) {
+        foreach ($sourceImage in $SourceStep.images) {
+            $targetImage = $TargetStep.images | Where-Object { $_.name -eq $sourceImage.name }
+            if ($targetImage) {
+                $expectedImageAttrs = Convert-ImageAttributesToCommaString -Attributes $sourceImage.attributes
+                $actualImageAttrs = Normalize-DataverseAttributeString -AttributeString $targetImage.attributes
+                if ($expectedImageAttrs -ne $actualImageAttrs) {
+                    Write-StatusMessage "  Updating attributes on image '$($sourceImage.name)' for step '$($SourceStep.name)'" -Type Info
+                    try {
+                        $imageUpdateFields = @{
+                            sdkmessageprocessingstepimageid = $targetImage.sdkmessageprocessingstepimageid
+                            attributes = $expectedImageAttrs
+                        }
+                        Set-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Id $targetImage.sdkmessageprocessingstepimageid -Fields $imageUpdateFields
+                        Add-Fix "Updated attributes on image '$($sourceImage.name)' for step '$($SourceStep.name)'"
+                    }
+                    catch {
+                        Add-Failure "Failed to update attributes on image '$($sourceImage.name)' for step '$($SourceStep.name)': $_"
+                    }
+                }
+            }
+        }
+    }
+    
     # 1. Remove extra images that exist in target but not in source
     if ($TargetStep.images -and $TargetStep.images.Count -gt 0) {
         foreach ($targetImage in $TargetStep.images) {
@@ -702,13 +817,15 @@ function Update-PluginStepInEnvironment {
                         default { 0 }  # Default to PreImage
                     }
                     
+                    $imageAttrsString = Convert-ImageAttributesToCommaString -Attributes $sourceImage.attributes
+                    
                     $imageFields = @{
                         sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $TargetStep.sdkmessageprocessingstepid
                         name = $sourceImage.name
                         entityalias = $sourceImage.entityAlias
                         imagetype = New-CrmOptionSetValue -Value $imageTypeValue
                         messagepropertyname = $sourceImage.messagePropertyName
-                        attributes = ""  # Empty string for all attributes
+                        attributes = $imageAttrsString
                     }
                     
                     $newImageId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Fields $imageFields
@@ -794,6 +911,12 @@ function New-PluginStepInEnvironment {
             $stepFields['asyncautodelete'] = if ($SourceStep.asyncAutoDelete -eq 'Yes') { $true } else { $false }
         }
         
+        # Add filteringAttributes
+        $filteringAttrsString = Convert-FilteringAttributesToCommaString -FilteringAttributes $SourceStep.filteringAttributes
+        if ($filteringAttrsString -ne '') {
+            $stepFields['filteringattributes'] = $filteringAttrsString
+        }
+        
         # Handle RunAsUser (impersonation)
         if ($SourceStep.runAsUser.applicationId) {
             $expectedUser = Get-SystemUserByApplicationId -Connection $Connection -ApplicationId $SourceStep.runAsUser.applicationId
@@ -827,13 +950,15 @@ function New-PluginStepInEnvironment {
                         default { 0 }
                     }
                     
+                    $imageAttrsString = Convert-ImageAttributesToCommaString -Attributes $sourceImage.attributes
+                    
                     $imageFields = @{
                         sdkmessageprocessingstepid = New-CrmEntityReference -EntityLogicalName 'sdkmessageprocessingstep' -Id $newStepId
                         name = $sourceImage.name
                         entityalias = $sourceImage.entityAlias
                         imagetype = New-CrmOptionSetValue -Value $imageTypeValue
                         messagepropertyname = $sourceImage.messagePropertyName
-                        attributes = ""  # Empty string for all attributes
+                        attributes = $imageAttrsString
                     }
                     
                     $newImageId = New-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Fields $imageFields
@@ -937,6 +1062,16 @@ function Compare-PluginStepImages {
         
         if ($sourceImage.messagePropertyName -ne $targetImage.messagePropertyName) {
             Add-Warning "Image messagePropertyName mismatch on step '$($SourceStep.name)', image '$($sourceImage.name)': Expected '$($sourceImage.messagePropertyName)', Found '$($targetImage.messagePropertyName)'"
+            $mismatch = $true
+        }
+        
+        # Compare image attributes
+        $expectedImageAttrs = Convert-ImageAttributesToCommaString -Attributes $sourceImage.attributes
+        $actualImageAttrs = Normalize-DataverseAttributeString -AttributeString $targetImage.attributes
+        if ($expectedImageAttrs -ne $actualImageAttrs) {
+            $expectedDisplay = if ($expectedImageAttrs -eq '') { '(all attributes)' } else { $expectedImageAttrs }
+            $actualDisplay = if ($actualImageAttrs -eq '') { '(all attributes)' } else { $actualImageAttrs }
+            Add-Warning "Image attributes mismatch on step '$($SourceStep.name)', image '$($sourceImage.name)': Expected '$expectedDisplay', Found '$actualDisplay'"
             $mismatch = $true
         }
     }
@@ -1127,6 +1262,16 @@ function Compare-PluginSteps {
 
         if ($runAsUserMismatch) {
             $mismatch = $true
+        }
+        
+        # Compare filteringAttributes
+        $expectedFilteringAttrs = Convert-FilteringAttributesToCommaString -FilteringAttributes $sourceStep.filteringAttributes
+        $actualFilteringAttrs = Normalize-DataverseAttributeString -AttributeString $targetStep.filteringattributes
+        if ($expectedFilteringAttrs -ne $actualFilteringAttrs) {
+            $mismatch = $true
+            $expectedDisplay = if ($expectedFilteringAttrs -eq '') { '(none)' } else { $expectedFilteringAttrs }
+            $actualDisplay = if ($actualFilteringAttrs -eq '') { '(none)' } else { $actualFilteringAttrs }
+            Add-Warning "FilteringAttributes mismatch on step '$($sourceStep.name)': Expected '$expectedDisplay', Found '$actualDisplay'"
         }
         
         # Compare images (PreImages, PostImages, etc.)
@@ -1458,4 +1603,3 @@ else {
     Write-Host "`n[OK] Health check completed successfully" -ForegroundColor Green
 
 }
-

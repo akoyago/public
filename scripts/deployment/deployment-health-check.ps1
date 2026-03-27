@@ -606,41 +606,23 @@ function Compare-WebResources {
                 # Step 2: If still not fixed, try removing from named unmanaged solutions
                 if (-not $fixed) {
                     Remove-WebResourceSolutionLayers -Connection $Connection -WebResourceId $wrId -WebResourceName $wr.Name
+
+                    # Re-verify after layer removal
+                    $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")
+                    $publishRequest["ParameterXml"] = $publishXml
+                    $Connection.Execute($publishRequest) | Out-Null
+
+                    Start-Sleep -Seconds 2
+
+                    $verifyWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
+                    if ($null -ne $verifyWr -and $verifyWr.content -eq $wr.Base64Content) {
+                        Add-Fix "Removed solution layer and verified web resource: $($wr.Name)"
+                        $fixed = $true
+                    }
                 }
 
-                # Step 3: If still not fixed, update content directly and publish
                 if (-not $fixed) {
-                    try {
-                        $updateFields = @{
-                            webresourceid = $wrId
-                            content = $wr.Base64Content
-                        }
-
-                        Set-CrmRecord -conn $Connection -EntityLogicalName webresource -Id $wrId -Fields $updateFields
-
-                        $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")
-                        $publishRequest["ParameterXml"] = $publishXml
-                        $Connection.Execute($publishRequest) | Out-Null
-
-                        Write-StatusMessage "  Updated and published web resource: $($wr.Name)" -Type Info
-
-                        Start-Sleep -Seconds 2
-
-                        $verifyWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
-
-                        if ($null -eq $verifyWr) {
-                            Add-Failure "Web resource '$($wr.Name)' disappeared after update"
-                        }
-                        elseif ($verifyWr.content -ne $wr.Base64Content) {
-                            Add-Failure "Web resource '$($wr.Name)' content still does not match after update and publish"
-                        }
-                        else {
-                            Add-Fix "Updated and verified web resource content: $($wr.Name)"
-                        }
-                    }
-                    catch {
-                        Add-Failure "Failed to update web resource '$($wr.Name)': $_"
-                    }
+                    Add-Failure "Web resource '$($wr.Name)' has an unmanaged customization layer that could not be removed. Remove it manually in Power Apps (Solution Layers > Remove active customizations)."
                 }
             }
             else {

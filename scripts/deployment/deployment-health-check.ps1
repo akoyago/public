@@ -565,20 +565,36 @@ function Compare-WebResources {
             }
         }
         else {
-            # Compare content
-            $targetContent = $targetWr.content
-            
-            if ($targetContent -ne $wr.Base64Content) {
-                Add-Warning "Web resource '$($wr.Name)' content mismatch - attempting to fix"
+            $wrId = $targetWr.webresourceid
+            $publishXml = "<importexportxml><webresources><webresource>{$wrId}</webresource></webresources></importexportxml>"
 
-                $wrId = $targetWr.webresourceid
-                $publishXml = "<importexportxml><webresources><webresource>{$wrId}</webresource></webresources></importexportxml>"
-                $fixed = $false
+            # Check if this web resource has multiple solution layers (indicates an active customization)
+            $hasExtraLayers = $false
+            try {
+                $layerFetch = @"
+<fetch>
+  <entity name='msdyn_solutioncomponentsummary'>
+    <attribute name='msdyn_solutionid' />
+    <filter>
+      <condition attribute='msdyn_objectid' operator='eq' value='$wrId' />
+      <condition attribute='msdyn_componentlogicalname' operator='eq' value='webresource' />
+    </filter>
+  </entity>
+</fetch>
+"@
+                $layerResult = Get-CrmRecordsByFetch -conn $Connection -Fetch $layerFetch
+                if ($layerResult.CrmRecords.Count -gt 1) {
+                    $hasExtraLayers = $true
+                }
+            }
+            catch {
+                # Virtual entity query may not be supported in all environments
+            }
 
-                # Step 1: Try removing active customizations (unmanaged layer overriding managed content)
+            # Remove active customization layers before comparing content
+            if ($hasExtraLayers) {
+                Write-StatusMessage "  Found $($layerResult.CrmRecords.Count) solution layers on '$($wr.Name)' - removing active customizations" -Type Warning
                 try {
-                    Write-StatusMessage "  Removing active customizations for: $($wr.Name)" -Type Info
-                    # Use generic OrganizationRequest to avoid dependency on Microsoft.Crm.Sdk.Messages assembly
                     $removeRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
                     $removeRequest["ComponentId"] = [guid]$wrId
                     $removeRequest["ComponentType"] = [int]61
@@ -590,40 +606,19 @@ function Compare-WebResources {
 
                     Start-Sleep -Seconds 2
 
-                    $verifyWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
-                    if ($null -ne $verifyWr -and $verifyWr.content -eq $wr.Base64Content) {
-                        Add-Fix "Removed active customization and verified web resource: $($wr.Name)"
-                        $fixed = $true
-                    }
-                    else {
-                        Write-StatusMessage "  Content still differs after removing active customizations" -Type Warning
-                    }
+                    # Re-read the web resource after layer removal
+                    $targetWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
+                    Add-Fix "Removed active customization layer from web resource: $($wr.Name)"
                 }
                 catch {
-                    Write-StatusMessage "  No active customization to remove (or removal not supported): $_" -Type Info
+                    Add-Failure "Web resource '$($wr.Name)' has an unmanaged customization layer that could not be removed: $_"
+                    continue
                 }
+            }
 
-                # Step 2: If still not fixed, try removing from named unmanaged solutions
-                if (-not $fixed) {
-                    Remove-WebResourceSolutionLayers -Connection $Connection -WebResourceId $wrId -WebResourceName $wr.Name
-
-                    # Re-verify after layer removal
-                    $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")
-                    $publishRequest["ParameterXml"] = $publishXml
-                    $Connection.Execute($publishRequest) | Out-Null
-
-                    Start-Sleep -Seconds 2
-
-                    $verifyWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
-                    if ($null -ne $verifyWr -and $verifyWr.content -eq $wr.Base64Content) {
-                        Add-Fix "Removed solution layer and verified web resource: $($wr.Name)"
-                        $fixed = $true
-                    }
-                }
-
-                if (-not $fixed) {
-                    Add-Failure "Web resource '$($wr.Name)' has an unmanaged customization layer that could not be removed. Remove it manually in Power Apps (Solution Layers > Remove active customizations)."
-                }
+            # Compare content (after any layer removal)
+            if ($targetWr.content -ne $wr.Base64Content) {
+                Add-Failure "Web resource '$($wr.Name)' content does not match the managed solution. This may indicate a failed solution import."
             }
             else {
                 Add-Success "Web resource '$($wr.Name)' matches"

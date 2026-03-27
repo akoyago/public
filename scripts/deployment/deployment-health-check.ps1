@@ -480,7 +480,7 @@ function Remove-WebResourceSolutionLayers {
                     try {
                         $request = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
                         $request["ComponentId"] = [guid]$WebResourceId
-                        $request["SolutionComponentName"] = "webresource"
+                        $request["SolutionComponentName"] = "WebResource"
                         $Connection.Execute($request) | Out-Null
                         Add-Fix "Removed active customization layer for web resource: $WebResourceName"
                     }

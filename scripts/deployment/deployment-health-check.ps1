@@ -336,6 +336,88 @@ function Get-WebResourceFromEnvironment {
     return $null
 }
 
+function Get-SolutionUniqueName {
+    param(
+        [object]$Connection,
+        [object]$Layer
+    )
+
+    $candidateNames = @(
+        $Layer.'sol.uniquename',
+        $Layer.'solution.uniquename',
+        $Layer.uniquename
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($candidateNames.Count -gt 0) {
+        return $candidateNames[0]
+    }
+
+    $solutionId = $null
+    $solutionDisplayName = $null
+
+    if ($Layer.PSObject.Properties.Match('original').Count -gt 0 -and $Layer.original -is [hashtable]) {
+        $rawSolutionReference = $Layer.original['msdyn_solutionid']
+
+        if ($rawSolutionReference -is [Microsoft.Xrm.Sdk.AliasedValue]) {
+            $rawSolutionReference = $rawSolutionReference.Value
+        }
+
+        if ($rawSolutionReference -is [Microsoft.Xrm.Sdk.EntityReference]) {
+            $solutionId = $rawSolutionReference.Id
+            $solutionDisplayName = $rawSolutionReference.Name
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($solutionDisplayName) -and
+        $Layer.PSObject.Properties.Match('msdyn_solutionid').Count -gt 0) {
+        $solutionDisplayName = $Layer.msdyn_solutionid
+    }
+
+    if ($solutionId) {
+        $fetchById = @"
+<fetch top='1'>
+  <entity name='solution'>
+    <attribute name='uniquename' />
+    <attribute name='friendlyname' />
+    <filter>
+      <condition attribute='solutionid' operator='eq' value='$solutionId' />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+        $solutionById = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchById
+        if ($solutionById.CrmRecords.Count -gt 0 -and
+            -not [string]::IsNullOrWhiteSpace($solutionById.CrmRecords[0].uniquename)) {
+            return $solutionById.CrmRecords[0].uniquename
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($solutionDisplayName)) {
+        $escapedSolutionDisplayName = [System.Security.SecurityElement]::Escape($solutionDisplayName)
+        $fetchByName = @"
+<fetch top='2'>
+  <entity name='solution'>
+    <attribute name='uniquename' />
+    <attribute name='friendlyname' />
+    <filter type='or'>
+      <condition attribute='uniquename' operator='eq' value='$escapedSolutionDisplayName' />
+      <condition attribute='friendlyname' operator='eq' value='$escapedSolutionDisplayName' />
+    </filter>
+  </entity>
+</fetch>
+"@
+
+        $solutionByName = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchByName
+        if ($solutionByName.CrmRecords.Count -eq 1 -and
+            -not [string]::IsNullOrWhiteSpace($solutionByName.CrmRecords[0].uniquename)) {
+            return $solutionByName.CrmRecords[0].uniquename
+        }
+    }
+
+    return $null
+}
+
 function Remove-WebResourceSolutionLayers {
     param(
         [object]$Connection,
@@ -374,7 +456,12 @@ function Remove-WebResourceSolutionLayers {
             Write-StatusMessage "  Found $($layers.CrmRecords.Count) unmanaged solution layer(s) for $WebResourceName" -Type Warning
             
             foreach ($layer in $layers.CrmRecords) {
-                $solutionName = $layer.'sol.uniquename'
+                $solutionName = Get-SolutionUniqueName -Connection $Connection -Layer $layer
+
+                if ([string]::IsNullOrWhiteSpace($solutionName)) {
+                    Add-Warning "Could not resolve solution unique name for unmanaged layer on web resource $WebResourceName; skipping layer removal"
+                    continue
+                }
                 
                 # Skip if it's the Active solution or Default solution
                 if ($solutionName -eq 'Active' -or $solutionName -eq 'Default') {

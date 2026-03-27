@@ -568,32 +568,34 @@ function Compare-WebResources {
             $wrId = $targetWr.webresourceid
             $publishXml = "<importexportxml><webresources><webresource>{$wrId}</webresource></webresources></importexportxml>"
 
-            # Check if this web resource has multiple solution layers (indicates an active customization)
+            # Check solution layers via msdyn_componentlayer virtual entity
             $hasExtraLayers = $false
             try {
                 $layerFetch = @"
 <fetch>
-  <entity name='msdyn_solutioncomponentsummary'>
-    <attribute name='msdyn_solutionid' />
+  <entity name='msdyn_componentlayer'>
+    <attribute name='msdyn_solutionname' />
+    <attribute name='msdyn_order' />
     <filter>
-      <condition attribute='msdyn_objectid' operator='eq' value='$wrId' />
-      <condition attribute='msdyn_componentlogicalname' operator='eq' value='webresource' />
+      <condition attribute='msdyn_componentid' operator='eq' value='$wrId' />
+      <condition attribute='msdyn_solutioncomponentname' operator='eq' value='WebResource' />
     </filter>
   </entity>
 </fetch>
 "@
                 $layerResult = Get-CrmRecordsByFetch -conn $Connection -Fetch $layerFetch
-                if ($layerResult.CrmRecords.Count -gt 1) {
+                $layers = $layerResult.CrmRecords
+                if ($layers.Count -gt 1) {
                     $hasExtraLayers = $true
                 }
             }
             catch {
-                # Virtual entity query may not be supported in all environments
+                Write-StatusMessage "  Could not query solution layers for '$($wr.Name)': $_" -Type Warning
             }
 
             # Remove active customization layers before comparing content
             if ($hasExtraLayers) {
-                Write-StatusMessage "  Found $($layerResult.CrmRecords.Count) solution layers on '$($wr.Name)' - removing active customizations" -Type Warning
+                Write-StatusMessage "  Found $($layers.Count) solution layers on '$($wr.Name)' - removing active customizations" -Type Warning
                 try {
                     $removeRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
                     $removeRequest["ComponentId"] = [guid]$wrId

@@ -475,13 +475,13 @@ function Remove-WebResourceSolutionLayers {
                 }
                 
                 if ($solutionName -eq 'Active' -or $solutionName -eq 'Default') {
-                    # Active/Default customization layers require RemoveActiveCustomizationsRequest
+                    # Active/Default customization layers require RemoveActiveCustomizations
                     Write-StatusMessage "  Removing active customization layer for web resource: $WebResourceName" -Type Info
                     try {
-                        $request = New-Object 'Microsoft.Crm.Sdk.Messages.RemoveActiveCustomizationsRequest'
-                        $request.ComponentId = [guid]$WebResourceId
-                        $request.ComponentType = 61
-                        $response = $Connection.Execute($request)
+                        $request = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
+                        $request["ComponentId"] = [guid]$WebResourceId
+                        $request["ComponentType"] = [int]61
+                        $Connection.Execute($request) | Out-Null
                         Add-Fix "Removed active customization layer for web resource: $WebResourceName"
                     }
                     catch {
@@ -493,13 +493,13 @@ function Remove-WebResourceSolutionLayers {
                 Write-StatusMessage "  Attempting to remove layer from solution: $solutionName" -Type Info
 
                 try {
-                    # Use RemoveSolutionComponent request for named unmanaged solutions
-                    $request = New-Object 'Microsoft.Crm.Sdk.Messages.RemoveSolutionComponentRequest'
-                    $request.ComponentId = [guid]$WebResourceId
-                    $request.ComponentType = 61
-                    $request.SolutionUniqueName = $solutionName
+                    # Use RemoveSolutionComponent for named unmanaged solutions
+                    $request = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveSolutionComponent")
+                    $request["ComponentId"] = [guid]$WebResourceId
+                    $request["ComponentType"] = [int]61
+                    $request["SolutionUniqueName"] = $solutionName
 
-                    $response = $Connection.Execute($request)
+                    $Connection.Execute($request) | Out-Null
                     Add-Fix "Removed web resource layer from solution: $solutionName"
                 }
                 catch {
@@ -554,8 +554,8 @@ function Compare-WebResources {
 
                 # Publish the new web resource
                 $publishXml = "<importexportxml><webresources><webresource>{$newId}</webresource></webresources></importexportxml>"
-                $publishRequest = New-Object 'Microsoft.Crm.Sdk.Messages.PublishXmlRequest'
-                $publishRequest.ParameterXml = $publishXml
+                $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")
+                $publishRequest["ParameterXml"] = $publishXml
                 $Connection.Execute($publishRequest) | Out-Null
 
                 Add-Fix "Created and published web resource: $($wr.Name)"
@@ -578,13 +578,14 @@ function Compare-WebResources {
                 # Step 1: Try removing active customizations (unmanaged layer overriding managed content)
                 try {
                     Write-StatusMessage "  Removing active customizations for: $($wr.Name)" -Type Info
-                    $removeRequest = New-Object 'Microsoft.Crm.Sdk.Messages.RemoveActiveCustomizationsRequest'
-                    $removeRequest.ComponentId = [guid]$wrId
-                    $removeRequest.ComponentType = 61
+                    # Use generic OrganizationRequest to avoid dependency on Microsoft.Crm.Sdk.Messages assembly
+                    $removeRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
+                    $removeRequest["ComponentId"] = [guid]$wrId
+                    $removeRequest["ComponentType"] = [int]61
                     $Connection.Execute($removeRequest) | Out-Null
 
-                    $publishRequest = New-Object 'Microsoft.Crm.Sdk.Messages.PublishXmlRequest'
-                    $publishRequest.ParameterXml = $publishXml
+                    $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")
+                    $publishRequest["ParameterXml"] = $publishXml
                     $Connection.Execute($publishRequest) | Out-Null
 
                     Start-Sleep -Seconds 2
@@ -617,8 +618,8 @@ function Compare-WebResources {
 
                         Set-CrmRecord -conn $Connection -EntityLogicalName webresource -Id $wrId -Fields $updateFields
 
-                        $publishRequest = New-Object 'Microsoft.Crm.Sdk.Messages.PublishXmlRequest'
-                        $publishRequest.ParameterXml = $publishXml
+                        $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")
+                        $publishRequest["ParameterXml"] = $publishXml
                         $Connection.Execute($publishRequest) | Out-Null
 
                         Write-StatusMessage "  Updated and published web resource: $($wr.Name)" -Type Info

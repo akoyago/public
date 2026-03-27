@@ -342,11 +342,22 @@ function Get-SolutionUniqueName {
         [object]$Layer
     )
 
-    $candidateNames = @(
+    # Extract candidate values, unwrapping AliasedValue objects from the CRM SDK
+    $rawCandidates = @(
         $Layer.'sol.uniquename',
         $Layer.'solution.uniquename',
         $Layer.uniquename
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+    $candidateNames = @()
+    foreach ($raw in $rawCandidates) {
+        if ($null -eq $raw) { continue }
+        $val = $raw
+        if ($val -is [Microsoft.Xrm.Sdk.AliasedValue]) { $val = $val.Value }
+        $str = [string]$val
+        if (-not [string]::IsNullOrWhiteSpace($str)) {
+            $candidateNames += $str
+        }
+    }
 
     if ($candidateNames.Count -gt 0) {
         return $candidateNames[0]
@@ -463,27 +474,31 @@ function Remove-WebResourceSolutionLayers {
                     continue
                 }
                 
-                # Skip if it's the Active solution or Default solution
                 if ($solutionName -eq 'Active' -or $solutionName -eq 'Default') {
+                    # Active/Default customization layers require RemoveActiveCustomizationsRequest
+                    Write-StatusMessage "  Removing active customization layer for web resource: $WebResourceName" -Type Info
+                    try {
+                        $request = New-Object 'Microsoft.Crm.Sdk.Messages.RemoveActiveCustomizationsRequest'
+                        $request.ComponentId = [guid]$WebResourceId
+                        $request.ComponentType = 61
+                        $response = $Connection.Execute($request)
+                        Add-Fix "Removed active customization layer for web resource: $WebResourceName"
+                    }
+                    catch {
+                        Add-Warning "Could not remove active customization layer for $WebResourceName`: $_"
+                    }
                     continue
                 }
-                
+
                 Write-StatusMessage "  Attempting to remove layer from solution: $solutionName" -Type Info
-                
+
                 try {
-                    # Remove the component from the solution
-                    $removeRequest = @{
-                        ComponentId = $WebResourceId
-                        ComponentType = 61 # Web Resource
-                        SolutionUniqueName = $solutionName
-                    }
-                    
-                    # Use RemoveSolutionComponent request
+                    # Use RemoveSolutionComponent request for named unmanaged solutions
                     $request = New-Object 'Microsoft.Crm.Sdk.Messages.RemoveSolutionComponentRequest'
                     $request.ComponentId = [guid]$WebResourceId
                     $request.ComponentType = 61
                     $request.SolutionUniqueName = $solutionName
-                    
+
                     $response = $Connection.Execute($request)
                     Add-Fix "Removed web resource layer from solution: $solutionName"
                 }

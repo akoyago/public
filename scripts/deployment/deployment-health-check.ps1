@@ -480,7 +480,7 @@ function Remove-WebResourceSolutionLayers {
                     try {
                         $request = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
                         $request["ComponentId"] = [guid]$WebResourceId
-                        $request["ComponentType"] = [int]61
+                        $request["SolutionComponentName"] = "webresource"
                         $Connection.Execute($request) | Out-Null
                         Add-Fix "Removed active customization layer for web resource: $WebResourceName"
                     }
@@ -599,7 +599,7 @@ function Compare-WebResources {
                 try {
                     $removeRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
                     $removeRequest["ComponentId"] = [guid]$wrId
-                    $removeRequest["ComponentType"] = [int]61
+                    $removeRequest["SolutionComponentName"] = "webresource"
                     $Connection.Execute($removeRequest) | Out-Null
 
                     $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")

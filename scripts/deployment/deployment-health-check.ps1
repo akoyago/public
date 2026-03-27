@@ -599,7 +599,7 @@ function Compare-WebResources {
                 try {
                     $removeRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("RemoveActiveCustomizations")
                     $removeRequest["ComponentId"] = [guid]$wrId
-                    $removeRequest["SolutionComponentName"] = "webresource"
+                    $removeRequest["SolutionComponentName"] = "WebResource"
                     $Connection.Execute($removeRequest) | Out-Null
 
                     $publishRequest = New-Object Microsoft.Xrm.Sdk.OrganizationRequest("PublishXml")

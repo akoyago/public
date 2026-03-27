@@ -551,7 +551,14 @@ function Compare-WebResources {
                 }
                 
                 $newId = New-CrmRecord -conn $Connection -EntityLogicalName webresource -Fields $newWr
-                Add-Fix "Created missing web resource: $($wr.Name)"
+
+                # Publish the new web resource
+                $publishXml = "<importexportxml><webresources><webresource>{$newId}</webresource></webresources></importexportxml>"
+                $publishRequest = New-Object 'Microsoft.Crm.Sdk.Messages.PublishXmlRequest'
+                $publishRequest.ParameterXml = $publishXml
+                $Connection.Execute($publishRequest) | Out-Null
+
+                Add-Fix "Created and published web resource: $($wr.Name)"
             }
             catch {
                 Add-Failure "Failed to create web resource '$($wr.Name)': $_"
@@ -563,37 +570,76 @@ function Compare-WebResources {
             
             if ($targetContent -ne $wr.Base64Content) {
                 Add-Warning "Web resource '$($wr.Name)' content mismatch - attempting to fix"
-                
-                # First, remove any custom solution layers
-                Remove-WebResourceSolutionLayers -Connection $Connection -WebResourceId $targetWr.webresourceid -WebResourceName $wr.Name
-                
-                # Now update the content
+
+                $wrId = $targetWr.webresourceid
+                $publishXml = "<importexportxml><webresources><webresource>{$wrId}</webresource></webresources></importexportxml>"
+                $fixed = $false
+
+                # Step 1: Try removing active customizations (unmanaged layer overriding managed content)
                 try {
-                    $updateFields = @{
-                        webresourceid = $targetWr.webresourceid
-                        content = $wr.Base64Content
-                    }
-                    
-                    Set-CrmRecord -conn $Connection -EntityLogicalName webresource -Id $targetWr.webresourceid -Fields $updateFields
-                    Write-StatusMessage "  Updated web resource content: $($wr.Name)" -Type Info
-                    
-                    # Re-verify the content after update
-                    Start-Sleep -Seconds 2  # Give the system a moment to process
-                    
+                    Write-StatusMessage "  Removing active customizations for: $($wr.Name)" -Type Info
+                    $removeRequest = New-Object 'Microsoft.Crm.Sdk.Messages.RemoveActiveCustomizationsRequest'
+                    $removeRequest.ComponentId = [guid]$wrId
+                    $removeRequest.ComponentType = 61
+                    $Connection.Execute($removeRequest) | Out-Null
+
+                    $publishRequest = New-Object 'Microsoft.Crm.Sdk.Messages.PublishXmlRequest'
+                    $publishRequest.ParameterXml = $publishXml
+                    $Connection.Execute($publishRequest) | Out-Null
+
+                    Start-Sleep -Seconds 2
+
                     $verifyWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
-                    
-                    if ($null -eq $verifyWr) {
-                        Add-Failure "Web resource '$($wr.Name)' disappeared after update"
-                    }
-                    elseif ($verifyWr.content -ne $wr.Base64Content) {
-                        Add-Failure "Web resource '$($wr.Name)' content still does not match after update - may have active customization layers"
+                    if ($null -ne $verifyWr -and $verifyWr.content -eq $wr.Base64Content) {
+                        Add-Fix "Removed active customization and verified web resource: $($wr.Name)"
+                        $fixed = $true
                     }
                     else {
-                        Add-Fix "Updated and verified web resource content: $($wr.Name)"
+                        Write-StatusMessage "  Content still differs after removing active customizations" -Type Warning
                     }
                 }
                 catch {
-                    Add-Failure "Failed to update web resource '$($wr.Name)': $_"
+                    Write-StatusMessage "  No active customization to remove (or removal not supported): $_" -Type Info
+                }
+
+                # Step 2: If still not fixed, try removing from named unmanaged solutions
+                if (-not $fixed) {
+                    Remove-WebResourceSolutionLayers -Connection $Connection -WebResourceId $wrId -WebResourceName $wr.Name
+                }
+
+                # Step 3: If still not fixed, update content directly and publish
+                if (-not $fixed) {
+                    try {
+                        $updateFields = @{
+                            webresourceid = $wrId
+                            content = $wr.Base64Content
+                        }
+
+                        Set-CrmRecord -conn $Connection -EntityLogicalName webresource -Id $wrId -Fields $updateFields
+
+                        $publishRequest = New-Object 'Microsoft.Crm.Sdk.Messages.PublishXmlRequest'
+                        $publishRequest.ParameterXml = $publishXml
+                        $Connection.Execute($publishRequest) | Out-Null
+
+                        Write-StatusMessage "  Updated and published web resource: $($wr.Name)" -Type Info
+
+                        Start-Sleep -Seconds 2
+
+                        $verifyWr = Get-WebResourceFromEnvironment -Connection $Connection -Name $wr.Name
+
+                        if ($null -eq $verifyWr) {
+                            Add-Failure "Web resource '$($wr.Name)' disappeared after update"
+                        }
+                        elseif ($verifyWr.content -ne $wr.Base64Content) {
+                            Add-Failure "Web resource '$($wr.Name)' content still does not match after update and publish"
+                        }
+                        else {
+                            Add-Fix "Updated and verified web resource content: $($wr.Name)"
+                        }
+                    }
+                    catch {
+                        Add-Failure "Failed to update web resource '$($wr.Name)': $_"
+                    }
                 }
             }
             else {

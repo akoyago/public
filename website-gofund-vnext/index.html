@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOfund vNext — Research &amp; Prototypes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0d9488;
+    --primary-dark: #0f766e;
+    --primary-light: #ccfbf1;
+    --accent: #d97706;
+    --text: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --bg-subtle: #f1f5f9;
+    --border: #e2e8f0;
+    --radius: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--text);
+    background: var(--bg-alt);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
+    color: white;
+    padding: 80px 24px 60px;
+    text-align: center;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    color: var(--primary-light);
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin: 0 0 12px;
+    line-height: 1.1;
+  }
+  .hero h1 span { color: var(--primary-light); }
+  .hero p {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.7);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Container */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Section */
+  .section {
+    padding: 48px 0;
+  }
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .section-label::before {
+    content: '';
+    width: 24px;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 1px;
+  }
+  .section h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 8px;
+  }
+  .section .subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin: 0 0 32px;
+  }
+
+  /* Research cards */
+  .research-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .research-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .research-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 24px rgba(13, 148, 136, 0.1);
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+  .research-card .card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 18px;
+  }
+  .research-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .research-card p {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+    flex: 1;
+  }
+  .research-card .card-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .research-card .arrow {
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: auto;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .research-card:hover .arrow { opacity: 1; }
+
+  /* Prototype cards */
+  .proto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+  }
+  .proto-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s ease;
+  }
+  .proto-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 8px 32px rgba(13, 148, 136, 0.12);
+    transform: translateY(-3px);
+    text-decoration: none;
+  }
+  .proto-preview {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .proto-preview .preview-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.9);
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+  }
+  .proto-preview .preview-stack {
+    font-size: 10px;
+    font-weight: 600;
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.4);
+    color: rgba(255,255,255,0.8);
+    padding: 3px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+  .proto-info {
+    padding: 20px 24px 24px;
+  }
+  .proto-info h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .proto-info p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+  .proto-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .proto-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--bg-subtle);
+    color: var(--text-secondary);
+  }
+  .proto-tag.tag-primary {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 20px 40px; }
+    .section { padding: 32px 0; }
+    .proto-grid { grid-template-columns: 1fr; }
+    .research-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">Internal Research</div>
+    <h1>GO<span>fund</span> vNext</h1>
+    <p>Competitive research, feature analysis, and UI prototypes for the next generation donor portal — targeting Community Foundations.</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Research Documents -->
+  <section class="section">
+    <div class="section-label">Research</div>
+    <h2>Research Documents</h2>
+    <p class="subtitle">Competitive landscape analysis, feature gaps, and product planning</p>
+
+    <div class="research-grid">
+
+      <a href="gofund-similar-products-research.html" class="research-card">
+        <div class="card-icon" style="background: #ede9fe; color: #7c3aed;">&#9878;</div>
+        <h3>Similar Products &amp; Competitive Landscape</h3>
+        <p>Comprehensive analysis of Foundant CommunitySuite, Give Interactive, Fidelity Charitable, Foundation Source, Fluxx, and adjacent players — evaluated through the donor portal lens.</p>
+        <span class="card-meta">5 direct competitors &middot; Comparison matrix</span>
+        <span class="arrow">View document &rarr;</span>
+      </a>
+
+      <a href="gofund-feature-gap-analysis.html" class="research-card">
+        <div class="card-icon" style="background: #fef3c7; color: #d97706;">&#9888;</div>
+        <h3>Feature Gap Analysis</h3>
+        <p>What competitors offer in their donor portals that GOfund does not — scoped to features fundholders interact with. Tagged CF vs DAF with priority tiers.</p>
+        <span class="card-meta">38 gaps identified &middot; 6 critical</span>
+        <span class="arrow">View document &rarr;</span>
+      </a>
+
+      <a href="gofund-vnext-candidate-features.html" class="research-card">
+        <div class="card-icon" style="background: var(--primary-light); color: var(--primary-dark);">&#10003;</div>
+        <h3>vNext Candidate Features</h3>
+        <p>Complete feature list for the ground-up rewrite — 87 features tagged EXISTING, ENHANCE, or NEW with P0-P3 priority tiers and CF/DAF classification.</p>
+        <span class="card-meta">87 features &middot; 46 existing &middot; 37 new</span>
+        <span class="arrow">View document &rarr;</span>
+      </a>
+
+      <a href="gofund-feature-catalog.html" class="research-card">
+        <div class="card-icon" style="background: #e0f2fe; color: #0284c7;">&#9881;</div>
+        <h3>Current Feature Catalog</h3>
+        <p>Detailed catalog of every feature in the current GOfund product — authentication, fund management, donations, grants, charts, and portal infrastructure.</p>
+        <span class="card-meta">46 existing features &middot; Implementation details</span>
+        <span class="arrow">View document &rarr;</span>
+      </a>
+
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- UI Prototypes -->
+  <section class="section">
+    <div class="section-label">Design</div>
+    <h2>UI Prototypes</h2>
+    <p class="subtitle">Interactive donor portal concepts — open in browser to explore. All prototypes feature Fidelity Charitable-inspired navigation with accounts mega-menu.</p>
+
+    <div class="proto-grid">
+
+      <a href="02-tailwind-alpine.html" class="proto-card">
+        <div class="proto-preview" style="background: linear-gradient(135deg, #0d9488, #065f5b);">
+          <span class="preview-label">02</span>
+          <span style="font-size: 48px; opacity: 0.15; font-weight: 900; color: white;">TAILWIND</span>
+          <span class="preview-stack">Tailwind + Alpine.js</span>
+        </div>
+        <div class="proto-info">
+          <h3>Tailwind — Modern Fintech</h3>
+          <p>Clean, spacious fintech aesthetic with teal/emerald palette. Generous whitespace, subtle shadows, smooth hover transitions.</p>
+          <div class="proto-tags">
+            <span class="proto-tag tag-primary">Tailwind CSS</span>
+            <span class="proto-tag">Alpine.js</span>
+            <span class="proto-tag">Chart.js</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="02.1-tailwind-community.html" class="proto-card">
+        <div class="proto-preview" style="background: linear-gradient(135deg, #0d9488, #2563eb);">
+          <span class="preview-label">02.1</span>
+          <span style="font-size: 36px; opacity: 0.15; font-weight: 900; color: white;">COMMUNITY</span>
+          <span class="preview-stack">Tailwind + Alpine.js</span>
+        </div>
+        <div class="proto-info">
+          <h3>Tailwind — Community Impact</h3>
+          <p>Fintech aesthetic meets community warmth. Includes impact stats strip, funding opportunities with progress bars, events calendar, and guidance resources.</p>
+          <div class="proto-tags">
+            <span class="proto-tag tag-primary">Tailwind CSS</span>
+            <span class="proto-tag">Community Focus</span>
+            <span class="proto-tag">Chart.js</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="03-shadcn-minimal.html" class="proto-card">
+        <div class="proto-preview" style="background: linear-gradient(135deg, #27272a, #52525b);">
+          <span class="preview-label">03</span>
+          <span style="font-size: 48px; opacity: 0.1; font-weight: 900; color: white;">SHADCN</span>
+          <span class="preview-stack">Tailwind + shadcn/ui</span>
+        </div>
+        <div class="proto-info">
+          <h3>shadcn/ui — Minimal</h3>
+          <p>Stripe/Vercel-inspired precision. Zinc neutrals, subtle borders, tight typography. Every pixel intentional. Quiet confidence.</p>
+          <div class="proto-tags">
+            <span class="proto-tag tag-primary">shadcn/ui</span>
+            <span class="proto-tag">Tailwind CSS</span>
+            <span class="proto-tag">Alpine.js</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="03.1-shadcn-community.html" class="proto-card">
+        <div class="proto-preview" style="background: linear-gradient(135deg, #27272a, #0f766e);">
+          <span class="preview-label">03.1</span>
+          <span style="font-size: 36px; opacity: 0.1; font-weight: 900; color: white;">COMMUNITY</span>
+          <span class="preview-stack">Tailwind + shadcn/ui</span>
+        </div>
+        <div class="proto-info">
+          <h3>shadcn/ui — Community Data</h3>
+          <p>Precision engineering meets community warmth. Data tables for opportunities, quiet community pulse stats, clean event listings. Nonprofit Stripe dashboard.</p>
+          <div class="proto-tags">
+            <span class="proto-tag tag-primary">shadcn/ui</span>
+            <span class="proto-tag">Community Focus</span>
+            <span class="proto-tag">Chart.js</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="04-glass-modern.html" class="proto-card">
+        <div class="proto-preview" style="background: linear-gradient(135deg, #7c3aed, #0d9488, #2563eb);">
+          <span class="preview-label">04</span>
+          <span style="font-size: 48px; opacity: 0.12; font-weight: 900; color: white;">GLASS</span>
+          <span class="preview-stack">Pure CSS + Vanilla JS</span>
+        </div>
+        <div class="proto-info">
+          <h3>Glass Modern</h3>
+          <p>Glassmorphism with frosted cards, mesh gradient background, dark mode toggle. Bold and contemporary with rich visual depth.</p>
+          <div class="proto-tags">
+            <span class="proto-tag tag-primary">Glassmorphism</span>
+            <span class="proto-tag">Dark Mode</span>
+            <span class="proto-tag">Chart.js</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="05-community-impact.html" class="proto-card">
+        <div class="proto-preview" style="background: linear-gradient(135deg, #2D5016, #4a7c28);">
+          <span class="preview-label">05</span>
+          <span style="font-size: 36px; opacity: 0.12; font-weight: 900; color: white;">COMMUNITY</span>
+          <span class="preview-stack">Tailwind + Alpine.js</span>
+        </div>
+        <div class="proto-info">
+          <h3>Community Impact — Warm</h3>
+          <p>Warm, storytelling-driven design for community foundations. Serif headings, forest green + amber palette, photography-forward, local impact focus.</p>
+          <div class="proto-tags">
+            <span class="proto-tag tag-primary">Community First</span>
+            <span class="proto-tag">Warm Palette</span>
+            <span class="proto-tag">Events &amp; Guidance</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+</div>
+
+<footer class="footer">
+  <p>GOfund vNext Research &middot; akoyaGO &middot; March 2026</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Similar Products & Competitive Landscape — GOfund vNext Research</title>
+<style>
+  :root {
+    --primary: #0d9488;
+    --primary-light: #ccfbf1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --border: #e2e8f0;
+    --code-bg: #f1f5f9;
+    --radius: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+  }
+  .top-bar {
+    background: var(--text);
+    color: white;
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .top-bar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.15s;
+  }
+  .top-bar a:hover { color: white; }
+  .top-bar .brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+  .top-bar .brand span { color: var(--primary); }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 8px;
+    color: var(--text);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 12px;
+  }
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 32px 0 12px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 24px 0 8px;
+    color: var(--text-muted);
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  blockquote {
+    border-left: 4px solid var(--primary);
+    margin: 16px 0;
+    padding: 12px 20px;
+    background: var(--primary-light);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+  }
+  blockquote p { margin: 0 0 8px; }
+  blockquote p:last-child { margin: 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+  }
+  pre {
+    background: var(--text);
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 16px;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.85em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 24px;
+    font-size: 0.9rem;
+    display: block;
+    overflow-x: auto;
+  }
+  thead { background: var(--bg-alt); }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--bg-alt); }
+  del { opacity: 0.5; }
+  strong { font-weight: 600; }
+  hr {
+    border: none;
+    border-top: 2px solid var(--border);
+    margin: 40px 0;
+  }
+  .meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) {
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.2rem; }
+    .container { padding: 24px 16px 60px; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 8px 10px; }
+  }
+  @media print {
+    .top-bar { display: none; }
+    body { font-size: 11pt; }
+    table { display: table; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="top-bar" role="banner">
+  <div class="top-bar-inner">
+    <a href="index.html" class="brand">GO<span>fund</span> vNext Research</a>
+    <a href="index.html">&larr; Back to Index</a>
+  </div>
+</div>
+<main class="container" role="main">
+<h1>GOfund Similar Products &amp; Competitive Landscape Research</h1>
+<blockquote>
+<p>Research date: 2026-03-27
+Updated: 2026-03-27 — Refocused on donor/fundholder portal capabilities. Admin, grantee, and grants management features noted but separated.</p>
+</blockquote>
+<h2>Scope</h2>
+<p>This document evaluates competitors through the lens of their <strong>donor/fundholder portal</strong> — the self-service experience for the person who holds a fund and wants to view balances, recommend grants, make contributions, and understand their philanthropic impact.</p>
+<p><strong>Target market:</strong> The next GOfund release targets <strong>Community Foundations (CF)</strong>. Competitors are tagged as CF (community foundation), DAF (donor-advised fund sponsor/platform), or both, to distinguish which features are priority.</p>
+<p>Many competitors are primarily grants management or admin platforms that also happen to have a portal. Their strengths may not overlap with what GOfund does at all.</p>
+<hr>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#akoyago--gofund-product-overview">akoyaGO / GOfund Product Overview</a></li>
+<li><a href="#direct-competitors-have-a-donor-portal">Direct Competitors (Have a Donor Portal)</a></li>
+<li><a href="#adjacent-competitors-no-true-donor-portal">Adjacent Competitors (No True Donor Portal)</a></li>
+<li><a href="#emerging--niche-players">Emerging / Niche Players</a></li>
+<li><a href="#donor-portal-comparison-matrix">Donor Portal Comparison Matrix</a></li>
+<li><a href="#sources">Sources</a></li>
+</ul>
+<hr>
+<h2>akoyaGO / GOfund Product Overview</h2>
+<p><strong>GOfund</strong> is akoyaGO&#39;s white-label donor/fundholder portal — one of five integrated products in the akoyaGO foundation software suite. It gives fund holders and donors 24/7 self-service access to their charitable funds without requiring manual requests from foundation staff.</p>
+<h3>The akoyaGO Suite</h3>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>akoyaGO CRM</strong></td>
+<td>Core relationship &amp; grant lifecycle management</td>
+</tr>
+<tr>
+<td><strong>GOapply</strong></td>
+<td>Online grant application intake &amp; external reviews</td>
+</tr>
+<tr>
+<td><strong>GOfund</strong></td>
+<td>Fundholder/donor portal (self-service)</td>
+</tr>
+<tr>
+<td><strong>GOdonate</strong></td>
+<td>Public giving/donation portal</td>
+</tr>
+<tr>
+<td><strong>GOsupport</strong></td>
+<td>Client success &amp; support portal</td>
+</tr>
+</tbody></table>
+<h3>Target Audience</h3>
+<p>Community foundations and private foundations across North America (~200 foundations, collectively managing billions in annual grants).</p>
+<h3>Technology Stack</h3>
+<ul>
+<li>Built on <strong>Microsoft Dynamics 365</strong> CRM</li>
+<li>Fund balances from <strong>Microsoft Business Central</strong></li>
+<li>Payment processing via <strong>Stripe</strong></li>
+<li>Document storage via <strong>SharePoint</strong></li>
+<li>Leverages the broader Microsoft 365 ecosystem</li>
+</ul>
+<h3>What a Donor Can Do in GOfund</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Donor-Facing Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund visibility</strong></td>
+<td>View fund statements (customizable date ranges), real-time fund balance from Business Central, spendable amounts, contribution history, investment allocations. Connect to multiple funds with unique permissions per fund.</td>
+</tr>
+<tr>
+<td><strong>Grant recommendations</strong></td>
+<td>Recommend grants to eligible orgs or funds. Search orgs via IRS Pub 78 / CRA database. Set timing (immediate, scheduled, recurring). Designate restrictions, purposes, dedications. Interfund recommendations. Configurable minimums.</td>
+</tr>
+<tr>
+<td><strong>Contributions</strong></td>
+<td>Make charitable gifts via Stripe. Designated giving. Recurring donations. Transaction confirmations.</td>
+</tr>
+<tr>
+<td><strong>Data visualization</strong></td>
+<td>GOfund Charts — admin-managed dashboards published to the portal for donor viewing.</td>
+</tr>
+<tr>
+<td><strong>Documents</strong></td>
+<td>Access globally shared and fund-specific documents via SharePoint.</td>
+</tr>
+<tr>
+<td><strong>Communications</strong></td>
+<td>View announcements, banners, and description boxes. Receive automated emails (invitations, password resets, grant confirmations, 2FA).</td>
+</tr>
+<tr>
+<td><strong>Profile</strong></td>
+<td>Edit fund profile (where permitted). Update contact information via change requests.</td>
+</tr>
+</tbody></table>
+<h3>Security &amp; Portal Customization</h3>
+<ul>
+<li>Two-factor authentication (optional), role-based permissions, granular fund-connection permissions</li>
+<li>Session tracking, activity logging, staff impersonation for support</li>
+<li>White-label branding (colors, logos, navbar), content pages, form customization</li>
+</ul>
+<h3>Scale &amp; Traction</h3>
+<ul>
+<li>~200 foundations across North America and select international markets</li>
+<li>32 new clients launched in 2025 (nearly double the 2022 rate)</li>
+<li>99%+ client retention rate</li>
+<li>Pricing not publicly disclosed — demo required</li>
+</ul>
+<hr>
+<h2>Direct Competitors (Have a Donor Portal)</h2>
+<p>These platforms have a dedicated portal where <strong>donors/fundholders</strong> log in to view their fund, recommend grants, make contributions, and manage their philanthropic activity. They compete directly with GOfund.</p>
+<h3>1. Foundant CommunitySuite — &quot;The Portal&quot; <code>CF</code></h3>
+<p><strong>The closest head-to-head competitor.</strong> CommunitySuite is an all-in-one community foundation platform, and its Portal serves donors, fund advisors, grantees, and other personas through a single login with role-based views.</p>
+<p><strong>What a donor can do in CommunitySuite&#39;s Portal:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Donor-Facing Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund visibility</strong></td>
+<td>Real-time fund balances tied directly to built-in fund accounting (not a separate system). View fund statements. See assets breakdown, spendable balance, investment strategy.</td>
+</tr>
+<tr>
+<td><strong>Grant recommendations</strong></td>
+<td>Recommend grants to organizations. Search grantees via Candid integration (richer org profiles than IRS Pub 78 alone — includes mission, financials, demographics). View grant history with past recipients for quick re-granting.</td>
+</tr>
+<tr>
+<td><strong>Contributions</strong></td>
+<td>Make online donations via Stripe. Recurring donations with self-service management (view/modify/cancel). Pay pledges through the portal.</td>
+</tr>
+<tr>
+<td><strong>Tax &amp; compliance</strong></td>
+<td>Download tax receipts directly from the portal. Auto-generated receipts for every donation including recurring.</td>
+</tr>
+<tr>
+<td><strong>Documents</strong></td>
+<td>Access fund statements, shared documents, and tax receipts.</td>
+</tr>
+<tr>
+<td><strong>Events</strong></td>
+<td>View foundation events, RSVP, purchase tickets.</td>
+</tr>
+<tr>
+<td><strong>Giving Hub</strong></td>
+<td>Browse a public-facing charitable marketplace with curated funds and grant catalog items. <em>(Note: akoyaGO covers this with GOdonate.)</em></td>
+</tr>
+</tbody></table>
+<p><strong>What CommunitySuite has that GOfund does NOT (donor-facing):</strong></p>
+<ul>
+<li>Tax receipt self-service download</li>
+<li>Candid/GuideStar org profiles during grant recommendation search</li>
+<li>Pledge tracking and payment through the portal</li>
+<li>Recurring donation management (modify/pause/cancel, not just setup)</li>
+<li>Foundation event calendar with RSVP and ticketing</li>
+<li>Grant catalog browsing (curated funding opportunities)</li>
+</ul>
+<p><strong>Tech Stack:</strong> Cloud-native; integrations with Stripe, Power BI, Google Looker Studio, Microsoft Outlook, Mailchimp, Salesforce, Constant Contact</p>
+<p><strong>Positioning vs akoyaGO:</strong> Foundant markets CommunitySuite as better suited for foundations with more complex donor and financial management needs. Built-in fund accounting is the key architectural differentiator — akoyaGO relies on Business Central.</p>
+<p><strong>Notable:</strong> Foundant merged with <strong>SmartSimple</strong> in August 2024, creating the largest global software partner for grant management.</p>
+<h3>2. Foundation Source — &quot;Impactfully&quot; <code>Private Foundation</code></h3>
+<p><strong>Private foundation focused.</strong> Foundation Source provides Impactfully, a proprietary SaaS platform with a native mobile app (iOS + Android). They combine software with outsourced back-office services (compliance, tax, reporting).</p>
+<p><strong>What a donor/board member can do in Impactfully:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Donor-Facing Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund visibility</strong></td>
+<td>Dashboard view of foundation operations — fund status, compliance position, budget tracking.</td>
+</tr>
+<tr>
+<td><strong>Grant management</strong></td>
+<td>Submit and track grant requests through the platform. View grant lifecycle status.</td>
+</tr>
+<tr>
+<td><strong>Expense management</strong></td>
+<td>Submit expense requests with receipts, view payment approvals and status.</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Consolidated view of expenses, grants, and audit data. Built-in visualization templates and standard reports.</td>
+</tr>
+<tr>
+<td><strong>Mobile</strong></td>
+<td>Full-featured native app — manage foundation from any device with push notifications.</td>
+</tr>
+</tbody></table>
+<p><strong>What Impactfully has that GOfund does NOT (donor-facing):</strong></p>
+<ul>
+<li>Native mobile app (iOS + Android)</li>
+<li>Expense submission and tracking</li>
+<li>Compliance dashboard (minimum distribution tracking, regulatory status)</li>
+</ul>
+<p><strong>Key Differentiator:</strong> Managed services model — Foundation Source handles compliance monitoring, transaction processing, tax prep, and financial reporting alongside the software. This is a fundamentally different business model than akoyaGO&#39;s software-only approach.</p>
+<p><strong>Scale:</strong> 2,000+ foundations, $10B+ facilitated. Recent Northern Trust partnership.</p>
+<p><strong>Best For:</strong> Private foundations wanting managed services alongside software. Not typical community foundation competitors.</p>
+<h3>3. Fluxx Grantmaker — DAF Portal <code>DAF</code></h3>
+<p><strong>Enterprise grants management with a branded DAF portal.</strong> Fluxx is primarily known for its grants management and analytics (Grantelligence), but it also offers a donor-facing portal for DAF administration.</p>
+<p><strong>What a donor can do in Fluxx&#39;s DAF Portal:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Donor-Facing Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund visibility</strong></td>
+<td>View fund balances and contributions.</td>
+</tr>
+<tr>
+<td><strong>Grant recommendations</strong></td>
+<td>Manage and submit grant recommendations.</td>
+</tr>
+<tr>
+<td><strong>Grantee info</strong></td>
+<td>Access grantee information and history.</td>
+</tr>
+</tbody></table>
+<p><strong>What Fluxx has that GOfund does NOT (donor-facing):</strong></p>
+<ul>
+<li>Less clear — Fluxx&#39;s public materials emphasize the admin/grantmaker side far more than the donor experience. The DAF portal is functional but not Fluxx&#39;s primary selling point.</li>
+</ul>
+<p><strong>Where Fluxx excels (but NOT donor-facing):</strong></p>
+<ul>
+<li>Grantelligence analytics platform (150+ chart types) — this is a <strong>staff/admin tool</strong>, not shown to donors</li>
+<li>Workflow automation with unlimited branches — <strong>staff/admin tool</strong></li>
+<li>AI features (application summarization, org intelligence, document extraction) — <strong>staff/admin tools</strong></li>
+<li>Real-time grantmaker dashboards — <strong>staff-facing</strong></li>
+</ul>
+<p><strong>Best For:</strong> Large foundations with complex grantmaking processes. The donor portal is secondary to the grants management engine.</p>
+<h3>4. Give Interactive <code>CF+DAF</code></h3>
+<p><strong>Purpose-built DAF administration platform with a branded donor portal.</strong> Unlike competitors that started as grants management tools and added a donor portal, Give Interactive was built around the donor and fund administration experience. Their marquee client is <strong>Vanguard Charitable</strong> ($23B+ granted since 1997), selected after a comprehensive industry review.</p>
+<p><strong>What a donor can do in Give Interactive&#39;s portal:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Donor-Facing Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund visibility</strong></td>
+<td>Real-time financial tracking, fund performance views, portfolio accounting with custodial integrations (including Morningstar for investment data).</td>
+</tr>
+<tr>
+<td><strong>Grant recommendations</strong></td>
+<td>Submit grant recommendations with built-in workflows, automated approvals, and compliance tracking from request to distribution.</td>
+</tr>
+<tr>
+<td><strong>Reporting</strong></td>
+<td>Live data dashboards, customizable reports, impact measurement — donor-facing, not just admin-facing.</td>
+</tr>
+<tr>
+<td><strong>Documents</strong></td>
+<td>Automated fund statements.</td>
+</tr>
+</tbody></table>
+<p><strong>What Give Interactive has that GOfund does NOT (donor-facing):</strong></p>
+<ul>
+<li>Customizable dashboards with live data surfaced directly to donors</li>
+<li>Investment performance visibility with custodial integrations (Morningstar)</li>
+<li>Automated fund statements (vs. GOfund&#39;s admin-managed statements)</li>
+<li>Grant status tracking from request through distribution</li>
+<li>SOC 2 Type II compliance (vs. GOfund&#39;s 2FA + role-based permissions)</li>
+</ul>
+<p><strong>Tech Stack:</strong> Cloud-native, API-driven. Integrations with Sage Intacct, Salesforce, Power BI, Stripe, Morningstar. Designed to be standalone or interoperable with existing CRMs/ERPs.</p>
+<p><strong>Scale:</strong> $40B+ in charitable assets under management. Serves financial institutions, community foundations, and special-purpose DAFs.</p>
+<p><strong>Key Differentiator:</strong> The donor portal IS the product — not an add-on to a grants management system. This is the inverse of Fluxx/SmartSimple/GivingData where the admin side dominates. Give Interactive&#39;s interoperable approach (plug into your existing CRM) is architecturally similar to akoyaGO&#39;s Dynamics 365 model.</p>
+<p><strong>Why This Matters:</strong> Give Interactive is the most direct threat to GOfund&#39;s positioning because they serve the exact same market segments (financial institution DAFs, community foundations, special-purpose charities) with a donor-first platform rather than a CRM-first platform.</p>
+<h3>5. Fidelity Charitable — Giving Account Portal <code>DAF</code> (UX benchmark for CF)</h3>
+<p><strong>The gold standard for consumer-grade DAF donor portal UX.</strong> Fidelity Charitable is the nation&#39;s largest DAF sponsor (over $23B granted since 1997). Their donor portal sets the bar for what sophisticated donors expect a giving experience to look and feel like. While Fidelity Charitable is a DAF sponsor (not a software vendor selling to foundations), their portal UX directly shapes donor expectations when they interact with community foundation portals like GOfund.</p>
+<p><strong>What a donor can do in Fidelity Charitable&#39;s portal:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Donor-Facing Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund visibility</strong></td>
+<td>Multi-account selector with combined balance across all Giving Accounts. Homepage KPI cards: Available to Grant, YTD Contributions, YTD Grants.</td>
+</tr>
+<tr>
+<td><strong>Grant recommendations</strong></td>
+<td>3-step wizard: (1) Find charities &amp; enter grant details, (2) Allocate funds across investment pools, (3) Review &amp; submit. Batch multiple grants in a single submission. Rich &quot;Use&quot; options (Where it&#39;s needed most, Annual fund, In honor of, In memory of, Membership, Pledge, Tithe, Create your own). Acknowledgment choices (named, account name only, anonymous). Timing (ASAP, future date, recurring with frequency/start/end).</td>
+</tr>
+<tr>
+<td><strong>Scheduled grants</strong></td>
+<td>View, edit, and delete scheduled/recurring grants. Status tracking (&quot;Under review&quot;).</td>
+</tr>
+<tr>
+<td><strong>Grant analysis</strong></td>
+<td>Donut chart showing grants by sector (e.g., Human Services 38%). Top charities by amount. &quot;Total Granted&quot; KPI. Separate &quot;Grant analysis&quot; page.</td>
+</tr>
+<tr>
+<td><strong>Contribute</strong></td>
+<td>Fund from Fidelity accounts, linked banks, or non-Fidelity accounts. Contribute appreciated securities (view holdings with cost basis, unrealized gains, &quot;most appreciated securities&quot; sort). Select investment strategy for the contribution. YTD/historical contribution summary.</td>
+</tr>
+<tr>
+<td><strong>Investment</strong></td>
+<td>View current investment selections across pools (Money Market, Asset Allocation 20%/70%/85% Equity, Charitable Legacy, Environmental Impact Access). Change selections. View pool performance. Research investment options. Choose asset allocation. During grant recommendations, donor chooses which pools to draw from.</td>
+</tr>
+<tr>
+<td><strong>History</strong></td>
+<td>Grant history (search, filter by date, print, download Excel). Contribution history. Investment exchange history. Gift4Giving history. All other transaction history.</td>
+</tr>
+<tr>
+<td><strong>Tax &amp; statements</strong></td>
+<td>Statements, Contributions (tax receipts) &amp; misc., Grant confirmations, IRS Form 8283 — all accessible as downloadable PDFs with date filters.</td>
+</tr>
+<tr>
+<td><strong>Guidance</strong></td>
+<td>Giving strategies, Tax &amp; estate planning, Family philanthropy, Disaster relief, Donor stories, Research charities — curated educational content.</td>
+</tr>
+<tr>
+<td><strong>Gift4Giving</strong></td>
+<td>Charitable gift cards — purchase as gifts for others.</td>
+</tr>
+</tbody></table>
+<p><strong>What Fidelity Charitable has that GOfund does NOT (donor-facing):</strong></p>
+<ul>
+<li>Grant analysis with sector breakdown donut chart and top charities ranking</li>
+<li>Investment pool allocation during grant recommendations (donor chooses which pools to draw from)</li>
+<li>Batch grant submissions (multiple charities in one transaction)</li>
+<li>Contribute appreciated securities with cost basis / unrealized gains visibility</li>
+<li>Investment pool performance views and selection management</li>
+<li>Statements, tax receipts, grant confirmations, and IRS Form 8283 as self-service downloadable PDFs</li>
+<li>Scheduled/recurring grant management (view, edit, delete with status)</li>
+<li>&quot;Most appreciated securities&quot; view sorted by gain % for tax-smart giving</li>
+<li>Rich grant &quot;Use&quot; taxonomy (12 options including In honor of, In memory of, Membership, Pledge, Tithe)</li>
+<li>Curated guidance content (giving strategies, tax planning, family philanthropy)</li>
+<li>Outside gift tracking (log grants made outside the platform)</li>
+<li>Gift4Giving charitable gift cards</li>
+</ul>
+<p><strong>Scale:</strong> Largest DAF sponsor in the US. $23B+ granted since 1997. Consumer-grade UX that sets donor expectations industry-wide.</p>
+<p><strong>Why This Matters:</strong> Fidelity Charitable isn&#39;t a software vendor competing for akoyaGO&#39;s foundation clients. But their portal is what sophisticated donors use at home — and those same donors then log into community foundation portals like GOfund and notice what&#39;s missing. Fidelity Charitable sets the UX bar that GOfund is measured against, even if they&#39;re not a direct competitor.</p>
+<hr>
+<h2>Adjacent Competitors (No True Donor Portal)</h2>
+<p>These platforms are frequently listed as akoyaGO alternatives, but they <strong>do not have a dedicated donor/fundholder portal</strong> comparable to GOfund. Their strength is in grants management, grantee portals, or admin tools. They compete with the broader akoyaGO suite (CRM + GOapply), not with GOfund specifically.</p>
+<h3>4. SmartSimple Cloud</h3>
+<p><strong>Highly configurable grants/funding management platform.</strong> Strong in government grants, research funding, and complex multi-stakeholder processes. Now merged with Foundant (August 2024).</p>
+<p><strong>Portal personas served:</strong> Applicants, reviewers, program managers, system admins. <strong>No dedicated donor/fundholder portal.</strong></p>
+<p><strong>Relevance to GOfund:</strong> SmartSimple competes with akoyaGO CRM and GOapply, not with GOfund. Its strengths (visual workflow builder, AI pre-screening, Report Builder Neo, Impact Maps) are all staff/admin-facing.</p>
+<h3>5. GivingData</h3>
+<p><strong>Grants management system with purpose-built portals</strong> — Grantee Portal, Board Portal, Reviewer Portal. Clean UX, strong workflow and task management, configurable homepage dashboards.</p>
+<p><strong>Portal personas served:</strong> Grantees, board members, reviewers, program officers. <strong>No dedicated donor/fundholder portal.</strong></p>
+<p><strong>Relevance to GOfund:</strong> GivingData competes with GOapply (grantee intake) and akoyaGO CRM (program officer workflows), not with GOfund. Its strengths (task dependencies, scenario planning, Grantee 360 view) are all staff or grantee-facing.</p>
+<h3>6. Blackbaud Grantmaking</h3>
+<p><strong>Part of the Blackbaud ecosystem</strong> (Raiser&#39;s Edge NXT, Financial Edge NXT). Strong on grantmaker dashboards and AI (70+ AI capabilities, Charity Discovery, Development Agent).</p>
+<p><strong>Portal personas served:</strong> Applicants, grantees, program officers. <strong>No dedicated donor/fundholder portal</strong> — Blackbaud&#39;s donor tools live in Raiser&#39;s Edge NXT (fundraising CRM), not in Grantmaking.</p>
+<p><strong>Relevance to GOfund:</strong> Blackbaud Grantmaking competes with GOapply and akoyaGO CRM. However, Blackbaud&#39;s <strong>Charity Discovery tool</strong> (org search with impact data and predicted cost-per-outcome) is relevant — if surfaced to donors, it would enhance the grant recommendation experience.</p>
+<h3>7. Foundant GLM (Grant Lifecycle Manager)</h3>
+<p><strong>Standalone grants management</strong> — focused purely on grant application intake, review, and award. No donor portal, no fund accounting, no CRM.</p>
+<p><strong>Relevance to GOfund:</strong> Competes with GOapply only. Not relevant to GOfund.</p>
+<hr>
+<h2>Emerging / Niche Players</h2>
+<table>
+<thead>
+<tr>
+<th>Product</th>
+<th>Type</th>
+<th>Donor Portal?</th>
+<th>Relevance to GOfund</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Daffy</strong></td>
+<td>Consumer DAF platform</td>
+<td>Yes — donors manage their own DAF, recommend grants, track giving</td>
+<td><strong>Relevant</strong> — modern consumer-grade donor UX with mobile app. Worth studying for UX inspiration.</td>
+</tr>
+<tr>
+<td><strong>FreeWill DAFpay</strong></td>
+<td>DAF grant checkout widget</td>
+<td>No — embeds on nonprofit websites for donors to give from existing DAFs</td>
+<td>Not a portal competitor, but relevant to the giving ecosystem</td>
+</tr>
+<tr>
+<td><strong>DAF Direct</strong></td>
+<td>DAF grant widget</td>
+<td>No — embeds on nonprofit sites for Fidelity/DAFgiving360/BNY Mellon DAF grants</td>
+<td>Not a portal competitor</td>
+</tr>
+<tr>
+<td><strong>Submittable</strong></td>
+<td>Application intake &amp; review</td>
+<td>No</td>
+<td>Competes with GOapply, not GOfund</td>
+</tr>
+<tr>
+<td><strong>Instrumentl</strong></td>
+<td>Grant discovery for seekers</td>
+<td>No</td>
+<td>Not relevant — serves grant-seekers, not grantmakers or donors</td>
+</tr>
+<tr>
+<td><strong>Bloomerang</strong></td>
+<td>Donor CRM for small nonprofits</td>
+<td>No</td>
+<td>Not foundation-specific, no fundholder portal</td>
+</tr>
+<tr>
+<td><strong>Aplos</strong></td>
+<td>Foundation software</td>
+<td>Limited</td>
+<td>Fund accounting &amp; grant tracking; basic donor-facing features</td>
+</tr>
+<tr>
+<td><strong>Sage Intacct</strong></td>
+<td>Nonprofit fund accounting</td>
+<td>No</td>
+<td>Financial management only, no donor portal</td>
+</tr>
+<tr>
+<td><strong>MonkeyPod</strong></td>
+<td>Nonprofit accounting + CRM</td>
+<td>No</td>
+<td>Small orgs, not foundation-specific</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Donor Portal Comparison Matrix</h2>
+<p>This matrix compares only <strong>donor/fundholder portal features</strong> — what the person holding the fund can see and do.</p>
+<table>
+<thead>
+<tr>
+<th>Donor Portal Feature</th>
+<th>GOfund</th>
+<th>Foundant CSuite</th>
+<th>Give Interactive</th>
+<th>Fidelity Charitable</th>
+<th>Foundation Source</th>
+<th>Fluxx DAF</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fund balance (real-time)</strong></td>
+<td>Yes (Business Central)</td>
+<td>Yes (built-in)</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Fund statements</strong></td>
+<td>Yes (customizable dates)</td>
+<td>Yes + PDF</td>
+<td>Yes (automated)</td>
+<td>Yes (PDF download)</td>
+<td>Yes</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Investment performance</strong></td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes (Morningstar)</td>
+<td>Yes (pool performance)</td>
+<td>Yes</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Investment pool management</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (view, change, research pools)</td>
+<td>Unknown</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Fund activity timeline</strong></td>
+<td>No (separate views)</td>
+<td>Yes (unified)</td>
+<td>Yes (real-time)</td>
+<td>Yes (recent grant activity)</td>
+<td>Yes (dashboard)</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Spendable balance</strong></td>
+<td>Yes</td>
+<td>Yes (breakdown)</td>
+<td>Yes</td>
+<td>Yes (&quot;Available to Grant&quot;)</td>
+<td>Yes</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Multi-account view</strong></td>
+<td>Yes (separate per fund)</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes (combined balance + switcher)</td>
+<td>N/A</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Grant recommendations</strong></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes (3-step wizard, batch)</td>
+<td>Yes (requests)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Grant pool allocation</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (choose which pools to draw from)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Org search</strong></td>
+<td>Yes (Pub 78 / CRA)</td>
+<td>Yes (Candid)</td>
+<td>Unknown</td>
+<td>Yes (name + TIN, GuideStar link)</td>
+<td>Unknown</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Grant use taxonomy</strong></td>
+<td>Limited</td>
+<td>Unknown</td>
+<td>Unknown</td>
+<td>Yes (12 types: honor/memory/tithe/pledge/membership/custom)</td>
+<td>Unknown</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Acknowledgment options</strong></td>
+<td>No</td>
+<td>Unknown</td>
+<td>Unknown</td>
+<td>Yes (named, account only, anonymous)</td>
+<td>Unknown</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Grant status tracking</strong></td>
+<td>No</td>
+<td>Yes (pending → paid)</td>
+<td>Yes (request → distribution)</td>
+<td>Yes (&quot;Under review&quot;)</td>
+<td>Yes</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Scheduled grant management</strong></td>
+<td>No</td>
+<td>Unknown</td>
+<td>Unknown</td>
+<td>Yes (view, edit, delete, status)</td>
+<td>Unknown</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Grant history</strong></td>
+<td>Yes</td>
+<td>Yes (quick re-grant)</td>
+<td>Yes</td>
+<td>Yes (search, filter, print, Excel download)</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Grant analysis charts</strong></td>
+<td>No</td>
+<td>No (via Power BI)</td>
+<td>Unknown</td>
+<td>Yes (donut by sector, top charities, total granted)</td>
+<td>Unknown</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Online contributions</strong></td>
+<td>Yes (Stripe)</td>
+<td>Yes (Stripe)</td>
+<td>Yes (Stripe)</td>
+<td>Yes (Fidelity accounts, banks, EFT)</td>
+<td>No (managed)</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Contribute securities</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (stocks with cost basis, unrealized gains, &quot;most appreciated&quot; sort)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Recurring donations</strong></td>
+<td>Yes (setup)</td>
+<td>Yes (manage/cancel)</td>
+<td>Unknown</td>
+<td>Yes (setup + manage scheduled)</td>
+<td>N/A</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Pledge tracking</strong></td>
+<td>No</td>
+<td>Yes</td>
+<td>Unknown</td>
+<td>Yes (non-binding pledge use type)</td>
+<td>N/A</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Tax receipts / statements</strong></td>
+<td>No</td>
+<td>Yes (auto)</td>
+<td>Unknown</td>
+<td>Yes (Statements, Tax receipts, Grant confirmations, IRS 8283 tabs)</td>
+<td>Yes (managed)</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Donor-facing dashboards</strong></td>
+<td>No (admin-managed)</td>
+<td>Limited</td>
+<td>Yes (live data)</td>
+<td>Yes (KPI cards: Available, YTD Contributions, YTD Grants)</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Grants by focus area</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (donut chart by sector)</td>
+<td>Unknown</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Giving trends</strong></td>
+<td>No</td>
+<td>Unknown</td>
+<td>Unknown</td>
+<td>Yes (YTD + prior years shown)</td>
+<td>Unknown</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Documents access</strong></td>
+<td>Yes (SharePoint)</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Unknown</td>
+</tr>
+<tr>
+<td><strong>Guidance / education</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (giving strategies, tax planning, family philanthropy, disaster relief)</td>
+<td>Unknown</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Gift cards</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (Gift4Giving)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Outside gift tracking</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Unknown</td>
+<td>Yes (log grants made elsewhere)</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Event calendar &amp; RSVP</strong></td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Grant catalog</strong></td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Mobile app</strong></td>
+<td>No (responsive)</td>
+<td>No (responsive)</td>
+<td>Unknown</td>
+<td>No (responsive)</td>
+<td>Yes (iOS+Android)</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>White-label branding</strong></td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>No (Fidelity branded)</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Configurable homepage</strong></td>
+<td>No</td>
+<td>Limited</td>
+<td>Yes</td>
+<td>No (fixed layout)</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>AI org discovery</strong></td>
+<td>No</td>
+<td>No</td>
+<td>No (coming soon)</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+</tr>
+</tbody></table>
+<h3>Key Observations</h3>
+<ol>
+<li><p><strong>Fidelity Charitable sets the UX bar.</strong> Their portal is what sophisticated donors use at home — grant analysis charts, investment pool management, tax form self-service, batch grant submissions, securities contributions. When those donors log into a community foundation portal, they notice what&#39;s missing.</p>
+</li>
+<li><p><strong>Three true head-to-head competitors:</strong> Foundant CommunitySuite (community foundations), Give Interactive (DAF administration), and Fidelity Charitable (UX benchmark). Foundant leads in events, grant catalog, and pledge management. Give Interactive leads in interoperable architecture and donor-first design. Fidelity leads in grant analysis, investment features, and tax self-service depth.</p>
+</li>
+<li><p><strong>Give Interactive is the most direct competitive threat</strong> to GOfund&#39;s positioning — they serve the exact same segments (financial institution DAFs, community foundations, special-purpose charities) with a donor-portal-first platform managing $40B+ in assets.</p>
+</li>
+<li><p><strong>Foundation Source is a different market</strong> (private foundations with managed services) but has a strong donor/board UX with mobile app and compliance dashboard.</p>
+</li>
+<li><p><strong>Fluxx, SmartSimple, GivingData, and Blackbaud do not have meaningful donor portals.</strong> They are grants management platforms that compete with akoyaGO CRM and GOapply, not with GOfund.</p>
+</li>
+<li><p><strong>Grant analysis is a major gap.</strong> Fidelity Charitable shows donors a donut chart of grants by sector with top charities ranked by amount. GOfund has no donor-facing grant analysis. This is table-stakes for a modern donor portal.</p>
+</li>
+<li><p><strong>Tax document self-service is non-negotiable.</strong> Fidelity Charitable offers 4 document types (Statements, Tax receipts, Grant confirmations, IRS Form 8283) as downloadable PDFs with date filtering. GOfund offers none.</p>
+</li>
+<li><p><strong>No competitor offers AI-powered features in the donor portal today.</strong> Give Interactive has AI grantmaking &quot;coming soon.&quot; This remains whitespace.</p>
+</li>
+<li><p><strong>No competitor offers geographic grant mapping in the donor portal.</strong> This remains a whitespace opportunity.</p>
+</li>
+</ol>
+<hr>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://akoyago.com/">akoyaGO | Software for Foundations</a></li>
+<li><a href="https://gosupport.akoyago.com/knowledgebase/article/KA-01080/en-us">GOfund Admin Guide — GOsupport</a></li>
+<li><a href="https://gosupport.akoyago.com/knowledgebase/article/KA-01290/en-us">GOfund FAQs — GOsupport</a></li>
+<li><a href="https://www.pr.com/press-release/962083">akoyaGO Announces Multi-Year Platform Transformation — PR.com</a></li>
+<li><a href="https://akoyago.com/akoyago-2024-year-in-review-advancing-philanthropy-through-innovation-and-partnership/">akoyaGO 2024 Year in Review</a></li>
+<li><a href="https://philanthropydatasolutions.org/gms-directory/akoyago/">akoyaGO — Philanthropy Data Solutions</a></li>
+<li><a href="https://www.foundant.com/blog/foundant-communitysuite-vs-akoyago/">Foundant CommunitySuite vs. AkoyaGO</a></li>
+<li><a href="https://www.foundant.com/products/foundation-management-software/">Foundant CommunitySuite Product</a></li>
+<li><a href="https://support.foundant.com/hc/en-us/articles/21412855474199-Portal-Setup-and-Configuration">Foundant Portal Setup</a></li>
+<li><a href="https://support.foundant.com/hc/en-us/articles/19944569982871-Giving-Hub">Foundant Giving Hub</a></li>
+<li><a href="https://www.foundant.com/blog/foundant-technologies-and-smartsimple-software-announce-strategic-merger-to-revolutionize-philanthropic-and-grant-management-solutions/">Foundant + SmartSimple Merger Announcement</a></li>
+<li><a href="https://www.fluxx.io/blog/community-foundation-software">Fluxx — Community Foundation Software</a></li>
+<li><a href="https://www.fluxx.io/blog/pros-and-cons-donor-advised-funds">Fluxx DAF Support</a></li>
+<li><a href="https://www.givingdata.com/product">GivingData Product</a></li>
+<li><a href="https://www.blackbaud.com/industry-insights/resources/blackbaud-grantmaking-applicant-and-grantee-portal">Blackbaud Grantmaking Portal</a></li>
+<li><a href="https://www.blackbaud.com/products/blackbaud-grantmaking">Blackbaud Grantmaking Product</a></li>
+<li><a href="https://foundationsource.com/impactfully/">Foundation Source / Impactfully</a></li>
+<li><a href="https://www.prnewswire.com/news-releases/foundation-source-launches-impactfully-select-a-purpose-built-end-to-end-saas-solution-for-private-foundations-301879175.html">Foundation Source Impactfully Select Launch</a></li>
+<li><a href="https://sourceforge.net/software/product/akoyaGO/alternatives">akoyaGO Alternatives — SourceForge</a></li>
+<li><a href="https://www.tagtech.org/wp-content/uploads/2023/10/TECH_IMPACT_Integrated_Softw.pdf">TAG Tech Landscape of Integrated Software for Community Foundations (PDF)</a></li>
+<li><a href="https://www.dafdirect.org/about-daf-direct/index.html">DAF Direct</a></li>
+<li><a href="https://www.nonprofits.freewill.com/products/donor-advised-funds">FreeWill DAF Software</a></li>
+<li><a href="https://www.daffy.org/">Daffy — Donor-Advised Fund</a></li>
+<li><a href="https://www.demo-charitablegift.com/">Fidelity Charitable — Demo Portal</a> (live demo screenshots captured 2026-03-28)</li>
+<li><a href="https://www.fidelitycharitable.org/">Fidelity Charitable — Official Site</a></li>
+<li><a href="https://www.giveinteractive.com/platform">Give Interactive Platform</a></li>
+<li><a href="https://www.giveinteractive.com/">Give Interactive Homepage</a></li>
+<li><a href="https://www.nonprofitpro.com/article/vanguard-charitable-partners-with-give-interactive-on-donor-advised-fund-administration/">Vanguard Charitable Partners with Give Interactive — NonProfit PRO</a></li>
+</ul>
+
+</main>
+</body>
+</html>

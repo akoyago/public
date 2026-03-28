@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOfund Feature Catalog — GOfund vNext Research</title>
+<style>
+  :root {
+    --primary: #0d9488;
+    --primary-light: #ccfbf1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --border: #e2e8f0;
+    --code-bg: #f1f5f9;
+    --radius: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+  }
+  .top-bar {
+    background: var(--text);
+    color: white;
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .top-bar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.15s;
+  }
+  .top-bar a:hover { color: white; }
+  .top-bar .brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+  .top-bar .brand span { color: var(--primary); }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 8px;
+    color: var(--text);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 12px;
+  }
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 32px 0 12px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 24px 0 8px;
+    color: var(--text-muted);
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  blockquote {
+    border-left: 4px solid var(--primary);
+    margin: 16px 0;
+    padding: 12px 20px;
+    background: var(--primary-light);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+  }
+  blockquote p { margin: 0 0 8px; }
+  blockquote p:last-child { margin: 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+  }
+  pre {
+    background: var(--text);
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 16px;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.85em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 24px;
+    font-size: 0.9rem;
+    display: block;
+    overflow-x: auto;
+  }
+  thead { background: var(--bg-alt); }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--bg-alt); }
+  del { opacity: 0.5; }
+  strong { font-weight: 600; }
+  hr {
+    border: none;
+    border-top: 2px solid var(--border);
+    margin: 40px 0;
+  }
+  .meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) {
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.2rem; }
+    .container { padding: 24px 16px 60px; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 8px 10px; }
+  }
+  @media print {
+    .top-bar { display: none; }
+    body { font-size: 11pt; }
+    table { display: table; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="top-bar" role="banner">
+  <div class="top-bar-inner">
+    <a href="index.html" class="brand">GO<span>fund</span> vNext Research</a>
+    <a href="index.html">&larr; Back to Index</a>
+  </div>
+</div>
+<main class="container" role="main">
+<h1>GOfund Feature Catalog</h1>
+<blockquote>
+<p>Source: <code>P:\BcoGO\src\GOfund</code>
+Generated: 2026-03-27
+Purpose: Comprehensive feature inventory for GOfund rewrite planning</p>
+</blockquote>
+<hr>
+<h2>Table of Contents</h2>
+<ol>
+<li><a href="#1-authentication--identity">Authentication &amp; Identity</a></li>
+<li><a href="#2-account-management">Account Management</a></li>
+<li><a href="#3-fund-management">Fund Management</a></li>
+<li><a href="#4-donations">Donations</a></li>
+<li><a href="#5-recurring-donations">Recurring Donations</a></li>
+<li><a href="#6-grant-recommendations">Grant Recommendations</a></li>
+<li><a href="#7-grant-history">Grant History</a></li>
+<li><a href="#8-gift-history">Gift History</a></li>
+<li><a href="#9-fund-statements">Fund Statements</a></li>
+<li><a href="#10-charts--analytics">Charts &amp; Analytics</a></li>
+<li><a href="#11-documents">Documents</a></li>
+<li><a href="#12-funding-opportunities">Funding Opportunities</a></li>
+<li><a href="#13-fund-profile">Fund Profile</a></li>
+<li><a href="#14-user-invites--onboarding">User Invites &amp; Onboarding</a></li>
+<li><a href="#15-impersonation">Impersonation</a></li>
+<li><a href="#16-multi-tenancy--theming">Multi-Tenancy &amp; Theming</a></li>
+<li><a href="#17-logo--image-serving">Logo &amp; Image Serving</a></li>
+<li><a href="#18-contact-us">Contact Us</a></li>
+<li><a href="#19-static-content-pages">Static Content Pages</a></li>
+<li><a href="#20-cross-application-navigation-godonate-sso">Cross-Application Navigation (GoDonate SSO)</a></li>
+<li><a href="#21-event--audit-system">Event &amp; Audit System</a></li>
+<li><a href="#22-caching">Caching</a></li>
+<li><a href="#23-diagnostics">Diagnostics</a></li>
+</ol>
+<hr>
+<h2>1. Authentication &amp; Identity</h2>
+<h3>1.1 Login (Email + Password)</h3>
+<ul>
+<li>Standard email/password authentication</li>
+<li>Validates user has fund connections before allowing login</li>
+<li>Manages timezone offset and IANA timezone claims on sign-in</li>
+<li>Detects when 2FA is globally enabled and user hasn&#39;t set it up yet</li>
+<li>Configurable sign-in instructions text and allow/disallow sign-ins toggle</li>
+<li>Publishes <code>UserSignInEvent</code> on successful login</li>
+<li>Account lockout support</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Login.cshtml.cs</code></td>
+<td>Login page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Login.cshtml</code></td>
+<td>Login page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Lockout.cshtml.cs</code></td>
+<td>Account lockout page</td>
+</tr>
+</tbody></table>
+<h3>1.2 Two-Factor Authentication (Email-based)</h3>
+<ul>
+<li>2FA code sent via email (not authenticator app by default)</li>
+<li>6-7 character code validation</li>
+<li>&quot;Remember machine&quot; option to skip 2FA on trusted devices</li>
+<li>Creates timeline note in CRM when 2FA code is sent</li>
+<li>Recovery code login as fallback (6-7 char codes)</li>
+<li>Publishes <code>UserSignInEvent</code> on successful 2FA</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/LoginWith2fa.cshtml.cs</code></td>
+<td>Email-based 2FA page</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/LoginWithRecoveryCode.cshtml.cs</code></td>
+<td>Recovery code login</td>
+</tr>
+</tbody></table>
+<h3>1.3 Authenticator App (TOTP) Setup</h3>
+<ul>
+<li>QR code generation for authenticator apps</li>
+<li>Shared key display (formatted in 4-char groups)</li>
+<li>Code verification to enable 2FA</li>
+<li>Generates 10 recovery codes on first setup</li>
+<li>Disable 2FA, reset authenticator key options</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/EnableAuthenticator.cshtml.cs</code></td>
+<td>Authenticator setup</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/Disable2fa.cshtml.cs</code></td>
+<td>Disable 2FA</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/ResetAuthenticator.cshtml.cs</code></td>
+<td>Reset authenticator key</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/GenerateRecoveryCodes.cshtml.cs</code></td>
+<td>Regenerate recovery codes</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/ShowRecoveryCodes.cshtml.cs</code></td>
+<td>One-time display of codes</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/TwoFactorAuthentication.cshtml.cs</code></td>
+<td>2FA settings dashboard</td>
+</tr>
+</tbody></table>
+<h3>1.4 SQS-Based Authentication (External SSO)</h3>
+<ul>
+<li>Accepts encrypted Secure Query String (SQS) tokens from external systems</li>
+<li>Validates SQS payload (subdomain, username, expiration)</li>
+<li>Signs user in, clears existing sessions, sets timezone claims</li>
+<li>Used for cross-application authentication</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Authenticate.cshtml.cs</code></td>
+<td>SQS authentication handler</td>
+</tr>
+</tbody></table>
+<h3>1.5 Password Management</h3>
+<ul>
+<li>Forgot password flow with email-based reset token</li>
+<li>Does not reveal whether user account exists (security best practice)</li>
+<li>Publishes <code>ForgotPasswordEvent</code> for audit logging</li>
+<li>Contacts CRM to get user information for email sending</li>
+<li>Change password (requires old password)</li>
+<li>Set password (for users who logged in via external provider)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/ForgotPassword.cshtml.cs</code></td>
+<td>Forgot password initiation</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/ForgotPasswordConfirmation.cshtml.cs</code></td>
+<td>Confirmation page</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/ResetPasswordConfirmation.cshtml.cs</code></td>
+<td>Reset confirmation page</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/ChangePassword.cshtml.cs</code></td>
+<td>Change password (authenticated)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/SetPassword.cshtml.cs</code></td>
+<td>Set password (external login users)</td>
+</tr>
+</tbody></table>
+<h3>1.6 Email Confirmation</h3>
+<ul>
+<li>Token-based email confirmation on registration</li>
+<li>Email change confirmation (updates both email and username)</li>
+<li>Resend email confirmation capability</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/ConfirmEmail.cshtml.cs</code></td>
+<td>Confirm email</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/ConfirmEmailChange.cshtml.cs</code></td>
+<td>Confirm email change</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/ResendEmailConfirmation.cshtml.cs</code></td>
+<td>Resend confirmation</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/RegisterConfirmation.cshtml.cs</code></td>
+<td>Registration confirmation</td>
+</tr>
+</tbody></table>
+<h3>1.7 External Logins</h3>
+<ul>
+<li>Manage linked external authentication providers</li>
+<li>Add/remove external login providers</li>
+<li>OAuth challenge flow for linking</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/ExternalLogins.cshtml.cs</code></td>
+<td>External login management</td>
+</tr>
+</tbody></table>
+<h3>1.8 Logout</h3>
+<ul>
+<li>Clears session data</li>
+<li>Signs out from cookie scheme and SignInManager</li>
+<li>Supports optional return URL</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Logout.cshtml.cs</code></td>
+<td>Logout handler</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>2. Account Management</h2>
+<h3>2.1 Email Management</h3>
+<ul>
+<li>View current email and confirmation status</li>
+<li>Change email with confirmation workflow</li>
+<li>Resend verification email</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/Email.cshtml.cs</code></td>
+<td>Email management</td>
+</tr>
+</tbody></table>
+<h3>2.2 Personal Data (GDPR Compliance)</h3>
+<ul>
+<li>Download personal data as JSON (all properties with <code>PersonalDataAttribute</code>, external logins, authenticator key)</li>
+<li>Delete account with password verification</li>
+<li>Personal data hub page</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/DownloadPersonalData.cshtml.cs</code></td>
+<td>Data export</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/DeletePersonalData.cshtml.cs</code></td>
+<td>Account deletion</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/PersonalData.cshtml.cs</code></td>
+<td>Personal data hub</td>
+</tr>
+</tbody></table>
+<h3>2.3 Manage Navigation</h3>
+<ul>
+<li>Active page detection for sidebar navigation in account management section</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Manage/ManageNavPages.cs</code></td>
+<td>Nav page state helpers</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Fund Management</h2>
+<h3>3.1 Home Page / Dashboard</h3>
+<ul>
+<li>Customizable header text with alert styling</li>
+<li>Optional hero image</li>
+<li>Fund selector for switching between funds (auto-selects if user has only one fund)</li>
+<li>Contact information sidebar (cached per user and fund)</li>
+<li>Customizable main content area (HTML)</li>
+<li>&quot;Make a Grant Recommendation&quot; call-to-action card (configurable colors)</li>
+<li>&quot;Grant History&quot; call-to-action card (configurable colors)</li>
+<li>Featured funding opportunities grid</li>
+<li>RSS/XML news feed (loaded dynamically via HTMX)</li>
+<li>Draft grant recommendation count badge</li>
+<li>Interfund recommendation support toggle</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Index.cshtml.cs</code></td>
+<td>Home page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Index.cshtml</code></td>
+<td>Home page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/_HomePageNewsFeed.cshtml</code></td>
+<td>News feed partial</td>
+</tr>
+</tbody></table>
+<h3>3.2 Fund Summary Page</h3>
+<ul>
+<li>Fund name, code, type, and primary donor display</li>
+<li>Fund balance and spendable balance (with tooltip explanation)</li>
+<li>Action buttons: Donate, Recommend a Grant (to organization or established fund), Documents, Fund Statement</li>
+<li>Recent grants/payments table (top 3) with &quot;See Full Grant History&quot; link</li>
+<li>Recent contributions table (top 3) with &quot;See Full Gift History&quot; link</li>
+<li>Pending recommendations/submissions table</li>
+<li>Scheduled distributions table</li>
+<li>Inline donation capability via modal dialog</li>
+<li>Update Fund Profile link (permission-gated)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Fund.cshtml.cs</code></td>
+<td>Fund summary page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Fund.cshtml</code></td>
+<td>Fund summary page view</td>
+</tr>
+</tbody></table>
+<h3>3.3 Fund Selector Component</h3>
+<ul>
+<li>Select2 dropdown showing all user&#39;s available funds</li>
+<li>Formatted fund names display</li>
+<li>Auto-navigation on fund switch with &quot;Switching funds...&quot; indicator</li>
+<li>Context-aware navigation (maintains page context during switch, e.g., stays on FundingOpportunity page)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Shared/_FundSelectorPartial.cshtml</code></td>
+<td>Fund switcher dropdown</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_ViewFundsPartial.cshtml</code></td>
+<td>Multi-fund browser with page-aware navigation</td>
+</tr>
+</tbody></table>
+<h3>3.4 Fund Connections Service</h3>
+<ul>
+<li>Retrieves fund connections for a user via MediatR</li>
+<li>Returns array of <code>FundConnection</code> objects</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Services/FundConnectionsService.cs</code></td>
+<td>Fund connections retrieval</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Donations</h2>
+<h3>4.1 Inline Donation (from Fund Page)</h3>
+<ul>
+<li>Amount input with decimal validation</li>
+<li>Gift type selection: General Unrestricted or Designated Purpose</li>
+<li>Designated purpose textarea (collapsible, shown when Designated Purpose selected)</li>
+<li>Optional dedication section (collapsible):<ul>
+<li>Dedication type: In Honor Of / In Memory Of</li>
+<li>Recipient name</li>
+<li>Notification recipient name and email</li>
+<li>Dedication address information</li>
+</ul>
+</li>
+<li>Submit with loading indicator (Hyperscript)</li>
+<li>Bootstrap modal dialog</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Fund.cshtml.cs</code></td>
+<td><code>OnPostDonateAsync</code> handler</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Fund.cshtml</code></td>
+<td>Donation modal dialog in Fund page</td>
+</tr>
+</tbody></table>
+<h3>4.2 Donation Checkout</h3>
+<ul>
+<li>Donation summary table (fund name, gift type, amount)</li>
+<li>Optional recurring donation frequency selector (One-time, Weekly, Monthly, Quarterly, Annually)</li>
+<li>Donor selection dropdown (existing donors or &quot;Add New Donor&quot;)</li>
+<li>New donor panel:<ul>
+<li>Donor type: Individual or Organization</li>
+<li>Donor name</li>
+<li>Address fields (street, city, state/province, postal code) shown for Organization donors</li>
+</ul>
+</li>
+<li>Creates donation transaction record</li>
+<li>Validates donations are enabled</li>
+<li>Creates timeline notes</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Donate/Checkout.cshtml.cs</code></td>
+<td>Checkout page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Donate/Checkout.cshtml</code></td>
+<td>Checkout page view</td>
+</tr>
+</tbody></table>
+<h3>4.3 Stripe Payment Processing</h3>
+<ul>
+<li>Stripe Elements integration with custom styling (flat theme, Gill Sans font)</li>
+<li>Creates Stripe PaymentIntent server-side</li>
+<li>Passes client secret to frontend for Stripe Elements</li>
+<li>Payment element renders card/payment method form</li>
+<li>&quot;Complete Donation&quot; button with loading states</li>
+<li>Error handling with user-friendly messages</li>
+<li>Return URL handling with payment intent client secret</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Donate/Payment.cshtml.cs</code></td>
+<td>Payment page model (Stripe PaymentIntent creation)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Donate/Payment.cshtml</code></td>
+<td>Payment page view (Stripe Elements)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/wwwroot/js/checkout.js</code></td>
+<td>Stripe Elements custom appearance config</td>
+</tr>
+</tbody></table>
+<h3>4.4 Donation Completion</h3>
+<ul>
+<li>Validates PaymentIntent status from Stripe</li>
+<li>Extracts transaction fee from Stripe</li>
+<li>Updates transaction status in system</li>
+<li>Sends confirmation email on success</li>
+<li>Generates donation receipt HTML</li>
+<li>Marks email confirmation as sent</li>
+<li>Displays customizable completion text and receipt</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Donate/Complete.cshtml.cs</code></td>
+<td>Completion page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Donate/Complete.cshtml</code></td>
+<td>Completion page view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>5. Recurring Donations</h2>
+<h3>5.1 Recurring Donations List</h3>
+<ul>
+<li>Toggle between Active and Inactive recurring donations</li>
+<li>Configurable disclaimer text (HTML)</li>
+<li>Table displaying recurring donations with dynamic columns</li>
+<li>Status code column</li>
+<li>Action buttons per status:<ul>
+<li>Active/Error: Retry, Pause, Cancel</li>
+<li>Paused: Resume, Cancel</li>
+</ul>
+</li>
+<li>&quot;No results&quot; message when empty</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RecurringDonations.cshtml.cs</code></td>
+<td>List page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/RecurringDonations.cshtml</code></td>
+<td>List page view</td>
+</tr>
+</tbody></table>
+<h3>5.2 Recurring Donation Detail / Edit</h3>
+<ul>
+<li>Status display with color coding (red for errors)</li>
+<li>Status-dependent action buttons (Retry, Pause, Cancel, Resume)</li>
+<li>Donor selector</li>
+<li>Frequency dropdown (Monthly, Quarterly, Semi-Annual, Annual, etc.)</li>
+<li>Next occurrence date picker</li>
+<li>End date picker (optional)</li>
+<li>Fund allocation table — distribute amount across up to 12 funds</li>
+<li>Validates total amount doesn&#39;t change from original</li>
+<li>Additional donation for fees row (display only)</li>
+<li>Grand total row</li>
+<li>Timeline notes for audit trail</li>
+<li>Hangfire job queuing for processing actions</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RecurringDonation.cshtml.cs</code></td>
+<td>Detail/edit page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/RecurringDonation.cshtml</code></td>
+<td>Detail/edit page view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. Grant Recommendations</h2>
+<h3>6.1 Recommend Grant to Organization</h3>
+<ul>
+<li>Fund name display</li>
+<li>Organization selection with search capability</li>
+<li>Recent organizations list (up to 100, with optional fund filtering)</li>
+<li>Charity search results display (name, tax ID, city, state, address, country, status)</li>
+<li>Amount input with currency formatting and min/max validation</li>
+<li>Grant date picker</li>
+<li>Purpose of grant textarea (max 850 chars) with character counter</li>
+<li>Custom form rendering via SurveyJS (with Quill rich text editor)</li>
+<li>Optional file upload with preview</li>
+<li>Recommendation note textarea (max 2000 chars) with counter</li>
+<li>Comments section (optional, max 2000 chars) with counter</li>
+<li>Certification checkbox (configurable HTML content)</li>
+<li>&quot;Submit Later&quot; (save as draft) and &quot;Submit Now&quot; buttons</li>
+<li>Loading indicators during submission</li>
+<li>Repeat grant support via request ID parameter</li>
+<li>Organization details display: logo (base64), address, website, EIN/TaxID, parent constituent, tax status, mission</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RecommendGrantOrganization.cshtml</code></td>
+<td>Organization grant form view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Commands/GetOrganizationDetails.cs</code></td>
+<td>Fetch org details (logo, EIN, mission, etc.)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Commands/GetRecommendGrantRecentOrganizations.cs</code></td>
+<td>Recent orgs query (up to 100)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Models/CharitySearchResultModel.cs</code></td>
+<td>Charity search result model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Models/RepeatOrganizationGrantRequest.cs</code></td>
+<td>Repeat org grant request model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_RecGrantCharitySearchResults.cshtml</code></td>
+<td>Charity search results partial</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_RecGrantOrgSearchResults.cshtml</code></td>
+<td>Org search results partial</td>
+</tr>
+</tbody></table>
+<h3>6.2 Recommend Grant to Established Fund (Interfund)</h3>
+<ul>
+<li>Similar form to organization grants but for inter-fund transfers</li>
+<li>Gift fund selection via TomSelect dropdown (fetches funds available for interfund grants via saved query)</li>
+<li>Amount input with currency formatting</li>
+<li>Grant date picker</li>
+<li>Purpose of grant textarea</li>
+<li>Custom form support (SurveyJS)</li>
+<li>File upload capability</li>
+<li>Recommendation note and comments</li>
+<li>Certification checkbox with configurable HTML</li>
+<li>Submit/Save Draft buttons</li>
+<li>Repeat interfund grant support</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RecommendGrantInterfund.cshtml</code></td>
+<td>Interfund grant form view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Commands/GetGiftFundsForInterfundGrantRecommendation.cs</code></td>
+<td>Fetch available gift funds</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Commands/GetInterfundRepeatGrantAkoyaInterfundGrants.cs</code></td>
+<td>Repeat interfund grant details</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Models/RepeatInterfundGrantRequest.cs</code></td>
+<td>Repeat interfund grant model</td>
+</tr>
+</tbody></table>
+<h3>6.3 Grant Recommendation Drafts</h3>
+<ul>
+<li>Drafts grouped by fund</li>
+<li>Per-fund display:<ul>
+<li>Fund name and code</li>
+<li>Warning badges: &quot;Exceeds Fund Limit&quot; and/or &quot;Below Minimum Fund Balance&quot; (red)</li>
+<li>Table of draft recommendations with columns: recipient, amount, status</li>
+<li>Action dropdown per draft: Edit, Delete, Submit</li>
+<li>Summary row: total, fund limit, minimum balance, remaining balance</li>
+<li>Color-coded warnings for limit violations</li>
+</ul>
+</li>
+<li>Submit All button (disabled if any fund exceeds limits or balance constraints)</li>
+<li>Backdrop spinner overlay during submit/delete operations</li>
+<li>Console logging of fund spending limits and balance calculations</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RecommendGrantDrafts.cshtml</code></td>
+<td>Drafts management view</td>
+</tr>
+</tbody></table>
+<h3>6.4 Grant Recommendation Confirmation</h3>
+<ul>
+<li>Displays configurable success message/HTML</li>
+<li>Options to recommend another grant:<ul>
+<li>&quot;Recommend another grant to organization&quot; button</li>
+<li>&quot;Recommend another grant to established fund&quot; button (if enabled)</li>
+</ul>
+</li>
+<li>&quot;Go back to fund summary&quot; link</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RecommendGrantConfirmation.cshtml.cs</code></td>
+<td>Confirmation page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/RecommendGrantConfirmation.cshtml</code></td>
+<td>Confirmation page view</td>
+</tr>
+</tbody></table>
+<h3>6.5 Grant Recommendation Error Handling</h3>
+<ul>
+<li>Email notification to foundation user on grant submission errors</li>
+<li>Template placeholders with error context (severity, user email, message, details)</li>
+<li>Handles interfund and impersonation context</li>
+<li>Error logging to Dynamics CRM <code>akoya_gofundlog</code> entity via Serilog</li>
+<li>Captures error severity, context, and stack trace</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Handlers/GrantRecommendationErrorEmailNotificationHandler.cs</code></td>
+<td>Error email notification</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantRecommendation/Handlers/GrantRecommendationSubmissionErrorEventHandler.cs</code></td>
+<td>Error logging to CRM</td>
+</tr>
+</tbody></table>
+<h3>6.6 Recommend Grant Funds Button</h3>
+<ul>
+<li>Single button if user has only one fund</li>
+<li>Dropdown button if user has multiple funds</li>
+<li>Links to RecommendGrantOrganization page with fund and opportunity IDs</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Shared/_RecommendGrantFundsButtonPartial.cshtml</code></td>
+<td>Grant recommendation button partial</td>
+</tr>
+</tbody></table>
+<h3>6.7 SurveyJS Custom Form Integration</h3>
+<ul>
+<li>Quill rich text editor widget registration for SurveyJS forms</li>
+<li>Toolbar options: Bold, Italic, Underline, Link, Image, Lists, Headers, Color, Alignment, Clean</li>
+<li>Editor lifecycle management (mount, unmount, value changes)</li>
+<li>Read-only mode support</li>
+<li>PDF rendering support</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/wwwroot/js/surveyQuill.js</code></td>
+<td>SurveyJS Quill editor widget</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_RecommendGrantSurveyJsScripts.cshtml</code></td>
+<td>SurveyJS script includes</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_RecommendGrantSurveyJsStyles.cshtml</code></td>
+<td>SurveyJS style includes</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>7. Grant History</h2>
+<h3>7.1 Grant History Page</h3>
+<ul>
+<li>Fund selector (TomSelect multi-select dropdown)</li>
+<li>Applicant/Organization filter (TomSelect single-select with search)</li>
+<li>Date range filters (start date, end date) with session persistence</li>
+<li>Apply Filter and Reset buttons</li>
+<li>Grant history table with:<ul>
+<li>Sortable columns with ascending/descending toggle</li>
+<li>Search/filter text input</li>
+<li>Type-aware sorting (currency, dates, numbers, text)</li>
+<li>&quot;Repeat Grant&quot; action links per row (routes to interfund or organization form based on folio type)</li>
+</ul>
+</li>
+<li>Excel export with styled output (GemBox.Spreadsheet)</li>
+<li>Permission-based access control</li>
+<li>Organization list populated from grant records (with AKA/also-known-as support)</li>
+<li>Cached organization list via FusionCache with refresh option</li>
+<li>Pagination support (5000 record pages from Dataverse)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/GrantHistory.cshtml.cs</code></td>
+<td>Grant history page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/GrantHistory.cshtml</code></td>
+<td>Grant history page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_GrantHistoryTableBody.cshtml</code></td>
+<td>Grant table body partial</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Features/GrantHistory/Commands/GetGrantHistoryOrganizations.cs</code></td>
+<td>Organizations query/handler</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Gift History</h2>
+<h3>8.1 Gift History Page</h3>
+<ul>
+<li>Fund selector (Select2) with multiple selection</li>
+<li>Date range filters with session persistence</li>
+<li>Apply Filter and Reset buttons</li>
+<li>Gift history table with:<ul>
+<li>Sortable columns (click to toggle ascending/descending)</li>
+<li>Search/filter text input</li>
+<li>Type-aware sorting (Double, Decimal, Integer, Money, DateTime, Text)</li>
+<li>Text truncation with &quot;Show more/less&quot; for long content</li>
+</ul>
+</li>
+<li>Excel export with styled output (formatted columns via GemBox.Spreadsheet)</li>
+<li>Permission-based access control</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/GiftHistory.cshtml.cs</code></td>
+<td>Gift history page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/GiftHistory.cshtml</code></td>
+<td>Gift history page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_GiftHistoryTableBody.cshtml</code></td>
+<td>Gift table body partial</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>9. Fund Statements</h2>
+<h3>9.1 Fund Statement Generation</h3>
+<ul>
+<li>Fund selector</li>
+<li>Date range selection with fiscal year defaults</li>
+<li>Respects min/max date constraints from settings</li>
+<li>Optional &quot;Print Fund Group&quot; checkbox (permission-gated)</li>
+<li>PDF generation and inline display in embedded viewer</li>
+<li>Spinner overlay during PDF load</li>
+<li>Timezone-aware date handling</li>
+<li>Permission-based access control</li>
+<li>Publishes <code>FundStatementViewedEvent</code> for audit logging</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundStatement.cshtml</code></td>
+<td>Fund statement view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/FundStatementViewedEvent.cs</code></td>
+<td>Statement viewed event</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>10. Charts &amp; Analytics</h2>
+<h3>10.1 Charts Dashboard</h3>
+<ul>
+<li>Multi-fund selection for comparative analysis (Select2)</li>
+<li>Date range filtering with session persistence</li>
+<li>Apply Filter and Reset buttons</li>
+<li>Multiple chart containers loaded via HTMX with loading spinners</li>
+<li>Supports chart types: Number Cards, Bar, Line, Pie (via Chart.js)</li>
+<li>Configurable chart definitions from settings</li>
+<li>Generates both NumberCard and Chart.js visualizations</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundCharts.cshtml.cs</code></td>
+<td>Charts dashboard model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/FundCharts.cshtml</code></td>
+<td>Charts dashboard view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_ChartPartial.cshtml</code></td>
+<td>Chart renderer partial</td>
+</tr>
+</tbody></table>
+<h3>10.2 Chart Preview (Public/Embeddable)</h3>
+<ul>
+<li>Anonymous access with API key validation</li>
+<li>Supports iframe embedding</li>
+<li>Date filtering (startDate, endDate)</li>
+<li>Single fund or no fund selection</li>
+<li>No authentication required (API key-gated)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/ChartPreview.cshtml.cs</code></td>
+<td>Public chart preview model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/ChartPreview.cshtml</code></td>
+<td>Public chart preview view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>11. Documents</h2>
+<h3>11.1 Document Library</h3>
+<ul>
+<li>Fund-specific documents (permission-gated)</li>
+<li>Global/shared GOfund documents (available to all users)</li>
+<li>Document download functionality</li>
+<li>Optional fund filtering</li>
+<li>Ordered by formatted name</li>
+<li>File type icons via custom tag helper (Bootstrap icons based on extension)</li>
+<li>&quot;No documents&quot; message when empty</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Documents.cshtml.cs</code></td>
+<td>Documents page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Documents.cshtml</code></td>
+<td>Documents page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/TagHelpers/FileTypeIconTagHelper.cs</code></td>
+<td>File extension icon tag helper</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>12. Funding Opportunities</h2>
+<h3>12.1 Funding Opportunities List</h3>
+<ul>
+<li>Featured opportunities section (separated from others)</li>
+<li>Other opportunities section</li>
+<li>Each opportunity displayed as a card with thumbnail image, title, and &quot;Learn More&quot; button</li>
+<li>Grant recommendation links (if user has permission)</li>
+<li>Fund-specific filtering</li>
+<li>&quot;No opportunities&quot; message when empty</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundingOpportunities.cshtml.cs</code></td>
+<td>List page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/FundingOpportunities.cshtml</code></td>
+<td>List page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_FundingOpportunityPartial.cshtml</code></td>
+<td>Opportunity card partial</td>
+</tr>
+</tbody></table>
+<h3>12.2 Funding Opportunity Detail</h3>
+<ul>
+<li>Full opportunity description (HTML-formatted)</li>
+<li>Primary image display</li>
+<li>&quot;Recommend a Grant&quot; button(s): single or dropdown based on fund count</li>
+<li>Redirect fallback to Opportunities, Home, or Fund page if not found</li>
+<li>Access validation</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundingOpportunity.cshtml.cs</code></td>
+<td>Detail page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/FundingOpportunity.cshtml</code></td>
+<td>Detail page view</td>
+</tr>
+</tbody></table>
+<h3>12.3 Funding Opportunity Images</h3>
+<ul>
+<li>Downloads file blocks from Dataverse</li>
+<li>1-hour response caching</li>
+<li>Fallback to <code>no-image.png</code> placeholder</li>
+<li>Separate endpoints for primary and thumbnail images</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundingOpportunityPrimaryImage.cshtml.cs</code></td>
+<td>Primary image serving</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/FundingOpportunityThumbnailImage.cshtml.cs</code></td>
+<td>Thumbnail image serving</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>13. Fund Profile</h2>
+<h3>13.1 Basic Fund Profile Edit</h3>
+<ul>
+<li>Edit formal fund name</li>
+<li>Select anonymity setting</li>
+<li>Edit fund purpose/mission</li>
+<li>Displays read-only fund details: code, type, class, endowed status, established date</li>
+<li>Permission-based access control</li>
+<li>Toast notifications on success</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundProfile/Edit.cshtml.cs</code></td>
+<td>Basic profile edit model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/FundProfile/Edit.cshtml</code></td>
+<td>Basic profile edit view</td>
+</tr>
+</tbody></table>
+<h3>13.2 Enhanced Fund Profile (Dubuque CF Variant)</h3>
+<p>All basic edit features plus:</p>
+<ul>
+<li>Giving center profile name</li>
+<li>Featured photo upload</li>
+<li>At-a-glance sections (3 configurable text fields)</li>
+<li>About us description</li>
+<li>Logo upload</li>
+<li>Mission statement</li>
+<li>Contact information: phone, email (validated)</li>
+<li>Executive director info</li>
+<li>Website and social media links</li>
+<li>Form 990 file upload</li>
+<li>Story and story photo uploads</li>
+<li>Display fields: address, city, state, postal code, year founded</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/FundProfile/DubuquecfEdit.cshtml.cs</code></td>
+<td>Enhanced profile edit model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/FundProfile/DubuquecfEdit.cshtml</code></td>
+<td>Enhanced profile edit view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>14. User Invites &amp; Onboarding</h2>
+<h3>14.1 Invite User (Background Job)</h3>
+<ul>
+<li>Background job (Hangfire) to create user invites</li>
+<li>Gets contact by ID from Dataverse via FetchXml</li>
+<li>Creates invite record in SQL database</li>
+<li>Generates onboarding URL</li>
+<li>Updates contact record with invite URL in Dataverse</li>
+<li>Instantiates email template with placeholders</li>
+<li>Creates email entity in Dataverse</li>
+<li>Queues email send job</li>
+<li>90-second timeout with cancellation support</li>
+<li>Automatic retry: 1 attempt</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Services/Features/Invites/InviteGoFundUserJob.cs</code></td>
+<td>Invite creation background job</td>
+</tr>
+</tbody></table>
+<h3>14.2 Send Invite Email (Background Job)</h3>
+<ul>
+<li>Sends invite email via <code>IEmailService</code></li>
+<li>Updates invite status to &quot;Sent&quot;</li>
+<li>Retrieves invite details</li>
+<li>Publishes <code>GoFundInviteSentEvent</code></li>
+<li>90-second timeout</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Services/Features/Invites/SendInviteGoFundUserEmailJob.cs</code></td>
+<td>Email send background job</td>
+</tr>
+</tbody></table>
+<h3>14.3 Onboarding Confirmation</h3>
+<ul>
+<li>Confirmation page after user completes invite/onboarding</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/OnboardNewUserConfirmation.cshtml.cs</code></td>
+<td>Onboarding confirmation</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/OnboardNewUser.cshtml</code></td>
+<td>Onboarding page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Invite.cshtml</code></td>
+<td>Invite page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_ResendInviteSuccess.cshtml</code></td>
+<td>Resend invite success partial</td>
+</tr>
+</tbody></table>
+<h3>14.4 Invite Events</h3>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Events/InviteCreatedEvent.cs</code></td>
+<td>Event: invite created (tenant, inviteId, contactId, email)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/InviteInProgressEvent.cs</code></td>
+<td>Event: invite in progress</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/InviteCompletedEvent.cs</code></td>
+<td>Event: invite completed</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>15. Impersonation</h2>
+<h3>15.1 User Impersonation</h3>
+<ul>
+<li>Accepts encrypted SQS token with original and impersonated usernames</li>
+<li>Validates SQS payload and expiration</li>
+<li>Signs out existing user, deletes cookies</li>
+<li>Displays confirmation page showing who will be impersonated</li>
+<li>On confirmation: signs in as impersonated user with claims:<ul>
+<li><code>ImpersonatedBy</code> claim (original username)</li>
+<li><code>IsImpersonated</code> claim set to &quot;true&quot;</li>
+</ul>
+</li>
+<li>Publishes <code>UserImpersonationEvent</code></li>
+<li>Timezone claim management</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Impersonation.cshtml.cs</code></td>
+<td>Impersonation page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Areas/Identity/Pages/Account/Impersonation.cshtml</code></td>
+<td>Impersonation page view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/UserImpersonationEvent.cs</code></td>
+<td>Impersonation event</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>16. Multi-Tenancy &amp; Theming</h2>
+<h3>16.1 Multi-Tenant Routing</h3>
+<ul>
+<li>Finbuckle multi-tenant integration</li>
+<li><code>{__tenant__}</code> prefix automatically prepended to all page routes</li>
+<li>Tenant-specific favicon path rewriting</li>
+<li>Ignored URL paths for static assets: favicon.ico, css, js, lib, robots.txt, healthcheck, _content, Error</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Infrastructure/MultiTenantPageRouteModelConvention.cs</code></td>
+<td>Route convention for tenant prefix</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Infrastructure/PathRewriteMiddleware.cs</code></td>
+<td>Favicon path rewrite middleware</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/IgnoredUrlBasePaths.cs</code></td>
+<td>Static asset path exclusions</td>
+</tr>
+</tbody></table>
+<h3>16.2 Tenant &amp; User Providers</h3>
+<ul>
+<li><code>TenantProvider</code>: Exposes current tenant account for DI</li>
+<li><code>UserProvider</code>: Exposes current user&#39;s ClaimsPrincipal for DI</li>
+<li>Custom claims principal factory: adds tenant subdomain, contact ID, tenant account ID, user fullname claims</li>
+<li>FusionCache integration with 30-second stale data fallback, 1-hour max</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Infrastructure/TenantProvider.cs</code></td>
+<td>Tenant provider</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Infrastructure/UserProvider.cs</code></td>
+<td>User provider</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Infrastructure/AppUserClaimsPrincipalFactory.cs</code></td>
+<td>Custom claims generation</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Infrastructure/Extensions/HttpContextExtensions.cs</code></td>
+<td>Tenant access helpers</td>
+</tr>
+</tbody></table>
+<h3>16.3 Theme Support</h3>
+<ul>
+<li>Tenant-specific theme via <code>IThemeProvider</code></li>
+<li>Theme-aware background color in layout</li>
+<li><code>TenantThemeStyle</code> tag helper for custom CSS</li>
+<li>Canary environment indicator in header</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Infrastructure/IThemeProvider.cs</code></td>
+<td>Theme provider interface</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Services/GoFundThemeProviderService.cs</code></td>
+<td>Theme provider implementation</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_Layout.cshtml</code></td>
+<td>Layout with theme integration</td>
+</tr>
+</tbody></table>
+<h3>16.4 GoFund Settings &amp; Department Settings</h3>
+<ul>
+<li>Tenant-level GoFund settings retrieval via MediatR</li>
+<li>Department-specific settings (chains fund → department queries)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Services/GoFundSettings.cs</code></td>
+<td>Tenant settings service</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Services/DepartmentSettings.cs</code></td>
+<td>Department settings service</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>17. Logo &amp; Image Serving</h2>
+<h3>17.1 Logo Endpoints</h3>
+<ul>
+<li>All logo endpoints: anonymous access, 1-day response caching, fallback to placeholder images</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Logos/Primary.cshtml.cs</code></td>
+<td>Primary/main logo</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Logos/Navbar.cshtml.cs</code></td>
+<td>Theme navbar logo</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Logos/FundNavbar.cshtml.cs</code></td>
+<td>Fund-specific navbar logo</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Logos/HomePageHero.cshtml.cs</code></td>
+<td>Home page hero image</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>18. Contact Us</h2>
+<h3>18.1 Contact Information Display</h3>
+<ul>
+<li>Optional customizable header text</li>
+<li>Staff contact details: name, address (2 lines), city/state/postal, telephone (tel: link), email (mailto: link), website (clickable)</li>
+<li>Cached per user and fund</li>
+<li>Factory pattern via MediatR</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Shared/_ContactUsPartial.cshtml</code></td>
+<td>Contact us partial view</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Services/ContactUsModelService.cs</code></td>
+<td>Contact model factory</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>19. Static Content Pages</h2>
+<h3>19.1 FAQ</h3>
+<ul>
+<li>Customizable header and footer text</li>
+<li>FAQ content rendered as HTML</li>
+<li>Contact sidebar</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Faq.cshtml.cs</code></td>
+<td>FAQ page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Faq.cshtml</code></td>
+<td>FAQ page view</td>
+</tr>
+</tbody></table>
+<h3>19.2 Privacy Policy</h3>
+<ul>
+<li>Simple page model</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Privacy.cshtml.cs</code></td>
+<td>Privacy page model</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Privacy.cshtml</code></td>
+<td>Privacy page view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>20. Cross-Application Navigation (GoDonate SSO)</h2>
+<h3>20.1 GiveToAnotherFund Component</h3>
+<ul>
+<li>Navigates user to external GoDonate application</li>
+<li>Single Sign-On (SSO) via encrypted SQS authentication token</li>
+<li>24-hour token expiration</li>
+<li>Passes timezone information</li>
+<li>Conditional visibility based on GoDonate configuration</li>
+<li>Customizable link label</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Shared/Components/GiveToAnotherFund/Default.cs</code></td>
+<td>GoDonate SSO view component</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/Components/GiveToAnotherFund/Default.cshtml</code></td>
+<td>GoDonate SSO view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>21. Event &amp; Audit System</h2>
+<h3>21.1 Domain Events (MediatR Notifications)</h3>
+<p>All events are records implementing <code>INotification</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Event</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Events/UserSignInEvent.cs</code></td>
+<td>User sign-in</td>
+<td>Tenant, ContactId, Username</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/ForgotPasswordEvent.cs</code></td>
+<td>Password reset initiated</td>
+<td>Tenant, Email</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/ResetPasswordEvent.cs</code></td>
+<td>Password reset completed</td>
+<td>Tenant, Email, ContactId</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/UserImpersonationEvent.cs</code></td>
+<td>User impersonation</td>
+<td>Tenant, OriginalUsername, ImpersonatedByUsername</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/FundStatementViewedEvent.cs</code></td>
+<td>Fund statement viewed</td>
+<td>Tenant, Username, FundId</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/GiftHistoryExportedEvent.cs</code></td>
+<td>Gift history exported</td>
+<td>Tenant, Username, UserContactId, FundIds, StartDate, EndDate</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/GrantHistoryExportedEvent.cs</code></td>
+<td>Grant history exported</td>
+<td>Tenant, Username, UserContactId, FundIds, StartDate, EndDate, ApplicantId</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/InviteCreatedEvent.cs</code></td>
+<td>Invite created</td>
+<td>Tenant, InviteId, ContactId, ContactEmail</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/InviteInProgressEvent.cs</code></td>
+<td>Invite in progress</td>
+<td>Tenant, InviteId, ContactId, ContactEmail</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Events/InviteCompletedEvent.cs</code></td>
+<td>Invite completed</td>
+<td>Tenant, InviteId, ContactId, ContactEmail</td>
+</tr>
+</tbody></table>
+<h3>21.2 Event Handlers</h3>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Handles</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/EventHandlers/Loggers/ForgotPasswordLoggerHandler.cs</code></td>
+<td><code>ForgotPasswordEvent</code></td>
+<td>Logs to Dataverse <code>akoya_gofundlog</code> entity</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/EventHandlers/Cache/NewGrantRecommendationCacheHandler.cs</code></td>
+<td><code>GrantRecommendationSubmittedEvent</code></td>
+<td>Invalidates fund cache via FusionCache</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>22. Caching</h2>
+<h3>22.1 FusionCache Configuration</h3>
+<ul>
+<li><strong>Global Cache</strong>: 5-minute duration, 10-minute failsafe window</li>
+<li><strong>GoFund Cache</strong>: 5-minute duration, 10-minute failsafe window</li>
+<li>Serializer: Newtonsoft Json with reference loop handling</li>
+<li>Failsafe mode enabled</li>
+<li>Cache invalidation on grant recommendation submission</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Infrastructure/AddCacheConfigExtension.cs</code></td>
+<td>Cache configuration</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>23. Diagnostics</h2>
+<h3>23.1 Routes Debug Page</h3>
+<ul>
+<li>Lists all registered Razor Pages and Controller routes</li>
+<li>Anonymous access</li>
+<li>Development/debugging utility</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/RoutesDebug.cshtml.cs</code></td>
+<td>Routes debug page</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/RoutesDebug.cshtml</code></td>
+<td>Routes debug view</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Shared UI Infrastructure</h2>
+<h3>Layout &amp; Styling</h3>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Web/Pages/Shared/_Layout.cshtml</code></td>
+<td>Main layout: navbar, Bootstrap, Select2, TomSelect, Quill, Chart.js, Sentry, theme styling</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_LayoutNoNav.cshtml</code></td>
+<td>Layout without navigation (for auth pages, etc.)</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/_LoginPartial.cshtml</code></td>
+<td>Login/user info in navbar</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/Pages/Shared/Components/PageHeader/Default.cshtml.cs</code></td>
+<td>Page header view component</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/wwwroot/css/site.css</code></td>
+<td>Global styles: toast, footer, backdrop spinner, validation, error pages</td>
+</tr>
+<tr>
+<td><code>GOfund.Web/wwwroot/js/site.js</code></td>
+<td>Global JS: Bootstrap tooltips, Select2 formatter, HTMX anti-forgery token</td>
+</tr>
+</tbody></table>
+<h3>Third-Party Libraries Used</h3>
+<ul>
+<li><strong>Bootstrap 5</strong> — layout and components</li>
+<li><strong>Bootstrap Icons</strong> — iconography</li>
+<li><strong>Select2</strong> — enhanced dropdowns (with Bootstrap 5 theme)</li>
+<li><strong>TomSelect</strong> — alternative enhanced dropdowns</li>
+<li><strong>Chart.js</strong> — charts and visualizations</li>
+<li><strong>Quill</strong> — rich text editing (via SurveyJS widget)</li>
+<li><strong>SurveyJS</strong> — dynamic form rendering</li>
+<li><strong>HTMX</strong> — dynamic content loading without full page reloads</li>
+<li><strong>Hyperscript</strong> — declarative UI behaviors (loading states)</li>
+<li><strong>Stripe Elements</strong> — payment processing</li>
+<li><strong>GemBox.Spreadsheet</strong> — Excel export</li>
+<li><strong>Sentry</strong> — error tracking</li>
+<li><strong>FusionCache</strong> — distributed caching</li>
+<li><strong>Hangfire</strong> — background job processing</li>
+<li><strong>MediatR</strong> — mediator/CQRS pattern</li>
+<li><strong>Finbuckle.MultiTenant</strong> — multi-tenancy</li>
+</ul>
+<h3>Service Registration</h3>
+<table>
+<thead>
+<tr>
+<th>Source File</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GOfund.Services/ServiceRegistration.cs</code></td>
+<td>DI registration: MediatR, logging/validation behaviors, Hangfire jobs</td>
+</tr>
+</tbody></table>
+
+</main>
+</body>
+</html>

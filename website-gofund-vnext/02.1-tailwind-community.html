@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOfund v2 — Community Giving Portal</title>
+
+  <!-- Tailwind CSS CDN (Play) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Alpine.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!--
+    ============================================================
+    THEME CUSTOMIZATION
+    ============================================================
+    Foundations can change their brand colors by updating these
+    CSS custom properties. The Tailwind config below references
+    them so every component picks up the new palette.
+
+    Example — switching to a blue brand:
+      --color-primary:   59 130 246;    /* blue-500 */
+      --color-primary-dark: 29 78 216;  /* blue-700 */
+      --color-secondary: 99 102 241;    /* indigo-500 */
+      --color-accent:    245 158 11;    /* amber-500 */
+
+    Example — switching to a purple brand:
+      --color-primary:   139 92 246;    /* violet-500 */
+      --color-primary-dark: 109 40 217; /* violet-700 */
+      --color-secondary: 236 72 153;    /* pink-500 */
+      --color-accent:    34 197 94;     /* green-500 */
+    ============================================================
+  -->
+  <style>
+    :root {
+      /* Teal / Emerald primary (Fidelity Charitable inspired) */
+      --color-primary:       20 184 166;   /* teal-500 */
+      --color-primary-dark:  13 148 136;   /* teal-600 */
+      --color-primary-light: 204 251 241;  /* teal-100 */
+      --color-secondary:     16 185 129;   /* emerald-500 */
+      --color-accent:        245 158 11;   /* amber-500 */
+      --color-surface:       255 255 255;
+      --color-muted:         248 250 252;  /* slate-50 */
+    }
+
+    /* Subtle background pattern */
+    body {
+      background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(var(--color-primary), 0.03) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, rgba(var(--color-secondary), 0.03) 0%, transparent 60%);
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              DEFAULT:  'rgb(var(--color-primary) / <alpha-value>)',
+              dark:     'rgb(var(--color-primary-dark) / <alpha-value>)',
+              light:    'rgb(var(--color-primary-light) / <alpha-value>)',
+              secondary:'rgb(var(--color-secondary) / <alpha-value>)',
+              accent:   'rgb(var(--color-accent) / <alpha-value>)',
+              surface:  'rgb(var(--color-surface) / <alpha-value>)',
+              muted:    'rgb(var(--color-muted) / <alpha-value>)',
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(12px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth transitions for all interactive elements */
+    [x-cloak] { display: none !important; }
+
+    /* Focus ring for keyboard navigation */
+    *:focus-visible {
+      outline: 2px solid rgb(var(--color-primary));
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Donut chart legend bullets */
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* Progress bar fill */
+    .progress-fill {
+      transition: width 0.8s ease-out;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 font-sans text-slate-800 antialiased" x-data="portal()">
+
+  <!-- Skip to content (ADA) -->
+  <a href="#main-content"
+     class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-brand focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium">
+    Skip to main content
+  </a>
+
+  <!-- ======================================================== -->
+  <!-- TOP NAVIGATION BAR  (Fidelity Charitable pattern)         -->
+  <!-- ======================================================== -->
+  <header class="sticky top-0 z-50 bg-white border-b border-slate-200/80 shadow-sm"
+          x-data="{ activeNav: null, accountsMega: false }"
+          @keydown.escape.window="activeNav = null; accountsMega = false">
+
+    <!-- Announcement banner -->
+    <div x-show="showBanner" x-transition
+         class="bg-gradient-to-r from-brand to-brand-secondary text-white text-sm text-center py-2 px-4"
+         role="alert">
+      <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+        </svg>
+        <span><strong>Year-End Giving:</strong> Recommend grants by Dec 15 for 2025 tax year. <a href="#" class="underline font-semibold hover:text-teal-100">Learn more</a></span>
+        <button @click="showBanner = false"
+                class="ml-4 p-0.5 rounded hover:bg-white/20 transition-colors"
+                aria-label="Dismiss announcement">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== ROW 1 — Utility bar ====== -->
+    <div class="border-b border-slate-100">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2.5 group" aria-label="GOfund v2 Home">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-brand-secondary flex items-center justify-center shadow-md shadow-brand/20 group-hover:shadow-lg group-hover:shadow-brand/30 transition-shadow">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          </div>
+          <span class="text-lg font-bold text-slate-900 tracking-tight">GOfund<span class="text-brand"> v2</span></span>
+        </a>
+
+        <!-- Right utility links (desktop) -->
+        <div class="hidden lg:flex items-center gap-5">
+          <a href="#" class="text-sm text-slate-600 hover:text-brand-dark transition-colors">Feedback</a>
+          <a href="#" class="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-brand-dark transition-colors" target="_blank" rel="noopener noreferrer">
+            Help Center
+            <!-- External link icon -->
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
+
+          <!-- Your profile -->
+          <div x-data="{ open: false }" class="relative" @keydown.escape="open = false">
+            <button @click="open = !open" @click.outside="open = false"
+                    class="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-brand-dark transition-colors"
+                    aria-haspopup="true" :aria-expanded="open">
+              <!-- User icon -->
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Your profile
+              <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div x-show="open" x-transition x-cloak
+                 class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg shadow-slate-200/60 border border-slate-200 py-2 z-50"
+                 role="menu">
+              <div class="px-4 py-2 border-b border-slate-100">
+                <div class="text-sm font-semibold text-slate-900">Sarah Mitchell</div>
+                <div class="text-xs text-slate-500">sarah@example.org</div>
+              </div>
+              <a href="#" class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-brand-light/50 hover:text-brand-dark transition-colors" role="menuitem">Profile Settings</a>
+              <a href="#" class="block px-4 py-2.5 text-sm text-slate-700 hover:bg-brand-light/50 hover:text-brand-dark transition-colors" role="menuitem">Manage Advisors</a>
+            </div>
+          </div>
+
+          <!-- Log out button (outlined) -->
+          <a href="#"
+             class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:border-brand/40 hover:text-brand-dark hover:bg-brand-light/30 transition-all"
+             role="button">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Log out
+          </a>
+        </div>
+
+        <!-- Mobile hamburger button -->
+        <button @click="mobileMenu = !mobileMenu"
+                class="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-brand transition-colors"
+                :aria-expanded="mobileMenu"
+                aria-label="Toggle mobile menu">
+          <svg x-show="!mobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg x-show="mobileMenu" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====== ROW 2 — Main navigation (desktop) ====== -->
+    <nav class="hidden lg:block" aria-label="Primary navigation">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-stretch" role="menubar">
+
+          <!-- Accounts (N) — active tab with fund info -->
+          <button @click="accountsMega = !accountsMega; activeNav = null"
+                  @click.outside="accountsMega = false"
+                  class="relative flex flex-col justify-center px-5 py-3 text-left group transition-colors hover:bg-slate-50"
+                  :class="accountsMega ? 'bg-slate-50' : ''"
+                  aria-haspopup="true" :aria-expanded="accountsMega" role="menuitem">
+            <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark flex items-center gap-1.5">
+              Accounts (3)
+              <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="accountsMega ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </span>
+            <span class="text-xs text-slate-500 mt-0.5">Community Impact Fund &middot; #4892</span>
+            <!-- Active teal underline -->
+            <span class="absolute bottom-0 left-3 right-3 h-0.5 bg-brand rounded-full"></span>
+          </button>
+
+          <!-- Grant -->
+          <div class="relative">
+            <button @click="activeNav = activeNav === 'grant' ? null : 'grant'; accountsMega = false"
+                    @click.outside="activeNav === 'grant' ? activeNav = null : null"
+                    class="flex flex-col justify-center px-5 py-3 text-left group transition-colors hover:bg-slate-50 h-full"
+                    :class="activeNav === 'grant' ? 'bg-slate-50' : ''"
+                    aria-haspopup="true" :aria-expanded="activeNav === 'grant'" role="menuitem">
+              <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Grant</span>
+              <span class="text-xs text-slate-500 mt-0.5">Support your<br>favorite charities</span>
+            </button>
+            <div x-show="activeNav === 'grant'" x-transition x-cloak
+                 class="absolute left-0 top-full mt-px w-72 bg-white rounded-b-xl shadow-lg shadow-slate-200/60 border border-slate-200 border-t-0 p-2 z-50"
+                 role="menu">
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Recommend a Grant</span>
+                  <span class="text-xs text-slate-500">Send funds to a charity</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Find Charities</span>
+                  <span class="text-xs text-slate-500">Search nonprofits to support</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Favorite Charities</span>
+                  <span class="text-xs text-slate-500">Your saved organizations</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Contribute -->
+          <div class="relative">
+            <button @click="activeNav = activeNav === 'contribute' ? null : 'contribute'; accountsMega = false"
+                    @click.outside="activeNav === 'contribute' ? activeNav = null : null"
+                    class="flex flex-col justify-center px-5 py-3 text-left group transition-colors hover:bg-slate-50 h-full"
+                    :class="activeNav === 'contribute' ? 'bg-slate-50' : ''"
+                    aria-haspopup="true" :aria-expanded="activeNav === 'contribute'" role="menuitem">
+              <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Contribute</span>
+              <span class="text-xs text-slate-500 mt-0.5">Fund your<br>Giving Account</span>
+            </button>
+            <div x-show="activeNav === 'contribute'" x-transition x-cloak
+                 class="absolute left-0 top-full mt-px w-72 bg-white rounded-b-xl shadow-lg shadow-slate-200/60 border border-slate-200 border-t-0 p-2 z-50"
+                 role="menu">
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Make a Contribution</span>
+                  <span class="text-xs text-slate-500">Add funds to your account</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Recurring Contributions</span>
+                  <span class="text-xs text-slate-500">Set up automatic funding</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Contribution History</span>
+                  <span class="text-xs text-slate-500">View past contributions</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- History -->
+          <div class="relative">
+            <button @click="activeNav = activeNav === 'history' ? null : 'history'; accountsMega = false"
+                    @click.outside="activeNav === 'history' ? activeNav = null : null"
+                    class="flex flex-col justify-center px-5 py-3 text-left group transition-colors hover:bg-slate-50 h-full"
+                    :class="activeNav === 'history' ? 'bg-slate-50' : ''"
+                    aria-haspopup="true" :aria-expanded="activeNav === 'history'" role="menuitem">
+              <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">History</span>
+              <span class="text-xs text-slate-500 mt-0.5">Access transaction<br>history &amp; statements</span>
+            </button>
+            <div x-show="activeNav === 'history'" x-transition x-cloak
+                 class="absolute left-0 top-full mt-px w-72 bg-white rounded-b-xl shadow-lg shadow-slate-200/60 border border-slate-200 border-t-0 p-2 z-50"
+                 role="menu">
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Transaction History</span>
+                  <span class="text-xs text-slate-500">All grants and contributions</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Tax Receipts</span>
+                  <span class="text-xs text-slate-500">Download annual statements</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Grant Analysis</span>
+                  <span class="text-xs text-slate-500">View your giving patterns</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Guidance -->
+          <div class="relative">
+            <button @click="activeNav = activeNav === 'guidance' ? null : 'guidance'; accountsMega = false"
+                    @click.outside="activeNav === 'guidance' ? activeNav = null : null"
+                    class="flex flex-col justify-center px-5 py-3 text-left group transition-colors hover:bg-slate-50 h-full"
+                    :class="activeNav === 'guidance' ? 'bg-slate-50' : ''"
+                    aria-haspopup="true" :aria-expanded="activeNav === 'guidance'" role="menuitem">
+              <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Guidance</span>
+              <span class="text-xs text-slate-500 mt-0.5">Develop your<br>giving strategy</span>
+            </button>
+            <div x-show="activeNav === 'guidance'" x-transition x-cloak
+                 class="absolute left-0 top-full mt-px w-72 bg-white rounded-b-xl shadow-lg shadow-slate-200/60 border border-slate-200 border-t-0 p-2 z-50"
+                 role="menu">
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Giving Strategy</span>
+                  <span class="text-xs text-slate-500">Plan your philanthropic goals</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Learning Center</span>
+                  <span class="text-xs text-slate-500">Articles and guides</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-brand-light/50 transition-colors group" role="menuitem">
+                <span class="flex-shrink-0 w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center">
+                  <svg class="w-5 h-5 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/></svg>
+                </span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark">Family Philanthropy</span>
+                  <span class="text-xs text-slate-500">Multi-generational giving</span>
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== Accounts mega menu ====== -->
+      <div x-show="accountsMega"
+           x-transition:enter="transition ease-out duration-200"
+           x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-150"
+           x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-1"
+           x-cloak
+           class="border-t border-slate-200 bg-white shadow-lg"
+           role="menu" aria-label="Your fund accounts">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Your Funds</div>
+          <div class="flex flex-wrap gap-4">
+
+            <!-- Fund card: Community Impact Fund (active) -->
+            <a href="#" class="relative flex flex-col justify-between w-60 border-2 border-brand rounded-lg px-4 py-3 hover:bg-brand-light/30 transition-colors" role="menuitem">
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="text-sm font-semibold text-brand-dark">Community Impact Fund</div>
+                  <div class="text-xs text-slate-500 mt-0.5">Account #4892</div>
+                </div>
+                <!-- Green checkmark for active -->
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Active fund">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <div class="text-lg font-bold text-brand mt-2">$52,250.16</div>
+            </a>
+
+            <!-- Fund card: Family Legacy Fund -->
+            <a href="#" class="flex flex-col justify-between w-60 border border-slate-200 rounded-lg px-4 py-3 hover:border-brand/50 hover:bg-brand-light/20 transition-all" role="menuitem">
+              <div>
+                <div class="text-sm font-semibold text-brand-dark">Family Legacy Fund</div>
+                <div class="text-xs text-slate-500 mt-0.5">Account #7201</div>
+              </div>
+              <div class="text-lg font-bold text-brand mt-2">$39,618.71</div>
+            </a>
+
+            <!-- Fund card: Education Fund -->
+            <a href="#" class="flex flex-col justify-between w-60 border border-slate-200 rounded-lg px-4 py-3 hover:border-brand/50 hover:bg-brand-light/20 transition-all" role="menuitem">
+              <div>
+                <div class="text-sm font-semibold text-brand-dark">Education Fund</div>
+                <div class="text-xs text-slate-500 mt-0.5">Account #9054</div>
+              </div>
+              <div class="text-lg font-bold text-brand mt-2">$125,400.00</div>
+            </a>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <a href="#" class="inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:text-brand-dark transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+              Open a New Fund
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ====== Mobile Navigation Panel ====== -->
+    <div x-show="mobileMenu"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+         x-cloak
+         class="lg:hidden border-t border-slate-200 bg-white pb-4 max-h-[80vh] overflow-y-auto"
+         role="navigation" aria-label="Mobile navigation">
+
+      <!-- Utility links (mobile) -->
+      <div class="flex items-center gap-4 px-4 pt-3 pb-2 border-b border-slate-100 text-sm">
+        <a href="#" class="text-slate-600 hover:text-brand-dark transition-colors">Feedback</a>
+        <a href="#" class="inline-flex items-center gap-1 text-slate-600 hover:text-brand-dark transition-colors" target="_blank" rel="noopener noreferrer">
+          Help Center
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Accordion sections -->
+      <div class="space-y-1 pt-3 px-2">
+
+        <!-- Accounts section (mobile) — with fund cards -->
+        <div x-data="{ expanded: false }">
+          <button @click="expanded = !expanded"
+                  class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                  :aria-expanded="expanded">
+            <div class="text-left">
+              <span class="block font-semibold">Accounts (3)</span>
+              <span class="block text-xs text-slate-500">Community Impact Fund &middot; #4892</span>
+            </div>
+            <svg class="w-4 h-4 transition-transform flex-shrink-0" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div x-show="expanded" x-transition x-cloak class="ml-2 mr-2 mt-1 space-y-2">
+            <!-- Active fund -->
+            <a href="#" class="flex items-center justify-between border-2 border-brand rounded-lg px-3 py-2.5 hover:bg-brand-light/30 transition-colors">
+              <div>
+                <div class="text-sm font-semibold text-brand-dark">Community Impact Fund</div>
+                <div class="text-xs text-slate-500">#4892 &middot; <span class="font-semibold text-brand">$52,250.16</span></div>
+              </div>
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-label="Active fund">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+              </svg>
+            </a>
+            <a href="#" class="block border border-slate-200 rounded-lg px-3 py-2.5 hover:border-brand/50 hover:bg-brand-light/20 transition-all">
+              <div class="text-sm font-semibold text-brand-dark">Family Legacy Fund</div>
+              <div class="text-xs text-slate-500">#7201 &middot; <span class="font-semibold text-brand">$39,618.71</span></div>
+            </a>
+            <a href="#" class="block border border-slate-200 rounded-lg px-3 py-2.5 hover:border-brand/50 hover:bg-brand-light/20 transition-all">
+              <div class="text-sm font-semibold text-brand-dark">Education Fund</div>
+              <div class="text-xs text-slate-500">#9054 &middot; <span class="font-semibold text-brand">$125,400.00</span></div>
+            </a>
+            <a href="#" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-brand hover:text-brand-dark transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+              Open a New Fund
+            </a>
+          </div>
+        </div>
+
+        <!-- Other sections via template loop -->
+        <template x-for="section in mobileNavSections" :key="section.name">
+          <div x-data="{ expanded: false }">
+            <button @click="expanded = !expanded"
+                    class="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                    :aria-expanded="expanded">
+              <div class="text-left">
+                <span class="block font-semibold" x-text="section.name"></span>
+                <span class="block text-xs text-slate-500" x-text="section.description"></span>
+              </div>
+              <svg class="w-4 h-4 transition-transform flex-shrink-0" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div x-show="expanded" x-transition x-cloak class="ml-4 space-y-1 mt-1">
+              <template x-for="item in section.items" :key="item">
+                <a href="#" class="block px-3 py-2 text-sm text-slate-600 rounded-lg hover:bg-brand-light/50 hover:text-brand-dark transition-colors" x-text="item"></a>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Mobile footer: user info + log out -->
+      <div class="border-t border-slate-100 mt-3 pt-3 px-4">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand to-brand-secondary flex items-center justify-center text-white text-sm font-bold">SM</div>
+          <div>
+            <div class="text-sm font-semibold text-slate-900">Sarah Mitchell</div>
+            <div class="text-xs text-slate-500">sarah@example.org</div>
+          </div>
+        </div>
+        <a href="#"
+           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:border-brand/40 hover:text-brand-dark hover:bg-brand-light/30 transition-all"
+           role="button">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          Log out
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- MAIN CONTENT                                              -->
+  <!-- ======================================================== -->
+  <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+
+    <!-- ======================== -->
+    <!-- 1. HERO WELCOME SECTION  -->
+    <!-- ======================== -->
+    <section class="mb-8 rounded-2xl overflow-hidden relative" aria-label="Welcome">
+      <!-- Gradient background with placeholder image area -->
+      <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
+        <!-- Subtle teal gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-brand/20 via-transparent to-brand-secondary/15"></div>
+        <!-- Decorative pattern -->
+        <div class="absolute inset-0 opacity-[0.04]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><circle cx=%2230%22 cy=%2230%22 r=%221.5%22 fill=%22white%22/></svg>');"></div>
+
+        <div class="relative z-10 px-6 sm:px-10 py-10 sm:py-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div class="max-w-xl">
+            <p class="text-brand-light/80 text-sm font-medium tracking-wide uppercase mb-2">Community Impact Fund &middot; #4892</p>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight mb-3">
+              Welcome back, Sarah
+            </h1>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-1">
+              Your fund has supported <strong class="text-white font-semibold">12 organizations</strong> in the Greater Portland area this year.
+            </p>
+            <p class="text-slate-400 text-sm">
+              As of <time datetime="2025-12-10">December 10, 2025</time>
+            </p>
+            <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-end gap-5">
+              <div>
+                <p class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Spendable Balance</p>
+                <p class="text-white text-3xl sm:text-4xl font-bold tracking-tight">$52,250<span class="text-2xl text-slate-400">.16</span></p>
+              </div>
+              <div class="flex gap-3">
+                <a href="#"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand to-brand-dark text-white text-sm font-semibold rounded-xl shadow-md shadow-brand/30 hover:shadow-lg hover:shadow-brand/40 hover:-translate-y-0.5 transition-all duration-200"
+                   role="button">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+                  </svg>
+                  Recommend a Grant
+                </a>
+                <a href="#"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 text-white text-sm font-semibold rounded-xl border border-white/20 hover:bg-white/15 hover:border-white/30 hover:-translate-y-0.5 transition-all duration-200"
+                   role="button">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Contribute
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Community stat card (desktop only) -->
+          <div class="hidden lg:block">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl px-6 py-5 border border-white/10">
+              <p class="text-slate-400 text-xs uppercase tracking-wider mb-1">Community Impact This Year</p>
+              <p class="text-white text-2xl font-bold">$45,230,000</p>
+              <p class="text-slate-400 text-sm mt-1">From 850 fundholders like you</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ======================== -->
+    <!-- 2. KPI CARDS ROW         -->
+    <!-- ======================== -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8" aria-label="Key performance indicators">
+      <!-- Spendable Balance -->
+      <div class="relative bg-white rounded-xl shadow-sm border border-slate-200/80 p-6 overflow-hidden group hover:shadow-md hover:border-brand/20 transition-all duration-300">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-brand to-brand-secondary rounded-l-xl"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Spendable Balance</p>
+            <p class="mt-2 text-3xl font-bold text-slate-900 tracking-tight">$52,250<span class="text-xl">.16</span></p>
+            <div class="mt-2 flex items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                12.4%
+              </span>
+              <span class="text-slate-400">vs last month</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-brand-light flex items-center justify-center group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grants This Year -->
+      <div class="relative bg-white rounded-xl shadow-sm border border-slate-200/80 p-6 overflow-hidden group hover:shadow-md hover:border-violet-200 transition-all duration-300">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-400 to-violet-600 rounded-l-xl"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Grants This Year</p>
+            <p class="mt-2 text-3xl font-bold text-slate-900 tracking-tight">18 <span class="text-lg font-normal text-slate-500">grants</span></p>
+            <div class="mt-2 flex items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center gap-1 text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full font-medium">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                $42,300
+              </span>
+              <span class="text-slate-400">distributed</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contributions Received -->
+      <div class="relative bg-white rounded-xl shadow-sm border border-slate-200/80 p-6 overflow-hidden group hover:shadow-md hover:border-emerald-200 transition-all duration-300">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 to-emerald-600 rounded-l-xl"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Contributions Received</p>
+            <p class="mt-2 text-3xl font-bold text-slate-900 tracking-tight">$75,000<span class="text-xl">.00</span></p>
+            <div class="mt-2 flex items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                25.0%
+              </span>
+              <span class="text-slate-400">vs last year</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fund Growth -->
+      <div class="relative bg-white rounded-xl shadow-sm border border-slate-200/80 p-6 overflow-hidden group hover:shadow-md hover:border-amber-200 transition-all duration-300">
+        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-amber-600 rounded-l-xl"></div>
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-medium text-slate-500">Fund Growth (YTD)</p>
+            <p class="mt-2 text-3xl font-bold text-slate-900 tracking-tight">+8.4%</p>
+            <div class="mt-2 flex items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                $9,870
+              </span>
+              <span class="text-slate-400">earnings</span>
+            </div>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ======================== -->
+    <!-- 3. COMMUNITY IMPACT STRIP -->
+    <!-- ======================== -->
+    <section class="mb-8 rounded-2xl bg-gradient-to-r from-brand/5 via-brand/10 to-brand-secondary/5 border border-brand/10 px-6 sm:px-8 py-6" aria-label="Community collective impact">
+      <div class="text-center mb-5">
+        <h2 class="text-lg sm:text-xl font-bold text-slate-900 mb-1">Our Community's Collective Impact</h2>
+        <p class="text-sm text-slate-500 max-w-xl mx-auto">Together, <strong class="text-brand-dark font-semibold">850 fundholders</strong> granted <strong class="text-brand-dark font-semibold">$45M</strong> across <strong class="text-brand-dark font-semibold">500 organizations</strong> this year.</p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-brand-light flex items-center justify-center">
+            <svg class="w-5 h-5 text-brand-dark" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+            </svg>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-slate-900">850</p>
+          <p class="text-xs text-slate-500 mt-0.5">Fundholders</p>
+        </div>
+        <div class="text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-emerald-50 flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-slate-900">$45M</p>
+          <p class="text-xs text-slate-500 mt-0.5">Granted This Year</p>
+        </div>
+        <div class="text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-violet-50 flex items-center justify-center">
+            <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+            </svg>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-slate-900">500+</p>
+          <p class="text-xs text-slate-500 mt-0.5">Organizations</p>
+        </div>
+        <div class="text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-xl bg-amber-50 flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+            </svg>
+          </div>
+          <p class="text-xl sm:text-2xl font-bold text-slate-900">12</p>
+          <p class="text-xs text-slate-500 mt-0.5">Counties Reached</p>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ======================== -->
+    <!-- 4. TWO-COLUMN: ACTIVITY + GIVING STORY -->
+    <!-- ======================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+
+      <!-- Recent Fund Activity Timeline (wider) -->
+      <section class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden" aria-label="Recent fund activity">
+        <div class="flex items-center justify-between px-6 pt-6 pb-4">
+          <h2 class="text-lg font-semibold text-slate-900">Recent Activity</h2>
+          <a href="#" class="text-sm text-brand hover:text-brand-dark font-medium transition-colors">View All</a>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <!-- Activity items -->
+          <template x-for="item in activityFeed" :key="item.id">
+            <div class="flex items-start gap-4 px-6 py-4 hover:bg-slate-50/50 transition-colors">
+              <!-- Icon -->
+              <div class="flex-shrink-0 mt-0.5">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                     :class="item.type === 'contribution' ? 'bg-emerald-50 text-emerald-600' :
+                             item.type === 'grant' ? 'bg-violet-50 text-violet-600' :
+                             item.type === 'fee' ? 'bg-slate-100 text-slate-500' :
+                             'bg-amber-50 text-amber-600'">
+                  <!-- Contribution in -->
+                  <svg x-show="item.type === 'contribution'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  <!-- Grant out -->
+                  <svg x-show="item.type === 'grant'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+                  </svg>
+                  <!-- Fee -->
+                  <svg x-show="item.type === 'fee'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                  </svg>
+                  <!-- Earnings -->
+                  <svg x-show="item.type === 'earnings'" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22"/>
+                  </svg>
+                </div>
+              </div>
+              <!-- Details -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <p class="text-sm font-medium text-slate-900 truncate" x-text="item.description"></p>
+                    <p class="text-xs text-slate-500 mt-0.5" x-text="item.detail"></p>
+                  </div>
+                  <div class="text-right flex-shrink-0">
+                    <p class="text-sm font-semibold"
+                       :class="item.type === 'contribution' || item.type === 'earnings' ? 'text-emerald-600' : item.type === 'grant' ? 'text-violet-600' : 'text-slate-500'"
+                       x-text="item.amount"></p>
+                    <p class="text-xs text-slate-400 mt-0.5" x-text="item.date"></p>
+                  </div>
+                </div>
+                <!-- Status badge + cause badge -->
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
+                        :class="item.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' :
+                                item.status === 'Pending' ? 'bg-amber-50 text-amber-700' :
+                                'bg-slate-100 text-slate-600'"
+                        x-text="item.status"></span>
+                  <span x-show="item.cause" class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-brand-light/50 text-brand-dark" x-text="item.cause"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+          <a href="#" class="text-sm text-brand hover:text-brand-dark font-medium transition-colors flex items-center gap-1">
+            View complete history
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      <!-- Right column: Your Giving Story donut chart -->
+      <section class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200/80 p-6" aria-label="Your giving story">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-semibold text-slate-900">Your Giving Story</h2>
+          <select class="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-600 bg-white focus:border-brand focus:ring-1 focus:ring-brand/20"
+                  aria-label="Grant analysis time period">
+            <option>2025 YTD</option>
+            <option>2024</option>
+            <option>All Time</option>
+          </select>
+        </div>
+        <p class="text-sm text-slate-500 mb-5">Where your grants go &mdash; by cause area</p>
+        <div class="flex items-center justify-center">
+          <div class="relative w-48 h-48">
+            <canvas id="givingDonut" aria-label="Grant distribution by cause area: Education 30%, Housing 22%, Health 20%, Arts & Culture 16%, Environment 12%"></canvas>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span class="text-2xl font-bold text-slate-900">$42.3K</span>
+              <span class="text-xs text-slate-500">18 grants</span>
+            </div>
+          </div>
+        </div>
+        <!-- Legend -->
+        <div class="mt-5 grid grid-cols-2 gap-x-4 gap-y-2">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="legend-dot" style="background: #14b8a6;"></span>
+            <span class="text-slate-600">Education</span>
+            <span class="ml-auto font-medium text-slate-900">30%</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="legend-dot" style="background: #8b5cf6;"></span>
+            <span class="text-slate-600">Housing</span>
+            <span class="ml-auto font-medium text-slate-900">22%</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="legend-dot" style="background: #f59e0b;"></span>
+            <span class="text-slate-600">Health</span>
+            <span class="ml-auto font-medium text-slate-900">20%</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="legend-dot" style="background: #ec4899;"></span>
+            <span class="text-slate-600">Arts &amp; Culture</span>
+            <span class="ml-auto font-medium text-slate-900">16%</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="legend-dot" style="background: #10b981;"></span>
+            <span class="text-slate-600">Environment</span>
+            <span class="ml-auto font-medium text-slate-900">12%</span>
+          </div>
+        </div>
+        <!-- Total -->
+        <div class="mt-5 pt-4 border-t border-slate-100 text-center">
+          <p class="text-xs text-slate-400 uppercase tracking-wider">Total Granted This Year</p>
+          <p class="text-xl font-bold text-slate-900 mt-1">$42,300</p>
+        </div>
+      </section>
+    </div>
+
+
+    <!-- ======================== -->
+    <!-- 5. FUNDING OPPORTUNITIES  -->
+    <!-- ======================== -->
+    <section class="mb-8" aria-label="Funding opportunities">
+      <div class="flex items-end justify-between mb-5">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-slate-900">Funding Opportunities</h2>
+          <p class="text-sm text-slate-500 mt-1">Curated causes in your community that need support</p>
+        </div>
+        <a href="#" class="hidden sm:inline-flex text-sm text-brand hover:text-brand-dark font-medium transition-colors">Browse All</a>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+        <!-- Opportunity 1: Education + Matching -->
+        <article class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden group hover:shadow-md hover:border-brand/20 transition-all duration-300">
+          <div class="h-44 bg-gradient-to-br from-brand/10 via-brand-secondary/5 to-slate-100 relative flex items-center justify-center overflow-hidden">
+            <div class="text-center text-slate-400">
+              <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>
+              </svg>
+              <span class="text-xs">Program photo</span>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2.5">
+              <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-brand-light text-brand-dark">Education</span>
+              <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700">2:1 Matching</span>
+            </div>
+            <h3 class="text-base font-semibold text-slate-900 mb-2 group-hover:text-brand-dark transition-colors">
+              Riverside Youth STEM Academy
+            </h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-4">
+              After-school science and technology programs for underserved middle school students. Your grant is matched 2:1 this month.
+            </p>
+            <!-- Progress bar -->
+            <div class="mb-3">
+              <div class="flex justify-between text-xs text-slate-500 mb-1">
+                <span>$36,000 raised</span>
+                <span>Goal: $50,000</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="progress-fill h-full bg-gradient-to-r from-brand to-brand-secondary rounded-full" style="width: 72%;"></div>
+              </div>
+            </div>
+            <a href="#"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white text-sm font-semibold rounded-xl shadow-sm shadow-brand/20 hover:shadow-md hover:shadow-brand/30 hover:-translate-y-0.5 transition-all duration-200 w-full justify-center"
+               role="button">
+              Support This
+            </a>
+          </div>
+        </article>
+
+        <!-- Opportunity 2: Housing + Urgent -->
+        <article class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden group hover:shadow-md hover:border-brand/20 transition-all duration-300">
+          <div class="h-44 bg-gradient-to-br from-violet-50 via-slate-50 to-slate-100 relative flex items-center justify-center overflow-hidden">
+            <div class="text-center text-slate-400">
+              <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819"/>
+              </svg>
+              <span class="text-xs">Program photo</span>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2.5">
+              <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-violet-50 text-violet-700">Housing</span>
+              <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700">Urgent Need</span>
+            </div>
+            <h3 class="text-base font-semibold text-slate-900 mb-2 group-hover:text-brand-dark transition-colors">
+              Community Land Trust Housing
+            </h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-4">
+              Creating permanently affordable homes for working families. 12 families are on the waitlist for the next construction phase.
+            </p>
+            <!-- Progress bar -->
+            <div class="mb-3">
+              <div class="flex justify-between text-xs text-slate-500 mb-1">
+                <span>$54,000 raised</span>
+                <span>Goal: $120,000</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="progress-fill h-full bg-gradient-to-r from-violet-400 to-violet-600 rounded-full" style="width: 45%;"></div>
+              </div>
+            </div>
+            <a href="#"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white text-sm font-semibold rounded-xl shadow-sm shadow-brand/20 hover:shadow-md hover:shadow-brand/30 hover:-translate-y-0.5 transition-all duration-200 w-full justify-center"
+               role="button">
+              Support This
+            </a>
+          </div>
+        </article>
+
+        <!-- Opportunity 3: Environment -->
+        <article class="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden group hover:shadow-md hover:border-brand/20 transition-all duration-300">
+          <div class="h-44 bg-gradient-to-br from-emerald-50 via-slate-50 to-slate-100 relative flex items-center justify-center overflow-hidden">
+            <div class="text-center text-slate-400">
+              <svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 01-1.161.886l-.143.048a1.107 1.107 0 00-.57 1.664c.369.555.169 1.307-.427 1.605L9 13.125l.423 1.059a.956.956 0 01-1.652.928l-.679-.906a1.125 1.125 0 00-1.906.172L4.5 15.75l-.612.153M12.75 3.031a9 9 0 00-8.862 12.872M12.75 3.031a9 9 0 016.69 14.036m0 0l-.177-.529A2.25 2.25 0 0017.128 15H16.5l-.324-.324a1.453 1.453 0 00-2.328.377l-.036.073a1.586 1.586 0 01-.982.816l-.99.282c-.55.157-.894.702-.8 1.267l.073.438c.08.474.49.821.97.821.846 0 1.598.542 1.865 1.345l.215.643m5.276-3.67a9.012 9.012 0 01-5.276 3.67m0 0a9 9 0 01-10.275-4.835M15.75 9c0 .896-.393 1.7-1.016 2.25"/>
+              </svg>
+              <span class="text-xs">Program photo</span>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center gap-2 mb-2.5">
+              <span class="inline-flex items-center text-xs font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Environment</span>
+            </div>
+            <h3 class="text-base font-semibold text-slate-900 mb-2 group-hover:text-brand-dark transition-colors">
+              Creek Watershed Restoration
+            </h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-4">
+              Restoring native habitats along Mill Creek to improve water quality and create walking trails. Three local conservation groups partnering.
+            </p>
+            <!-- Progress bar -->
+            <div class="mb-3">
+              <div class="flex justify-between text-xs text-slate-500 mb-1">
+                <span>$45,000 raised</span>
+                <span>Goal: $75,000</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="progress-fill h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full" style="width: 60%;"></div>
+              </div>
+            </div>
+            <a href="#"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white text-sm font-semibold rounded-xl shadow-sm shadow-brand/20 hover:shadow-md hover:shadow-brand/30 hover:-translate-y-0.5 transition-all duration-200 w-full justify-center"
+               role="button">
+              Support This
+            </a>
+          </div>
+        </article>
+      </div>
+
+      <!-- Mobile browse all -->
+      <div class="sm:hidden text-center mt-4">
+        <a href="#" class="text-sm text-brand hover:text-brand-dark font-medium transition-colors">Browse All Opportunities</a>
+      </div>
+    </section>
+
+
+    <!-- ======================== -->
+    <!-- 6. TWO-COLUMN: EVENTS + QUICK ACTIONS -->
+    <!-- ======================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+      <!-- Upcoming Events -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-6" aria-label="Upcoming events">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-semibold text-slate-900">Upcoming Events</h2>
+          <a href="#" class="text-sm text-brand hover:text-brand-dark font-medium transition-colors">All Events</a>
+        </div>
+        <div class="space-y-4" role="list" aria-label="Foundation events">
+
+          <!-- Event 1 -->
+          <article class="flex gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors" role="listitem">
+            <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-brand-light flex flex-col items-center justify-center text-center">
+              <span class="text-xs font-bold uppercase leading-none text-brand-dark">Apr</span>
+              <span class="text-lg font-bold leading-tight text-slate-900">12</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-semibold text-slate-900">Annual Community Gala</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Riverside Convention Center &bull; 6:00 PM</p>
+              <p class="text-xs text-slate-500 mt-1">Celebrating our fundholders and community partners with dinner, awards, and live music.</p>
+            </div>
+            <div class="flex-shrink-0 self-center">
+              <a href="#" class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-brand text-brand hover:bg-brand hover:text-white transition-all">
+                RSVP
+              </a>
+            </div>
+          </article>
+
+          <!-- Event 2 -->
+          <article class="flex gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors" role="listitem">
+            <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-brand-light flex flex-col items-center justify-center text-center">
+              <span class="text-xs font-bold uppercase leading-none text-brand-dark">Apr</span>
+              <span class="text-lg font-bold leading-tight text-slate-900">25</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-semibold text-slate-900">Fundholder Lunch &amp; Learn</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Foundation Office &bull; 12:00 PM</p>
+              <p class="text-xs text-slate-500 mt-1">Maximizing your community impact &mdash; strategies for effective local giving. Lunch provided.</p>
+            </div>
+            <div class="flex-shrink-0 self-center">
+              <a href="#" class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-brand text-brand hover:bg-brand hover:text-white transition-all">
+                RSVP
+              </a>
+            </div>
+          </article>
+
+          <!-- Event 3 -->
+          <article class="flex gap-4 p-3 rounded-xl hover:bg-slate-50 transition-colors" role="listitem">
+            <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-brand-light flex flex-col items-center justify-center text-center">
+              <span class="text-xs font-bold uppercase leading-none text-brand-dark">May</span>
+              <span class="text-lg font-bold leading-tight text-slate-900">10</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-semibold text-slate-900">Nonprofit Site Visits Day</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Multiple locations &bull; 9:00 AM &ndash; 3:00 PM</p>
+              <p class="text-xs text-slate-500 mt-1">Tour 5 grantee organizations, meet their teams, and see your grants in action firsthand.</p>
+            </div>
+            <div class="flex-shrink-0 self-center">
+              <a href="#" class="px-3 py-1.5 rounded-lg text-xs font-semibold border-2 border-brand text-brand hover:bg-brand hover:text-white transition-all">
+                RSVP
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl shadow-lg p-6 text-white overflow-hidden relative" aria-label="Quick actions">
+        <!-- Decorative circles -->
+        <div class="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-brand/10 blur-2xl"></div>
+        <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-brand-secondary/10 blur-2xl"></div>
+        <h2 class="text-lg font-semibold mb-4 relative">Quick Actions</h2>
+        <div class="grid grid-cols-2 gap-3 relative">
+          <a href="#" class="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg class="w-5 h-5 text-brand-light" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-white/90">Recommend Grant</span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-white/90">Contribute</span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg class="w-5 h-5 text-violet-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-white/90">Find Charities</span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-2.5 p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 transition-all group">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg class="w-5 h-5 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-white/90">Tax Documents</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+
+    <!-- ======================== -->
+    <!-- 7. FOUNDATION GUIDANCE    -->
+    <!-- ======================== -->
+    <section class="mb-8" aria-label="Foundation guidance">
+      <h2 class="text-lg sm:text-xl font-bold text-slate-900 mb-5">Foundation Guidance</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+        <!-- Giving Strategies -->
+        <a href="#" class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 hover:shadow-md hover:border-brand/20 transition-all duration-300 group block">
+          <div class="w-11 h-11 rounded-xl bg-brand-light flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-brand-dark" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+            </svg>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark transition-colors">Giving Strategies</h3>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+            Maximize your charitable impact with approaches from immediate grants to endowed giving that supports your community for generations.
+          </p>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-brand mt-3 group-hover:text-brand-dark transition-colors">
+            Learn More
+            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+            </svg>
+          </span>
+        </a>
+
+        <!-- Tax Planning -->
+        <a href="#" class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 hover:shadow-md hover:border-brand/20 transition-all duration-300 group block">
+          <div class="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z"/>
+            </svg>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark transition-colors">Tax Planning</h3>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+            Understand your tax benefits, including strategies for year-end giving, IRA distributions, and maximizing your charitable deductions.
+          </p>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-brand mt-3 group-hover:text-brand-dark transition-colors">
+            Learn More
+            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+            </svg>
+          </span>
+        </a>
+
+        <!-- Family Philanthropy -->
+        <a href="#" class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 hover:shadow-md hover:border-brand/20 transition-all duration-300 group block">
+          <div class="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            <svg class="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-900 group-hover:text-brand-dark transition-colors">Family Philanthropy</h3>
+          <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+            Involve the next generation in your giving journey. Learn about successor advisors, family giving circles, and building a legacy of generosity.
+          </p>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold text-brand mt-3 group-hover:text-brand-dark transition-colors">
+            Learn More
+            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+            </svg>
+          </span>
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ======================================================== -->
+  <!-- 8. FOOTER                                                 -->
+  <!-- ======================================================== -->
+  <footer class="bg-slate-900 text-slate-400 mt-16" role="contentinfo">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-10">
+        <!-- Brand column -->
+        <div class="col-span-2 md:col-span-4 lg:col-span-1 mb-4 lg:mb-0">
+          <a href="#" class="flex items-center gap-2.5 mb-4" aria-label="GOfund v2 Home">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand to-brand-secondary flex items-center justify-center">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+            </div>
+            <span class="text-base font-bold text-white tracking-tight">GOfund<span class="text-brand"> v2</span></span>
+          </a>
+          <p class="text-sm leading-relaxed text-slate-500">Empowering donors to strengthen their communities through strategic, thoughtful philanthropy.</p>
+        </div>
+
+        <!-- Giving -->
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Giving</h3>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Open a Fund</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Make a Grant</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Contribute</a></li>
+          </ul>
+        </div>
+
+        <!-- Resources -->
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Resources</h3>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Learning Center</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Tax Benefits</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Giving Strategies</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">FAQs</a></li>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Company</h3>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">About Us</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Careers</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Press</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Contact</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <h3 class="text-sm font-semibold text-white mb-4 uppercase tracking-wider">Legal</h3>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Privacy Policy</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Terms of Service</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Accessibility</a></li>
+            <li><a href="#" class="text-sm hover:text-brand transition-colors">Security</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="border-t border-slate-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-xs text-slate-500">&copy; 2025 GOfund v2. All rights reserved. Prototype for demonstration purposes only.</p>
+        <div class="flex items-center gap-4">
+          <a href="#" class="text-slate-500 hover:text-brand transition-colors" aria-label="LinkedIn">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a href="#" class="text-slate-500 hover:text-brand transition-colors" aria-label="X (Twitter)">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+          <a href="#" class="text-slate-500 hover:text-brand transition-colors" aria-label="Facebook">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ======================================================== -->
+  <!-- ALPINE.JS DATA & CHART.JS INITIALIZATION                 -->
+  <!-- ======================================================== -->
+  <script>
+    function portal() {
+      return {
+        mobileMenu: false,
+        showBanner: true,
+
+        mobileNavSections: [
+          { name: 'Grant', description: 'Support your favorite charities', items: ['Recommend a Grant', 'Grant History', 'Recurring Grants', 'Pending Grants'] },
+          { name: 'Contribute', description: 'Fund your Giving Account', items: ['Make a Contribution', 'Contribution History', 'Recurring Contributions'] },
+          { name: 'History', description: 'Access transaction history & statements', items: ['All Activity', 'Statements', 'Tax Documents', 'Confirmations'] },
+          { name: 'Guidance', description: 'Develop your giving strategy', items: ['Giving Strategy', 'Charity Search', 'Tax Benefits Calculator', 'Learning Center'] },
+        ],
+
+        activityFeed: [
+          { id: 1, type: 'grant', description: 'Grant to Riverside Food Bank', detail: 'Emergency hunger relief program', amount: '-$5,000.00', date: 'Dec 8, 2025', status: 'Completed', cause: 'Food Security' },
+          { id: 2, type: 'grant', description: 'Grant to Community Arts Center', detail: 'Youth arts education summer program', amount: '-$2,500.00', date: 'Dec 1, 2025', status: 'Completed', cause: 'Arts & Culture' },
+          { id: 3, type: 'contribution', description: 'Contribution Received', detail: 'Wire transfer — annual contribution', amount: '+$25,000.00', date: 'Nov 28, 2025', status: 'Completed', cause: '' },
+          { id: 4, type: 'grant', description: 'Grant to Habitat for Humanity', detail: 'Local chapter home building project', amount: '-$3,000.00', date: 'Nov 22, 2025', status: 'Completed', cause: 'Housing' },
+          { id: 5, type: 'earnings', description: 'Fund Earnings', detail: 'Q4 endowment earnings credited', amount: '+$412.38', date: 'Nov 15, 2025', status: 'Completed', cause: '' },
+          { id: 6, type: 'grant', description: 'Grant to Big Brothers Big Sisters', detail: 'Mentorship matching program', amount: '-$1,500.00', date: 'Nov 10, 2025', status: 'Completed', cause: 'Youth Development' },
+          { id: 7, type: 'grant', description: 'Grant to Portland Health Clinic', detail: 'Free community health screenings', amount: '-$4,000.00', date: 'Nov 5, 2025', status: 'Pending', cause: 'Health' },
+        ],
+
+        init() {
+          // Initialize Chart.js donut chart after Alpine + DOM are ready
+          this.$nextTick(() => {
+            const ctx = document.getElementById('givingDonut');
+            if (ctx) {
+              new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                  labels: ['Education', 'Housing', 'Health', 'Arts & Culture', 'Environment'],
+                  datasets: [{
+                    data: [12690, 9306, 8460, 6768, 5076],
+                    backgroundColor: ['#14b8a6', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981'],
+                    borderWidth: 0,
+                    borderRadius: 4,
+                    spacing: 2,
+                  }]
+                },
+                options: {
+                  cutout: '72%',
+                  responsive: true,
+                  maintainAspectRatio: true,
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      backgroundColor: '#1e293b',
+                      titleFont: { family: 'Inter', size: 13, weight: '600' },
+                      bodyFont: { family: 'Inter', size: 12 },
+                      cornerRadius: 8,
+                      padding: 10,
+                      callbacks: {
+                        label: function(context) {
+                          return ' $' + context.parsed.toLocaleString();
+                        }
+                      }
+                    }
+                  },
+                  animation: {
+                    animateRotate: true,
+                    duration: 1000,
+                  }
+                }
+              });
+            }
+          });
+        }
+      };
+    }
+  </script>
+
+</body>
+</html>

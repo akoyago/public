@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOfund vNext — Candidate Features — GOfund vNext Research</title>
+<style>
+  :root {
+    --primary: #0d9488;
+    --primary-light: #ccfbf1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --border: #e2e8f0;
+    --code-bg: #f1f5f9;
+    --radius: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+  }
+  .top-bar {
+    background: var(--text);
+    color: white;
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .top-bar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.15s;
+  }
+  .top-bar a:hover { color: white; }
+  .top-bar .brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+  .top-bar .brand span { color: var(--primary); }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 8px;
+    color: var(--text);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 12px;
+  }
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 32px 0 12px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 24px 0 8px;
+    color: var(--text-muted);
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  blockquote {
+    border-left: 4px solid var(--primary);
+    margin: 16px 0;
+    padding: 12px 20px;
+    background: var(--primary-light);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+  }
+  blockquote p { margin: 0 0 8px; }
+  blockquote p:last-child { margin: 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+  }
+  pre {
+    background: var(--text);
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 16px;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.85em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 24px;
+    font-size: 0.9rem;
+    display: block;
+    overflow-x: auto;
+  }
+  thead { background: var(--bg-alt); }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--bg-alt); }
+  del { opacity: 0.5; }
+  strong { font-weight: 600; }
+  hr {
+    border: none;
+    border-top: 2px solid var(--border);
+    margin: 40px 0;
+  }
+  .meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) {
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.2rem; }
+    .container { padding: 24px 16px 60px; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 8px 10px; }
+  }
+  @media print {
+    .top-bar { display: none; }
+    body { font-size: 11pt; }
+    table { display: table; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="top-bar" role="banner">
+  <div class="top-bar-inner">
+    <a href="index.html" class="brand">GO<span>fund</span> vNext Research</a>
+    <a href="index.html">&larr; Back to Index</a>
+  </div>
+</div>
+<main class="container" role="main">
+<h1>GOfund vNext — Candidate Features</h1>
+<blockquote>
+<p>Target market: <strong>Community Foundations</strong>
+Date: 2026-03-28
+Ground-up rewrite — includes existing features (carry forward) and new features (gaps identified from competitive research)
+Sources: <a href="gofund-feature-catalog.md">GOfund Feature Catalog</a>, <a href="gofund-feature-gap-analysis.md">Feature Gap Analysis</a>, <a href="gofund-similar-products-research.md">Similar Products Research</a></p>
+</blockquote>
+<h2>How to Read This Document</h2>
+<p>This is a <strong>complete feature list</strong> for the GOfund vNext rewrite. Every feature is tagged:</p>
+<ul>
+<li><code>EXISTING</code> = Carry forward from current GOfund (already built, needs rewrite for new architecture)</li>
+<li><code>NEW</code> = Gap feature identified from competitive research (not in current GOfund)</li>
+<li><code>ENHANCE</code> = Exists in current GOfund but needs significant improvement based on competitive gaps</li>
+</ul>
+<p>Priority tiers:</p>
+<ul>
+<li><strong>P0 — Must Have:</strong> Ship without these and you can&#39;t sell the product</li>
+<li><strong>P1 — Should Have:</strong> Close the gap with Foundant CommunitySuite, Give Interactive, and Fidelity Charitable</li>
+<li><strong>P2 — Differentiators:</strong> Whitespace features where GOfund can leapfrog competitors</li>
+<li><strong>P3 — Future:</strong> Defer unless customer demand emerges</li>
+</ul>
+<p>Market tags:</p>
+<ul>
+<li><strong>CF</strong> = Community Foundation priority</li>
+<li><strong>DAF</strong> = Primarily DAF feature (defer for CF launch)</li>
+<li><strong>CF+DAF</strong> = Applies to both</li>
+</ul>
+<hr>
+<h2>P0 — Must Have</h2>
+<h3>Authentication &amp; Identity</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-01</td>
+<td>Login (email + password)</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Standard email/password auth with fund connection validation, timezone handling, account lockout, sign-in event publishing</td>
+</tr>
+<tr>
+<td>F-02</td>
+<td>Two-factor authentication</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Email-based 2FA with 6-7 char code, &quot;remember machine&quot; option, CRM timeline note on code send. Recovery code fallback</td>
+</tr>
+<tr>
+<td>F-03</td>
+<td>Authenticator app (TOTP)</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>QR code setup for authenticator apps, shared key display, 10 recovery codes, disable/reset options</td>
+</tr>
+<tr>
+<td>F-04</td>
+<td>Password management</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Forgot password (email reset token, doesn&#39;t reveal if account exists), change password, set password for external login users</td>
+</tr>
+<tr>
+<td>F-05</td>
+<td>Email confirmation</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Token-based email confirmation on registration, email change confirmation, resend capability</td>
+</tr>
+<tr>
+<td>F-06</td>
+<td>External logins (SSO)</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>SQS-based authentication from external systems (encrypted token, subdomain/username/expiration validation)</td>
+</tr>
+<tr>
+<td>F-07</td>
+<td>Logout</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Clear session, sign out, optional return URL</td>
+</tr>
+</tbody></table>
+<h3>Account Management</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-08</td>
+<td>Email management</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>View current email/confirmation status, change email with confirmation workflow, resend verification</td>
+</tr>
+<tr>
+<td>F-09</td>
+<td>Personal data (GDPR)</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Download personal data as JSON, delete account with password verification</td>
+</tr>
+<tr>
+<td>F-10</td>
+<td>External login management</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Add/remove linked external authentication providers</td>
+</tr>
+</tbody></table>
+<h3>Fund Management</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-11</td>
+<td>Fund dashboard homepage</td>
+<td><code>ENHANCE</code></td>
+<td>CF+DAF</td>
+<td><strong>Current:</strong> Customizable header, hero image, fund selector, CTA cards, news feed, funding opportunities grid. <strong>vNext:</strong> Add KPI cards (Available to Grant, YTD Contributions, YTD Grants), recent fund activity feed, grant analysis summary, quick action buttons. Homepage should answer &quot;what do I need to know right now?&quot; on first load — like Fidelity Charitable.</td>
+</tr>
+<tr>
+<td>F-12</td>
+<td>Fund summary page</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Fund name/code/type, fund balance and spendable balance with tooltip, action buttons (Donate, Recommend Grant, Documents, Statement), recent grants (top 3), recent contributions (top 3), pending recommendations, scheduled distributions, inline donation modal, update fund profile link</td>
+</tr>
+<tr>
+<td>F-13</td>
+<td>Fund selector</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Dropdown showing all user&#39;s funds, auto-navigation on switch, context-aware navigation (maintains current page), auto-select if single fund</td>
+</tr>
+<tr>
+<td>F-14</td>
+<td>Fund activity timeline</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Unified chronological feed of all fund events (contributions in, grants out, fees charged, earnings posted) — like a bank statement. Foundant, Give Interactive, and Fidelity Charitable all have this. Currently GOfund shows grants, gifts, and balances in separate views.</td>
+</tr>
+<tr>
+<td>F-15</td>
+<td>Fund connections</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Retrieves fund connections for a user, one person can connect to multiple funds with unique permissions per fund</td>
+</tr>
+</tbody></table>
+<h3>Donations &amp; Contributions</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-16</td>
+<td>Inline donation (from fund page)</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Amount input, gift type (Unrestricted / Designated Purpose), dedication section (In Honor Of / In Memory Of with recipient details), submit with loading indicator, Bootstrap modal</td>
+</tr>
+<tr>
+<td>F-17</td>
+<td>Donation checkout</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Donation summary, recurring frequency selector (One-time, Weekly, Monthly, Quarterly, Annually), donor selector with &quot;Add New Donor&quot; option, new donor form (Individual/Organization), transaction record creation</td>
+</tr>
+<tr>
+<td>F-18</td>
+<td>Stripe payment processing</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Stripe Elements integration, PaymentIntent creation, card/payment method form, &quot;Complete Donation&quot; with loading states, error handling, return URL handling</td>
+</tr>
+<tr>
+<td>F-19</td>
+<td>Donation completion</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>PaymentIntent status validation, transaction fee extraction, confirmation email, donation receipt HTML, customizable completion text</td>
+</tr>
+<tr>
+<td>F-20</td>
+<td>Recurring donations list</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Toggle Active/Inactive, configurable disclaimer, status-dependent actions (Retry, Pause, Cancel, Resume)</td>
+</tr>
+<tr>
+<td>F-21</td>
+<td>Recurring donation detail/edit</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Status display with color coding, donor selector, frequency dropdown, next occurrence / end date pickers, fund allocation table (up to 12 funds), timeline notes, Hangfire job queuing</td>
+</tr>
+</tbody></table>
+<h3>Grant Recommendations</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-22</td>
+<td>Recommend grant to organization</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Fund display, org search with recent orgs list (up to 100), charity search results (name, tax ID, city, state, status), amount with min/max validation, grant date picker, purpose textarea (850 chars), SurveyJS custom form, file upload, recommendation note (2000 chars), comments, certification checkbox, Submit Now / Save as Draft, repeat grant support, org details display (logo, address, website, EIN, mission)</td>
+</tr>
+<tr>
+<td>F-23</td>
+<td>Recommend grant to established fund (interfund)</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Inter-fund transfers, gift fund selection via TomSelect, amount input, grant date picker, purpose textarea, SurveyJS custom form, file upload, certification checkbox, Submit/Save Draft, repeat interfund support</td>
+</tr>
+<tr>
+<td>F-24</td>
+<td>Grant recommendation drafts</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Drafts grouped by fund, warning badges (Exceeds Fund Limit, Below Minimum Balance), per-draft actions (Edit, Delete, Submit), summary with totals/limits/remaining, Submit All button (disabled if constraints violated)</td>
+</tr>
+<tr>
+<td>F-25</td>
+<td>Grant recommendation confirmation</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Configurable success message, options to recommend another grant (to org or fund), back to fund summary link</td>
+</tr>
+<tr>
+<td>F-26</td>
+<td>Grant recommendation error handling</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Email notification to foundation on errors, template placeholders with error context, CRM logging</td>
+</tr>
+<tr>
+<td>F-27</td>
+<td>SurveyJS custom form integration</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Quill rich text editor for SurveyJS, toolbar options, read-only mode, PDF rendering support</td>
+</tr>
+<tr>
+<td>F-28</td>
+<td>Grant recommendation status tracking</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>After submitting, donor sees real-time status: Pending Review → Approved → Payment Scheduled → Paid (or Declined). Visible in grant history table and optionally as notification. Foundant, Give Interactive, and Fidelity Charitable all show this.</td>
+</tr>
+<tr>
+<td>F-29</td>
+<td>Scheduled/recurring grant management</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Donor views, edits, and deletes scheduled/recurring grant recommendations in a management table. Columns: ID, Charity, Use, Next grant date / Frequency, Amount, Status, Actions (Edit/Delete). Fidelity Charitable has this.</td>
+</tr>
+</tbody></table>
+<h3>Grant &amp; Gift History</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-30</td>
+<td>Grant history</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Multi-fund selector, org filter with search, date range filters with session persistence, sortable columns, search/filter text, &quot;Repeat Grant&quot; action links, Excel export (GemBox.Spreadsheet), pagination (5000 records), cached org list</td>
+</tr>
+<tr>
+<td>F-31</td>
+<td>Gift history</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Multi-fund selector, date range filters with session persistence, sortable columns, search/filter text, text truncation with show more/less, Excel export, permission-based access</td>
+</tr>
+</tbody></table>
+<h3>Fund Statements &amp; Documents</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-32</td>
+<td>Fund statement generation</td>
+<td><code>EXISTING</code></td>
+<td>CF</td>
+<td>Fund selector, date range with fiscal year defaults, min/max date constraints, optional &quot;Print Fund Group&quot; checkbox (permission-gated), PDF generation and inline display, timezone-aware, audit event publishing</td>
+</tr>
+<tr>
+<td>F-33</td>
+<td>Tax receipt &amp; statement self-service</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Donors download tax receipts, fund statements, grant confirmations, and year-end summaries as PDFs — without calling the foundation. Tabbed document access (Statements, Tax receipts, Grant confirmations). Date range filtering. Print and Download buttons. Foundant and Fidelity Charitable both offer this. <strong>#1 most basic gap.</strong></td>
+</tr>
+<tr>
+<td>F-34</td>
+<td>Document library</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Fund-specific documents (permission-gated), global/shared documents, download capability, file type icons, ordered by name</td>
+</tr>
+</tbody></table>
+<h3>Charts &amp; Analytics</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-35</td>
+<td>Charts dashboard</td>
+<td><code>ENHANCE</code></td>
+<td>CF+DAF</td>
+<td><strong>Current:</strong> Multi-fund selection, date range filtering, HTMX-loaded charts, Chart.js (Number Cards, Bar, Line, Pie), configurable chart definitions from CRM. <strong>vNext:</strong> Charts are admin-managed — donors have no self-service analytics. Add donor-specific grant analysis (see F-36).</td>
+</tr>
+<tr>
+<td>F-36</td>
+<td>Grant analysis dashboard</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Donor sees a visual analysis of their giving: donut/pie chart of grants by cause area/sector, top charities ranked by amount, &quot;Total Granted&quot; KPI, date filter. Fidelity Charitable shows this on the homepage. This is the single most impactful visual for a donor portal.</td>
+</tr>
+<tr>
+<td>F-37</td>
+<td>Investment performance visibility</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Line/area chart showing fund investment value over time (months/years). Current strategy/pool name, performance YTD and trailing periods. Give Interactive has Morningstar integration; Fidelity shows pool performance.</td>
+</tr>
+<tr>
+<td>F-38</td>
+<td>Year-over-year giving trends</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Bar or line chart showing total giving by year. Helps donors track philanthropic trajectory. Fidelity shows YTD + prior year KPI cards.</td>
+</tr>
+<tr>
+<td>F-39</td>
+<td>Geographic grant distribution map</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Interactive map showing where the donor&#39;s grants went — pins with org names and amounts. No competitor has this in the donor portal. Especially valuable for CF fundholders whose grants focus on a local community. <strong>Whitespace opportunity.</strong></td>
+</tr>
+</tbody></table>
+<h3>Funding Opportunities</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-40</td>
+<td>Funding opportunities list</td>
+<td><code>EXISTING</code></td>
+<td>CF</td>
+<td>Featured and other opportunities as cards with thumbnail, title, &quot;Learn More&quot; button, grant recommendation links (permission-gated)</td>
+</tr>
+<tr>
+<td>F-41</td>
+<td>Funding opportunity detail</td>
+<td><code>EXISTING</code></td>
+<td>CF</td>
+<td>Full description (HTML), primary image, &quot;Recommend a Grant&quot; button (single or dropdown for multi-fund), access validation</td>
+</tr>
+<tr>
+<td>F-42</td>
+<td>Grant catalog browsing</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Curated list of vetted local funding opportunities posted by nonprofits — &quot;here&#39;s what needs funding right now in our community.&quot; Browsable with org name, description, cause area, requested amount, and &quot;Recommend a Grant&quot; button. Foundant offers this via Grant Catalog. CF-specific differentiator.</td>
+</tr>
+</tbody></table>
+<h3>Fund Profile</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-43</td>
+<td>Basic fund profile edit</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Edit formal fund name, anonymity setting, fund purpose/mission. Read-only: code, type, class, endowed status, established date. Permission-based.</td>
+</tr>
+<tr>
+<td>F-44</td>
+<td>Enhanced fund profile</td>
+<td><code>EXISTING</code></td>
+<td>CF</td>
+<td>Giving center profile name, featured photo, at-a-glance sections (3 text fields), about us, logo, mission, contact info, executive director, website/social media, Form 990, story/photos.</td>
+</tr>
+</tbody></table>
+<h3>Portal Infrastructure</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-45</td>
+<td>Multi-tenancy &amp; routing</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Finbuckle multi-tenant, <code>{__tenant__}</code> route prefix, tenant-specific favicon, static asset path exclusions</td>
+</tr>
+<tr>
+<td>F-46</td>
+<td>Tenant &amp; user providers</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>TenantProvider, UserProvider, custom claims principal factory (subdomain, contactId, tenantAccountId, fullname), FusionCache with 30s stale fallback</td>
+</tr>
+<tr>
+<td>F-47</td>
+<td>Theme support</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Tenant-specific theme via IThemeProvider, theme-aware background color, TenantThemeStyle tag helper, canary environment indicator</td>
+</tr>
+<tr>
+<td>F-48</td>
+<td>GoFund settings</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Tenant-level settings retrieval via MediatR, department-specific settings</td>
+</tr>
+<tr>
+<td>F-49</td>
+<td>Logo &amp; image serving</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Anonymous access, 1-day caching, fallback to placeholders, fund/contact/organization/nav logos, tenant-specific</td>
+</tr>
+<tr>
+<td>F-50</td>
+<td>Contact us</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Configurable contact page content (HTML), foundation contact information</td>
+</tr>
+<tr>
+<td>F-51</td>
+<td>Static content pages</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>FAQ, Privacy Policy, Terms pages with configurable HTML content</td>
+</tr>
+<tr>
+<td>F-52</td>
+<td>GoDonate SSO navigation</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>SQS-based cross-application single sign-on, navbar link to GoDonate portal</td>
+</tr>
+<tr>
+<td>F-53</td>
+<td>Event &amp; audit system</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Domain event publishing/handling, Dataverse audit logging, Serilog structured logging to Dynamics CRM</td>
+</tr>
+<tr>
+<td>F-54</td>
+<td>Caching</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>FusionCache with configurable TTLs, session-based filter persistence, HTTP response caching for images</td>
+</tr>
+<tr>
+<td>F-55</td>
+<td>Diagnostics</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Health check endpoints, structured logging, error pages</td>
+</tr>
+<tr>
+<td>F-56</td>
+<td>User invites &amp; onboarding</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>Hangfire background job for invite creation, Dataverse contact lookup, invite record in SQL, onboarding URL generation, email template with placeholders, invite status tracking (Created → Sent → In Progress → Completed), 90s timeout, auto-retry</td>
+</tr>
+<tr>
+<td>F-57</td>
+<td>Impersonation</td>
+<td><code>EXISTING</code></td>
+<td>CF+DAF</td>
+<td>SQS token with original/impersonated usernames, confirmation page, ImpersonatedBy and IsImpersonated claims, impersonation event publishing</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>P1 — Should Have</h2>
+<h3>Grant Recommendation Enhancements</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-58</td>
+<td>Rich grant use taxonomy</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Structured &quot;Use&quot; dropdown: Where it&#39;s needed most, Annual fund, In honor of (with note), In memory of (with note), Membership, Pledge, Tithe, Create your own. CF fundholders frequently make grants &quot;in memory of&quot; or &quot;in honor of.&quot; Fidelity offers 12 use types.</td>
+</tr>
+<tr>
+<td>F-59</td>
+<td>Grant acknowledgment options</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Donor controls how the charity acknowledges them: Full name and address, Fund/account name only, or Remain anonymous. Fidelity Charitable offers all three.</td>
+</tr>
+<tr>
+<td>F-60</td>
+<td>Richer org search (Candid/GuideStar)</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Org search results show mission, program areas, &quot;Research Charity&quot; link to GuideStar profile. Foundant integrates Candid; Fidelity includes GuideStar link per result.</td>
+</tr>
+</tbody></table>
+<h3>Contribution Management</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-61</td>
+<td>Contribution history with print/download</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Full contribution history table with search, date filtering, Print button, and Download (Excel/CSV) button. Fidelity Charitable provides both.</td>
+</tr>
+<tr>
+<td>F-62</td>
+<td>Pledge tracking &amp; payment</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Donor sees outstanding pledges (original amount, paid, remaining, next payment date) and can make pledge payments from the portal. CF-specific — pledges are common in community foundation giving. Foundant offers this.</td>
+</tr>
+<tr>
+<td>F-63</td>
+<td>Recurring donation management (self-service)</td>
+<td><code>ENHANCE</code></td>
+<td>CF+DAF</td>
+<td><strong>Current:</strong> Donors can view and manage recurring donations with status-dependent actions. <strong>vNext:</strong> Ensure donors can view, modify, pause, and cancel without contacting the foundation — full self-service like Foundant.</td>
+</tr>
+</tbody></table>
+<h3>Communication &amp; Engagement</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-64</td>
+<td>Curated guidance content</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Foundation publishes philanthropic guidance: giving strategies, tax planning tips, family philanthropy resources, community-specific content. Accessible from the portal as a &quot;Guidance&quot; or &quot;Resources&quot; section. CFs are uniquely positioned for this — Fidelity has a full Guidance section.</td>
+</tr>
+<tr>
+<td>F-65</td>
+<td>Foundation event calendar &amp; RSVP</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Upcoming foundation events (galas, donor appreciation, site visits) with RSVP/ticketing. CF-specific — builds fundholder relationships. Foundant offers this.</td>
+</tr>
+<tr>
+<td>F-66</td>
+<td>In-portal messaging</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Donor sends messages/questions to foundation staff directly from the portal and sees replies in-portal. CF-specific — fundholders have personal relationships with staff.</td>
+</tr>
+<tr>
+<td>F-67</td>
+<td>Grant catalog browsing</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Curated local funding opportunities browsable by donors. See F-42 for details. (Listed here as P1 engagement feature as well as P0 Funding Opportunities enhancement.)</td>
+</tr>
+</tbody></table>
+<h3>Downloadable PDF Fund Statements</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-68</td>
+<td>Downloadable PDF fund statements</td>
+<td><code>ENHANCE</code></td>
+<td>CF</td>
+<td><strong>Current:</strong> Fund statements generated and displayed in embedded PDF viewer. <strong>vNext:</strong> Add self-service download for any date range as formatted PDF. Donor clicks a button and gets a statement for their accountant — like Foundant and Fidelity.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>P2 — Differentiators</h2>
+<p>These are features where GOfund can leapfrog competitors. No one owns these in the donor portal today.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-69</td>
+<td>Geographic grant distribution map</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Interactive map showing where the donor&#39;s grants went — pins with org names and amounts. No competitor has this in a donor portal. Especially valuable for CF fundholders whose grants focus on a local community.</td>
+</tr>
+<tr>
+<td>F-70</td>
+<td>AI-powered organization discovery</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Donor describes philanthropic interests in plain language → gets AI-recommended organizations with relevance explanations. No competitor offers this. Especially valuable for CFs: &quot;find local nonprofits in our community that match my interests.&quot;</td>
+</tr>
+<tr>
+<td>F-71</td>
+<td>AI grant impact summaries</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>AI-generated plain-language summary of what the donor&#39;s past grants achieved — synthesized from grantee reports (via GOapply). &quot;Your $10K grant to Habitat for Humanity helped build 3 homes in your community.&quot; Cross-product differentiator.</td>
+</tr>
+<tr>
+<td>F-72</td>
+<td>Donor community impact visibility</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Aggregated community impact from all fundholders: &quot;Together, our fundholders granted $45M to our community this year across 500 organizations.&quot; Builds CF identity. DAF sponsors can&#39;t replicate this.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>P3 — Future</h2>
+<p>Defer unless customer demand emerges.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Status</th>
+<th>Type</th>
+<th>Why Defer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>F-73</td>
+<td>Configurable donor homepage (drag-and-drop widgets)</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Fixed dashboard (F-11) covers the core need first</td>
+</tr>
+<tr>
+<td>F-74</td>
+<td>Batch grant submissions</td>
+<td><code>NEW</code></td>
+<td>DAF</td>
+<td>DAF workflow — CF fundholders typically grant one at a time</td>
+</tr>
+<tr>
+<td>F-75</td>
+<td>Contribute appreciated securities</td>
+<td><code>NEW</code></td>
+<td>DAF</td>
+<td>Primarily DAF; CFs handle securities offline</td>
+</tr>
+<tr>
+<td>F-76</td>
+<td>Grant pool allocation (choose investment pools)</td>
+<td><code>NEW</code></td>
+<td>DAF</td>
+<td>DAF-specific; CF foundations manage allocations centrally</td>
+</tr>
+<tr>
+<td>F-77</td>
+<td>Investment pool management (view, change, research)</td>
+<td><code>NEW</code></td>
+<td>DAF</td>
+<td>DAF-specific</td>
+</tr>
+<tr>
+<td>F-78</td>
+<td>Giving cards / charitable gift cards</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Delighter, not a gap</td>
+</tr>
+<tr>
+<td>F-79</td>
+<td>IRS Form 8283 access</td>
+<td><code>NEW</code></td>
+<td>DAF</td>
+<td>DAF-specific for non-cash contributions</td>
+</tr>
+<tr>
+<td>F-80</td>
+<td>Outside gift tracking</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Minor record-keeping convenience</td>
+</tr>
+<tr>
+<td>F-81</td>
+<td>Spendable balance breakdown</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Useful refinement — donors can see the total; breakdown is secondary</td>
+</tr>
+<tr>
+<td>F-82</td>
+<td>Notification preferences</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>UX polish</td>
+</tr>
+<tr>
+<td>F-83</td>
+<td>Saved organizations and saved searches</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>UX polish</td>
+</tr>
+<tr>
+<td>F-84</td>
+<td>Native mobile app</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Responsive web covers the need; only Foundation Source has a native app</td>
+</tr>
+<tr>
+<td>F-85</td>
+<td>AI natural language fund queries</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Emerging — not proven in this market yet</td>
+</tr>
+<tr>
+<td>F-86</td>
+<td>Impact stories / org updates</td>
+<td><code>NEW</code></td>
+<td>CF</td>
+<td>Requires foundation staff to create content; low ROI for v1</td>
+</tr>
+<tr>
+<td>F-87</td>
+<td>Contribution acknowledgment letter downloads</td>
+<td><code>NEW</code></td>
+<td>CF+DAF</td>
+<td>Tax receipts (F-33) cover the primary need</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Total</th>
+<th>Existing</th>
+<th>Enhanced</th>
+<th>New</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>P0 — Must Have</strong></td>
+<td>57</td>
+<td>46</td>
+<td>3</td>
+<td>8</td>
+</tr>
+<tr>
+<td><strong>P1 — Should Have</strong></td>
+<td>11</td>
+<td>0</td>
+<td>1</td>
+<td>10</td>
+</tr>
+<tr>
+<td><strong>P2 — Differentiators</strong></td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>4</td>
+</tr>
+<tr>
+<td><strong>P3 — Future</strong></td>
+<td>15</td>
+<td>0</td>
+<td>0</td>
+<td>15</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>87</strong></td>
+<td><strong>46</strong></td>
+<td><strong>4</strong></td>
+<td><strong>37</strong></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>CF</th>
+<th>CF+DAF</th>
+<th>DAF-Only</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>P0</strong></td>
+<td>7</td>
+<td>50</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>P1</strong></td>
+<td>5</td>
+<td>6</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>P2</strong></td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+</tr>
+<tr>
+<td><strong>P3</strong></td>
+<td>3</td>
+<td>7</td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>17</strong></td>
+<td><strong>65</strong></td>
+<td><strong>5</strong></td>
+</tr>
+</tbody></table>
+<p>All P0, P1, and P2 features are CF or CF+DAF. DAF-only features are deferred to P3.</p>
+<hr>
+<h2>Implementation Notes</h2>
+<h3>Quick Wins (low complexity, high visibility — do first)</h3>
+<ul>
+<li><strong>F-28</strong> Grant status tracking — expose existing CRM status field to the portal</li>
+<li><strong>F-59</strong> Grant acknowledgment options — add dropdown to existing grant form</li>
+<li><strong>F-58</strong> Rich grant use taxonomy — add dropdown to existing grant form</li>
+<li><strong>F-61</strong> Contribution history print/download — add toolbar buttons to existing view</li>
+<li><strong>F-29</strong> Scheduled grant management — list view over existing scheduled grant data</li>
+</ul>
+<h3>Data Dependencies (need CRM-side work first)</h3>
+<ul>
+<li><strong>F-33</strong> Tax receipts require integration with contribution records and PDF generation</li>
+<li><strong>F-37</strong> Investment performance requires time-series data from Business Central or custodial integration</li>
+<li><strong>F-36</strong> Grant analysis requires grants to be tagged with cause area/sector codes (CRM-side tagging)</li>
+<li><strong>F-71</strong> AI impact summaries require grantee reports from GOapply connected to donor grant records</li>
+<li><strong>F-39</strong> Geographic map requires geo-coded organization addresses</li>
+</ul>
+<h3>UX-Heavy (design investment needed)</h3>
+<ul>
+<li><strong>F-11</strong> Fund dashboard homepage — defines the first impression; needs careful design</li>
+<li><strong>F-36</strong> Grant analysis dashboard — data visualization UX</li>
+<li><strong>F-39</strong> Geographic grant map — interactive map component</li>
+<li><strong>F-42</strong> Grant catalog — browsable marketplace UX with foundation staff curation workflow</li>
+<li><strong>F-70</strong> AI org discovery — NLP search interface with AI infrastructure</li>
+</ul>
+<h3>CF-Specific Features to Highlight in Sales</h3>
+<p>These differentiate GOfund for community foundations vs generic DAF platforms:</p>
+<ul>
+<li>F-39: Geographic grant map (local community visualization)</li>
+<li>F-42/F-67: Grant catalog (curated local opportunities)</li>
+<li>F-65: Event calendar &amp; RSVP (community engagement)</li>
+<li>F-64: Curated guidance content (philanthropic advisor role)</li>
+<li>F-72: Community impact visibility (shared purpose)</li>
+<li>F-66: In-portal messaging (personal relationship with staff)</li>
+<li>F-62: Pledge tracking (CF-specific giving pattern)</li>
+</ul>
+
+</main>
+</body>
+</html>

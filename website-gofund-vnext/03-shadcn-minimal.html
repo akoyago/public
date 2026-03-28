@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOfund v2 — Donor Portal</title>
+  <meta name="description" content="GOfund v2 donor portal prototype — shadcn/ui-inspired minimal design">
+
+  <!-- ============================================================
+       THEME CUSTOMIZATION GUIDE
+       ============================================================
+       GOfund v2 uses HSL-based CSS custom properties for theming.
+       Foundations can change brand colors by adjusting hue values.
+
+       How it works:
+       - All brand colors use HSL format: hue saturation% lightness%
+       - Change --primary hue to shift the entire brand palette
+       - Change --accent for secondary actions and highlights
+
+       Examples:
+       Green (default):    --primary: 142 76% 36%;
+       Blue (ocean):       --primary: 210 76% 36%;
+       Purple (regal):     --primary: 270 76% 36%;
+       Teal (modern):      --primary: 174 76% 36%;
+       Red (urgent):       --primary: 0 76% 36%;
+       Orange (warm):      --primary: 30 76% 36%;
+
+       To customize, simply change the HSL values in :root below.
+       The entire UI will adapt — buttons, links, badges, charts.
+
+       For dark mode, override --background, --foreground, and
+       --card values in a [data-theme="dark"] selector.
+       ============================================================ -->
+
+  <style>
+    :root {
+      /* ── Brand palette (HSL components only, no hsl() wrapper) ── */
+      --primary:          142 76% 36%;
+      --primary-foreground: 0 0% 100%;
+      --accent:           142 76% 96%;
+      --accent-foreground: 142 76% 20%;
+
+      /* ── Neutral surface tokens ── */
+      --background:       0 0% 100%;
+      --foreground:       240 10% 3.9%;
+      --card:             0 0% 100%;
+      --card-foreground:  240 10% 3.9%;
+      --muted:            240 4.8% 95.9%;
+      --muted-foreground: 240 3.8% 46.1%;
+      --border:           240 5.9% 90%;
+      --input:            240 5.9% 90%;
+      --ring:             142 76% 36%;
+      --radius:           0.5rem;
+
+      /* ── Semantic tokens ── */
+      --destructive:      0 84% 60%;
+      --destructive-foreground: 0 0% 98%;
+      --success:          142 76% 36%;
+      --warning:          38 92% 50%;
+      --info:             210 76% 50%;
+    }
+
+    /* Base resets */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Skip to content */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      z-index: 9999;
+      padding: 0.5rem 1rem;
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      border-radius: var(--radius);
+      font-weight: 500;
+      text-decoration: none;
+      transition: top 0.2s;
+    }
+    .skip-link:focus {
+      top: 0.5rem;
+    }
+
+    /* Focus-visible ring (shadcn pattern) */
+    *:focus-visible {
+      outline: 2px solid hsl(var(--ring));
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    /* Smooth scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+
+    /* Chart canvas responsive fix */
+    canvas { max-width: 100%; }
+
+    /* Alpine.js cloak */
+    [x-cloak] { display: none !important; }
+
+    /* Badge components */
+    .badge-success {
+      background: hsl(142 76% 96%);
+      color: hsl(142 71% 28%);
+    }
+    .badge-warning {
+      background: hsl(38 92% 95%);
+      color: hsl(32 95% 30%);
+    }
+    .badge-info {
+      background: hsl(210 76% 95%);
+      color: hsl(210 76% 30%);
+    }
+    .badge-destructive {
+      background: hsl(0 84% 95%);
+      color: hsl(0 84% 35%);
+    }
+    .badge-muted {
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+    }
+
+    /* Button components */
+    .btn-primary {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+    }
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid hsl(var(--border));
+      color: hsl(var(--foreground));
+    }
+    .btn-outline:hover {
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: hsl(var(--muted-foreground));
+    }
+    .btn-ghost:hover {
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+    }
+
+    /* Card component */
+    .card {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+    }
+
+    /* Table */
+    .data-table th {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: hsl(var(--muted-foreground));
+      border-bottom: 1px solid hsl(var(--border));
+    }
+    .data-table td {
+      border-bottom: 1px solid hsl(var(--border));
+    }
+    .data-table tbody tr:hover {
+      background: hsl(var(--muted) / 0.5);
+    }
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Tabs */
+    .tab-trigger {
+      position: relative;
+      color: hsl(var(--muted-foreground));
+      padding-bottom: 0.75rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: color 0.15s;
+    }
+    .tab-trigger:hover { color: hsl(var(--foreground)); }
+    .tab-trigger.active {
+      color: hsl(var(--foreground));
+    }
+    .tab-trigger.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: hsl(var(--primary));
+      border-radius: 1px;
+    }
+
+    /* Navbar active indicator */
+    .nav-link {
+      position: relative;
+      color: hsl(var(--muted-foreground));
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+      padding: 0.5rem 0;
+    }
+    .nav-link:hover { color: hsl(var(--foreground)); }
+    .nav-link.active {
+      color: hsl(var(--foreground));
+    }
+    .nav-link.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: hsl(var(--primary));
+      border-radius: 1px;
+    }
+
+    /* Main nav section items */
+    .main-nav-section {
+      position: relative;
+      padding: 0.625rem 0;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .main-nav-section .nav-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: hsl(var(--foreground));
+      line-height: 1.25;
+    }
+    .main-nav-section .nav-desc {
+      font-size: 0.6875rem;
+      color: hsl(var(--muted-foreground));
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .main-nav-section:hover .nav-title { color: hsl(var(--primary)); }
+    .main-nav-section.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: hsl(var(--primary));
+      border-radius: 1px;
+    }
+
+    /* Mega menu */
+    .mega-menu {
+      background: hsl(var(--card));
+      border-bottom: 1px solid hsl(var(--border));
+      box-shadow: 0 4px 12px hsl(var(--foreground) / 0.05);
+    }
+
+    /* Fund card in mega menu */
+    .fund-card {
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+      min-width: 200px;
+    }
+    .fund-card:hover {
+      border-color: hsl(var(--primary) / 0.4);
+      background: hsl(var(--accent));
+    }
+    .fund-card.fund-active {
+      border-color: hsl(var(--primary));
+      background: hsl(var(--accent));
+    }
+
+    /* Section dropdown */
+    .section-dropdown {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
+    }
+
+    /* Quick Action button hover lift */
+    .quick-action {
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .quick-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px hsl(var(--foreground) / 0.06);
+    }
+
+    /* Dropdown menu */
+    .dropdown-menu {
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px hsl(var(--foreground) / 0.08);
+    }
+    .dropdown-item {
+      color: hsl(var(--foreground));
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+      transition: background 0.1s;
+      border-radius: calc(var(--radius) - 2px);
+      text-decoration: none;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+    }
+    .dropdown-item:hover {
+      background: hsl(var(--muted));
+    }
+    .dropdown-item .dropdown-icon {
+      flex-shrink: 0;
+      width: 1.125rem;
+      height: 1.125rem;
+      margin-top: 0.125rem;
+      color: hsl(240 5% 64%);
+    }
+    .dropdown-item .dropdown-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.0625rem;
+    }
+    .dropdown-item .dropdown-title {
+      font-weight: 500;
+      color: hsl(240 6% 10%);
+      line-height: 1.3;
+    }
+    .dropdown-item .dropdown-subtitle {
+      font-size: 0.75rem;
+      color: hsl(240 4% 46%);
+      line-height: 1.3;
+    }
+
+    /* Mobile menu overlay */
+    .mobile-overlay {
+      background: hsl(var(--foreground) / 0.4);
+    }
+
+    /* Notification dot */
+    .notification-dot {
+      width: 8px;
+      height: 8px;
+      background: hsl(var(--destructive));
+      border-radius: 50%;
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      border: 2px solid hsl(var(--card));
+    }
+
+    /* KPI trend animation */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in {
+      animation: fadeInUp 0.4s ease-out both;
+    }
+    .delay-1 { animation-delay: 0.05s; }
+    .delay-2 { animation-delay: 0.1s; }
+    .delay-3 { animation-delay: 0.15s; }
+    .delay-4 { animation-delay: 0.2s; }
+
+    /* Print styles */
+    @media print {
+      nav, .skip-link, .quick-action, button { display: none !important; }
+      .card { border: 1px solid #ddd !important; break-inside: avoid; }
+      body { background: white; }
+    }
+  </style>
+
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="min-h-screen" x-data="app()" x-init="init()">
+
+  <!-- Skip to content link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TOP NAVBAR — Fidelity Charitable pattern (two-row)
+       ═══════════════════════════════════════════════════════════ -->
+  <nav class="bg-white sticky top-0 z-50" aria-label="Main navigation"
+       x-data="{ accountsOpen: false, grantOpen: false, contributeOpen: false, historyOpen: false, guidanceOpen: false }"
+       @keydown.escape.window="accountsOpen = false; grantOpen = false; contributeOpen = false; historyOpen = false; guidanceOpen = false">
+
+    <!-- ── Row 1: Utility bar ── -->
+    <div class="border-b border-zinc-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-12">
+
+          <!-- Logo -->
+          <a href="#" class="flex items-center gap-2.5 text-zinc-900 no-underline" aria-label="GOfund v2 home">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: hsl(var(--primary));">
+              <svg class="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </div>
+            <span class="font-semibold text-lg tracking-tight hidden sm:inline">GOfund</span>
+          </a>
+
+          <!-- Right utility links -->
+          <div class="hidden md:flex items-center gap-4">
+            <a href="#" class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors">Help Center</a>
+            <span class="text-zinc-200">|</span>
+            <a href="#" class="text-sm text-zinc-500 hover:text-zinc-900 transition-colors flex items-center gap-1.5">
+              <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold text-white" style="background: hsl(var(--primary));">JM</div>
+              Your profile
+            </a>
+            <button class="btn-outline inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+              Log out
+            </button>
+          </div>
+
+          <!-- Mobile hamburger -->
+          <button @click="mobileMenu = !mobileMenu" class="md:hidden btn-ghost p-2 rounded-md" aria-label="Toggle navigation menu" :aria-expanded="mobileMenu">
+            <svg x-show="!mobileMenu" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg x-show="mobileMenu" x-cloak class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Row 2: Main navigation sections ── -->
+    <div class="hidden md:block border-b border-zinc-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-stretch gap-6 lg:gap-8" role="menubar">
+
+          <!-- Accounts section (active, with mega-menu) -->
+          <div class="relative">
+            <button @click="accountsOpen = !accountsOpen; grantOpen = false; contributeOpen = false; historyOpen = false; guidanceOpen = false"
+                    class="main-nav-section active flex flex-col items-start py-3"
+                    role="menuitem" aria-haspopup="true" :aria-expanded="accountsOpen">
+              <span class="nav-title inline-flex items-center gap-1">
+                Accounts <span class="text-xs font-normal text-zinc-400">(3)</span>
+                <svg class="w-3 h-3 text-zinc-400 transition-transform" :class="accountsOpen && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+              <span class="nav-desc truncate max-w-[200px]" x-text="selectedFund.name + ' #' + selectedFund.id">Family Charitable Fund #1053934</span>
+            </button>
+          </div>
+
+          <!-- Grant -->
+          <div class="relative">
+            <button @click="grantOpen = !grantOpen; accountsOpen = false; contributeOpen = false; historyOpen = false; guidanceOpen = false"
+                    class="main-nav-section flex flex-col items-start py-3"
+                    role="menuitem" aria-haspopup="true" :aria-expanded="grantOpen">
+              <span class="nav-title inline-flex items-center gap-1">
+                Grant
+                <svg class="w-3 h-3 text-zinc-400 transition-transform" :class="grantOpen && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+              <span class="nav-desc">Support your favorite charities</span>
+            </button>
+            <!-- Grant dropdown -->
+            <div x-show="grantOpen" x-cloak @click.away="grantOpen = false"
+                 x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="section-dropdown absolute left-0 top-full mt-px w-72 p-1.5 z-50" role="menu">
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Recommend a Grant</span>
+                  <span class="dropdown-subtitle">Send funds to a charity</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Find Charities</span>
+                  <span class="dropdown-subtitle">Search nonprofits to support</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0l-4.725 2.885a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Favorite Charities</span>
+                  <span class="dropdown-subtitle">Your saved organizations</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Contribute -->
+          <div class="relative">
+            <button @click="contributeOpen = !contributeOpen; accountsOpen = false; grantOpen = false; historyOpen = false; guidanceOpen = false"
+                    class="main-nav-section flex flex-col items-start py-3"
+                    role="menuitem" aria-haspopup="true" :aria-expanded="contributeOpen">
+              <span class="nav-title inline-flex items-center gap-1">
+                Contribute
+                <svg class="w-3 h-3 text-zinc-400 transition-transform" :class="contributeOpen && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+              <span class="nav-desc">Fund your Giving Account</span>
+            </button>
+            <!-- Contribute dropdown -->
+            <div x-show="contributeOpen" x-cloak @click.away="contributeOpen = false"
+                 x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="section-dropdown absolute left-0 top-full mt-px w-72 p-1.5 z-50" role="menu">
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Make a Contribution</span>
+                  <span class="dropdown-subtitle">Add funds to your account</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Set Up Recurring</span>
+                  <span class="dropdown-subtitle">Automatic contributions</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Contribution History</span>
+                  <span class="dropdown-subtitle">View past contributions</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- History -->
+          <div class="relative">
+            <button @click="historyOpen = !historyOpen; accountsOpen = false; grantOpen = false; contributeOpen = false; guidanceOpen = false"
+                    class="main-nav-section flex flex-col items-start py-3"
+                    role="menuitem" aria-haspopup="true" :aria-expanded="historyOpen">
+              <span class="nav-title inline-flex items-center gap-1">
+                History
+                <svg class="w-3 h-3 text-zinc-400 transition-transform" :class="historyOpen && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+              <span class="nav-desc">Access transaction history &amp; statements</span>
+            </button>
+            <!-- History dropdown -->
+            <div x-show="historyOpen" x-cloak @click.away="historyOpen = false"
+                 x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="section-dropdown absolute left-0 top-full mt-px w-72 p-1.5 z-50" role="menu">
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Transaction History</span>
+                  <span class="dropdown-subtitle">All grants and contributions</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Tax Receipts</span>
+                  <span class="dropdown-subtitle">Download annual statements</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Grant Analysis</span>
+                  <span class="dropdown-subtitle">View your giving patterns</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Guidance -->
+          <div class="relative">
+            <button @click="guidanceOpen = !guidanceOpen; accountsOpen = false; grantOpen = false; contributeOpen = false; historyOpen = false"
+                    class="main-nav-section flex flex-col items-start py-3"
+                    role="menuitem" aria-haspopup="true" :aria-expanded="guidanceOpen">
+              <span class="nav-title inline-flex items-center gap-1">
+                Guidance
+                <svg class="w-3 h-3 text-zinc-400 transition-transform" :class="guidanceOpen && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </span>
+              <span class="nav-desc">Develop your giving strategy</span>
+            </button>
+            <!-- Guidance dropdown -->
+            <div x-show="guidanceOpen" x-cloak @click.away="guidanceOpen = false"
+                 x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="section-dropdown absolute left-0 top-full mt-px w-72 p-1.5 z-50" role="menu">
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 0v0"/><path stroke-linecap="round" stroke-linejoin="round" d="M16.24 7.76l-2.12 6.36-6.36 2.12 2.12-6.36 6.36-2.12z"/><circle cx="12" cy="12" r="1"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Giving Strategy</span>
+                  <span class="dropdown-subtitle">Plan your philanthropic goals</span>
+                </span>
+              </a>
+              <a href="#" class="dropdown-item" role="menuitem">
+                <svg class="dropdown-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <span class="dropdown-text">
+                  <span class="dropdown-title">Learning Center</span>
+                  <span class="dropdown-subtitle">Articles and guides</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Accounts mega-menu ── -->
+    <div x-show="accountsOpen" x-cloak @click.away="accountsOpen = false"
+         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         class="mega-menu hidden md:block" role="menu" aria-label="Fund selector">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-medium uppercase tracking-wider text-zinc-400">Select a Giving Account</h3>
+        </div>
+        <div class="flex gap-4 overflow-x-auto pb-1">
+          <template x-for="fund in funds" :key="fund.id">
+            <button @click="selectedFund = fund; accountsOpen = false"
+                    class="fund-card flex-shrink-0 text-left"
+                    :class="selectedFund.id === fund.id ? 'fund-active' : ''"
+                    role="option" :aria-selected="selectedFund.id === fund.id">
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <div class="text-sm font-medium" :class="selectedFund.id === fund.id ? 'text-emerald-700' : 'text-zinc-900'" x-text="fund.name"></div>
+                  <div class="text-xs text-zinc-400 mt-0.5" x-text="'Account #' + fund.id"></div>
+                </div>
+                <svg x-show="selectedFund.id === fund.id" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div class="text-lg font-semibold tabular-nums mt-2" :class="selectedFund.id === fund.id ? 'text-zinc-900' : 'text-zinc-700'" x-text="'$' + fund.balance"></div>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Mobile menu ── -->
+    <div x-show="mobileMenu" x-cloak
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         class="md:hidden border-t border-zinc-200 bg-white" role="menu">
+      <div class="px-4 py-3 space-y-1">
+
+        <!-- Fund selector (mobile) -->
+        <div class="border-b border-zinc-100 pb-3 mb-2">
+          <div class="text-xs font-medium uppercase tracking-wider text-zinc-400 px-3 mb-2">Active Account</div>
+          <button class="w-full btn-outline px-3 py-2 rounded-md text-sm text-left flex justify-between items-center">
+            <span x-text="selectedFund.name">Family Charitable Fund</span>
+            <span class="text-xs text-zinc-400" x-text="'#' + selectedFund.id"></span>
+          </button>
+        </div>
+
+        <!-- Nav sections (mobile) -->
+        <div class="space-y-0.5">
+          <a href="#" class="block px-3 py-2.5 rounded-md text-sm" role="menuitem">
+            <div class="font-medium text-zinc-900">Accounts <span class="text-zinc-400 font-normal">(3)</span></div>
+            <div class="text-xs text-zinc-400 mt-0.5" x-text="selectedFund.name + ' #' + selectedFund.id"></div>
+          </a>
+          <a href="#" class="block px-3 py-2.5 rounded-md text-sm hover:bg-zinc-50" role="menuitem">
+            <div class="font-medium text-zinc-700">Grant</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Support your favorite charities</div>
+          </a>
+          <a href="#" class="block px-3 py-2.5 rounded-md text-sm hover:bg-zinc-50" role="menuitem">
+            <div class="font-medium text-zinc-700">Contribute</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Fund your Giving Account</div>
+          </a>
+          <a href="#" class="block px-3 py-2.5 rounded-md text-sm hover:bg-zinc-50" role="menuitem">
+            <div class="font-medium text-zinc-700">History</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Access transaction history &amp; statements</div>
+          </a>
+          <a href="#" class="block px-3 py-2.5 rounded-md text-sm hover:bg-zinc-50" role="menuitem">
+            <div class="font-medium text-zinc-700">Guidance</div>
+            <div class="text-xs text-zinc-400 mt-0.5">Develop your giving strategy</div>
+          </a>
+        </div>
+
+        <!-- Utility links (mobile) -->
+        <div class="border-t border-zinc-100 pt-3 mt-3 space-y-1">
+          <a href="#" class="block px-3 py-2 rounded-md text-sm text-zinc-500 hover:bg-zinc-50" role="menuitem">Help Center</a>
+          <a href="#" class="block px-3 py-2 rounded-md text-sm text-zinc-500 hover:bg-zinc-50" role="menuitem">Your profile</a>
+          <button class="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 font-medium" role="menuitem">Log out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════════════════════ -->
+  <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8" role="main">
+
+    <!-- Greeting -->
+    <div class="mb-8">
+      <h1 class="text-2xl sm:text-3xl font-semibold text-zinc-900 tracking-tight" x-text="greeting + ', James'"></h1>
+      <p class="text-sm text-zinc-500 mt-1">Here's an overview of your giving account activity.</p>
+    </div>
+
+    <!-- ─── KPI Cards ──────────────────────────────────────── -->
+    <section aria-label="Key metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+      <!-- Spendable Balance -->
+      <div class="card p-5 animate-in delay-1">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-400">Spendable Balance</span>
+          <div class="w-8 h-8 rounded-md bg-emerald-50 flex items-center justify-center">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+        <div class="text-2xl font-semibold text-zinc-900 tabular-nums">$52,250.16</div>
+        <div class="flex items-center gap-1 mt-2">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          <span class="text-xs font-medium text-emerald-600">+12.5%</span>
+          <span class="text-xs text-zinc-400 ml-1">vs last quarter</span>
+        </div>
+      </div>
+
+      <!-- Contributions This Year -->
+      <div class="card p-5 animate-in delay-2">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-400">Contributions YTD</span>
+          <div class="w-8 h-8 rounded-md bg-blue-50 flex items-center justify-center">
+            <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+          </div>
+        </div>
+        <div class="text-2xl font-semibold text-zinc-900 tabular-nums">$100,000.00</div>
+        <div class="flex items-center gap-1 mt-2">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          <span class="text-xs font-medium text-emerald-600">+25.0%</span>
+          <span class="text-xs text-zinc-400 ml-1">vs last year</span>
+        </div>
+      </div>
+
+      <!-- Grants This Year -->
+      <div class="card p-5 animate-in delay-3">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-400">Grants YTD</span>
+          <div class="w-8 h-8 rounded-md bg-violet-50 flex items-center justify-center">
+            <svg class="w-4 h-4 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+          </div>
+        </div>
+        <div class="text-2xl font-semibold text-zinc-900 tabular-nums">$28,000.00</div>
+        <div class="flex items-center gap-1 mt-2">
+          <svg class="w-3.5 h-3.5 text-red-500 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+          <span class="text-xs font-medium text-red-500">-8.2%</span>
+          <span class="text-xs text-zinc-400 ml-1">vs last year</span>
+        </div>
+      </div>
+
+      <!-- Pending Recommendations -->
+      <div class="card p-5 animate-in delay-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-medium uppercase tracking-wider text-zinc-400">Pending Grants</span>
+          <div class="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center">
+            <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+        <div class="text-2xl font-semibold text-zinc-900 tabular-nums">3</div>
+        <div class="flex items-center gap-1 mt-2">
+          <span class="text-xs text-zinc-400">Awaiting processing</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Quick Actions ──────────────────────────────────── -->
+    <section aria-label="Quick actions" class="mb-8">
+      <h2 class="sr-only">Quick Actions</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button class="quick-action card p-4 flex flex-col items-center gap-2.5 text-center group cursor-pointer">
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: hsl(var(--accent));">
+            <svg class="w-5 h-5" style="color: hsl(var(--primary));" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+          </div>
+          <span class="text-sm font-medium text-zinc-700 group-hover:text-zinc-900">New Grant</span>
+        </button>
+        <button class="quick-action card p-4 flex flex-col items-center gap-2.5 text-center group cursor-pointer">
+          <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+          </div>
+          <span class="text-sm font-medium text-zinc-700 group-hover:text-zinc-900">Contribute</span>
+        </button>
+        <button class="quick-action card p-4 flex flex-col items-center gap-2.5 text-center group cursor-pointer">
+          <div class="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center">
+            <svg class="w-5 h-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          </div>
+          <span class="text-sm font-medium text-zinc-700 group-hover:text-zinc-900">Statements</span>
+        </button>
+        <button class="quick-action card p-4 flex flex-col items-center gap-2.5 text-center group cursor-pointer">
+          <div class="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center">
+            <svg class="w-5 h-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          </div>
+          <span class="text-sm font-medium text-zinc-700 group-hover:text-zinc-900">Tax Receipts</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ─── Activity Feed + Scheduled Grants ───────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+      <!-- Activity Feed (2/3 width) -->
+      <section class="lg:col-span-2 card" aria-label="Recent activity">
+        <div class="p-5 border-b border-zinc-100">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold text-zinc-900">Recent Activity</h2>
+            <div class="flex items-center gap-1" x-data="{ tab: 'all' }">
+              <button @click="tab = 'all'" :class="tab === 'all' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'" class="px-3 py-1 rounded-md text-xs font-medium transition-colors">All</button>
+              <button @click="tab = 'grants'" :class="tab === 'grants' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'" class="px-3 py-1 rounded-md text-xs font-medium transition-colors">Grants</button>
+              <button @click="tab = 'contributions'" :class="tab === 'contributions' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-700'" class="px-3 py-1 rounded-md text-xs font-medium transition-colors">Contributions</button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="data-table w-full text-sm" role="table">
+            <thead>
+              <tr>
+                <th class="text-left px-5 py-3">Date</th>
+                <th class="text-left px-5 py-3">Description</th>
+                <th class="text-left px-5 py-3">Type</th>
+                <th class="text-right px-5 py-3">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 25, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">St. Jude Children's Research Hospital</td>
+                <td class="px-5 py-3.5"><span class="badge-success inline-block px-2 py-0.5 rounded-full text-xs font-medium">Grant Sent</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$5,000.00</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 22, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">American Cancer Society</td>
+                <td class="px-5 py-3.5"><span class="badge-warning inline-block px-2 py-0.5 rounded-full text-xs font-medium">Pending</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$2,500.00</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 20, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">Wire Transfer — Fidelity Brokerage</td>
+                <td class="px-5 py-3.5"><span class="badge-info inline-block px-2 py-0.5 rounded-full text-xs font-medium">Contribution</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-emerald-700">+$25,000.00</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 18, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">American Red Cross</td>
+                <td class="px-5 py-3.5"><span class="badge-success inline-block px-2 py-0.5 rounded-full text-xs font-medium">Grant Sent</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$3,000.00</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 15, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">Habitat for Humanity International</td>
+                <td class="px-5 py-3.5"><span class="badge-success inline-block px-2 py-0.5 rounded-full text-xs font-medium">Grant Sent</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$7,500.00</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 10, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">Stock Contribution — AAPL (150 shares)</td>
+                <td class="px-5 py-3.5"><span class="badge-info inline-block px-2 py-0.5 rounded-full text-xs font-medium">Contribution</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-emerald-700">+$75,000.00</td>
+              </tr>
+              <tr>
+                <td class="px-5 py-3.5 text-zinc-500 tabular-nums whitespace-nowrap">Mar 5, 2026</td>
+                <td class="px-5 py-3.5 font-medium text-zinc-800">Museum of Modern Art</td>
+                <td class="px-5 py-3.5"><span class="badge-success inline-block px-2 py-0.5 rounded-full text-xs font-medium">Grant Sent</span></td>
+                <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$10,000.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="p-4 border-t border-zinc-100 text-center">
+          <a href="#" class="text-sm font-medium hover:underline" style="color: hsl(var(--primary));">View all activity</a>
+        </div>
+      </section>
+
+      <!-- Scheduled Grants (1/3 width) -->
+      <section class="card" aria-label="Scheduled grants">
+        <div class="p-5 border-b border-zinc-100">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold text-zinc-900">Scheduled Grants</h2>
+            <span class="badge-warning inline-block px-2 py-0.5 rounded-full text-xs font-medium">3 upcoming</span>
+          </div>
+        </div>
+        <div class="p-4 space-y-3">
+
+          <!-- Scheduled Grant 1 -->
+          <div class="p-3 rounded-lg border border-zinc-100 hover:border-zinc-200 transition-colors">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="text-sm font-medium text-zinc-800">American Heart Association</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Apr 1, 2026 &middot; Recurring monthly</div>
+              </div>
+              <span class="text-sm font-semibold text-zinc-900 tabular-nums">$1,000</span>
+            </div>
+            <div class="mt-2">
+              <span class="badge-success inline-block px-2 py-0.5 rounded-full text-xs font-medium">Active</span>
+            </div>
+          </div>
+
+          <!-- Scheduled Grant 2 -->
+          <div class="p-3 rounded-lg border border-zinc-100 hover:border-zinc-200 transition-colors">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="text-sm font-medium text-zinc-800">Local Food Bank Coalition</div>
+                <div class="text-xs text-zinc-400 mt-0.5">Apr 15, 2026 &middot; Quarterly</div>
+              </div>
+              <span class="text-sm font-semibold text-zinc-900 tabular-nums">$2,500</span>
+            </div>
+            <div class="mt-2">
+              <span class="badge-success inline-block px-2 py-0.5 rounded-full text-xs font-medium">Active</span>
+            </div>
+          </div>
+
+          <!-- Scheduled Grant 3 -->
+          <div class="p-3 rounded-lg border border-zinc-100 hover:border-zinc-200 transition-colors">
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="text-sm font-medium text-zinc-800">Community Arts Foundation</div>
+                <div class="text-xs text-zinc-400 mt-0.5">May 1, 2026 &middot; One-time</div>
+              </div>
+              <span class="text-sm font-semibold text-zinc-900 tabular-nums">$5,000</span>
+            </div>
+            <div class="mt-2">
+              <span class="badge-warning inline-block px-2 py-0.5 rounded-full text-xs font-medium">Pending Review</span>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t border-zinc-100 text-center">
+          <a href="#" class="text-sm font-medium hover:underline" style="color: hsl(var(--primary));">Manage scheduled grants</a>
+        </div>
+      </section>
+    </div>
+
+    <!-- ─── Grant Analysis (Charts) ────────────────────────── -->
+    <section aria-label="Grant analysis" class="mb-8">
+      <div class="card">
+        <div class="p-5 border-b border-zinc-100">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-semibold text-zinc-900">Grant Analysis</h2>
+              <p class="text-xs text-zinc-400 mt-0.5">Breakdown of your charitable giving</p>
+            </div>
+            <!-- Tabs for chart views -->
+            <div class="flex items-center border border-zinc-200 rounded-lg overflow-hidden" role="tablist" aria-label="Chart view period">
+              <button @click="chartPeriod = 'ytd'" :class="chartPeriod === 'ytd' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 hover:text-zinc-700'" class="px-3 py-1.5 text-xs font-medium transition-colors" role="tab" :aria-selected="chartPeriod === 'ytd'">YTD</button>
+              <button @click="chartPeriod = '1y'" :class="chartPeriod === '1y' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 hover:text-zinc-700'" class="px-3 py-1.5 text-xs font-medium transition-colors border-l border-r border-zinc-200" role="tab" :aria-selected="chartPeriod === '1y'">1 Year</button>
+              <button @click="chartPeriod = 'all'" :class="chartPeriod === 'all' ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-500 hover:text-zinc-700'" class="px-3 py-1.5 text-xs font-medium transition-colors" role="tab" :aria-selected="chartPeriod === 'all'">All Time</button>
+            </div>
+          </div>
+        </div>
+        <div class="p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Donut Chart: Grants by Sector -->
+            <div>
+              <h3 class="text-sm font-medium text-zinc-700 mb-4">Grants by Sector</h3>
+              <div class="relative" style="max-width: 280px; margin: 0 auto;">
+                <canvas id="sectorChart" aria-label="Donut chart showing grant distribution by sector" role="img"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span class="text-2xl font-semibold text-zinc-900">$28K</span>
+                  <span class="text-xs text-zinc-400">Total Granted</span>
+                </div>
+              </div>
+              <div class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs" id="sectorLegend" aria-hidden="true"></div>
+            </div>
+
+            <!-- Bar Chart: Grants by Year -->
+            <div>
+              <h3 class="text-sm font-medium text-zinc-700 mb-4">Grants by Year</h3>
+              <div style="max-height: 280px;">
+                <canvas id="yearChart" aria-label="Bar chart showing yearly grant totals from 2021 to 2026" role="img"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Top Charities Table ────────────────────────────── -->
+    <section class="card mb-8" aria-label="Top charities">
+      <div class="p-5 border-b border-zinc-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-semibold text-zinc-900">Top Charities</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Your most-supported organizations since inception</p>
+          </div>
+          <a href="#" class="text-sm font-medium hover:underline" style="color: hsl(var(--primary));">View full analysis</a>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="data-table w-full text-sm" role="table">
+          <thead>
+            <tr>
+              <th class="text-left px-5 py-3 w-8">#</th>
+              <th class="text-left px-5 py-3">Charity</th>
+              <th class="text-left px-5 py-3">Sector</th>
+              <th class="text-right px-5 py-3">Total Granted</th>
+              <th class="text-right px-5 py-3">Grants</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="px-5 py-3.5 text-zinc-400">1</td>
+              <td class="px-5 py-3.5 font-medium text-zinc-800">St. Jude Children's Research Hospital</td>
+              <td class="px-5 py-3.5"><span class="badge-muted inline-block px-2 py-0.5 rounded-full text-xs font-medium">Healthcare</span></td>
+              <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$12,377.00</td>
+              <td class="px-5 py-3.5 text-right tabular-nums text-zinc-500">8</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3.5 text-zinc-400">2</td>
+              <td class="px-5 py-3.5 font-medium text-zinc-800">Museum of Modern Art</td>
+              <td class="px-5 py-3.5"><span class="badge-muted inline-block px-2 py-0.5 rounded-full text-xs font-medium">Arts & Culture</span></td>
+              <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$10,512.00</td>
+              <td class="px-5 py-3.5 text-right tabular-nums text-zinc-500">5</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3.5 text-zinc-400">3</td>
+              <td class="px-5 py-3.5 font-medium text-zinc-800">Habitat for Humanity International</td>
+              <td class="px-5 py-3.5"><span class="badge-muted inline-block px-2 py-0.5 rounded-full text-xs font-medium">Housing</span></td>
+              <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$8,250.00</td>
+              <td class="px-5 py-3.5 text-right tabular-nums text-zinc-500">4</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3.5 text-zinc-400">4</td>
+              <td class="px-5 py-3.5 font-medium text-zinc-800">American Red Cross</td>
+              <td class="px-5 py-3.5"><span class="badge-muted inline-block px-2 py-0.5 rounded-full text-xs font-medium">Disaster Relief</span></td>
+              <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$6,500.00</td>
+              <td class="px-5 py-3.5 text-right tabular-nums text-zinc-500">6</td>
+            </tr>
+            <tr>
+              <td class="px-5 py-3.5 text-zinc-400">5</td>
+              <td class="px-5 py-3.5 font-medium text-zinc-800">American Cancer Society</td>
+              <td class="px-5 py-3.5"><span class="badge-muted inline-block px-2 py-0.5 rounded-full text-xs font-medium">Healthcare</span></td>
+              <td class="px-5 py-3.5 text-right tabular-nums font-medium text-zinc-900">$4,861.69</td>
+              <td class="px-5 py-3.5 text-right tabular-nums text-zinc-500">3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════ -->
+  <footer class="border-t border-zinc-200 bg-white" role="contentinfo">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Grants</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Grant to charities</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Manage scheduled grants</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Grant analysis</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Contribute</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Fund your account</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Scheduled contributions</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">What you can donate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">History</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Grant history</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Contribution history</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Statements & tax forms</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Guidance</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Giving strategies</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Tax & estate planning</a></li>
+            <li><a href="#" class="text-sm text-zinc-500 hover:text-zinc-700">Research charities</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-zinc-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded flex items-center justify-center" style="background: hsl(var(--primary));">
+            <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          </div>
+          <span class="text-xs text-zinc-400">&copy; 2026 GOfund. All rights reserved.</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="#" class="text-xs text-zinc-400 hover:text-zinc-600">Privacy Policy</a>
+          <a href="#" class="text-xs text-zinc-400 hover:text-zinc-600">Terms of Service</a>
+          <a href="#" class="text-xs text-zinc-400 hover:text-zinc-600">Help Center</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ALPINE.JS APP + CHART.JS INITIALIZATION
+       ═══════════════════════════════════════════════════════════ -->
+  <script>
+    function app() {
+      return {
+        mobileMenu: false,
+        chartPeriod: 'ytd',
+
+        // Funds data
+        funds: [
+          { id: '1053934', name: 'Family Charitable Fund', balance: '52,250.16' },
+          { id: '1053935', name: 'Management Co. Fund', balance: '39,618.71' },
+          { id: '1065293', name: 'Advised Balance Fund', balance: '9,226,014.10' },
+        ],
+        selectedFund: { id: '1053934', name: 'Family Charitable Fund', balance: '52,250.16' },
+
+        // Time-aware greeting
+        get greeting() {
+          const hour = new Date().getHours();
+          if (hour < 12) return 'Good morning';
+          if (hour < 17) return 'Good afternoon';
+          return 'Good evening';
+        },
+
+        init() {
+          // Wait for Chart.js and DOM to be ready
+          this.$nextTick(() => {
+            this.initSectorChart();
+            this.initYearChart();
+          });
+        },
+
+        initSectorChart() {
+          const ctx = document.getElementById('sectorChart');
+          if (!ctx) return;
+
+          // Read primary hue from CSS custom properties for chart colors
+          const style = getComputedStyle(document.documentElement);
+          const primaryHSL = style.getPropertyValue('--primary').trim();
+
+          const sectorData = [
+            { label: 'Healthcare', value: 9500, color: 'hsl(142, 76%, 36%)' },
+            { label: 'Education', value: 5200, color: 'hsl(210, 76%, 50%)' },
+            { label: 'Arts & Culture', value: 4800, color: 'hsl(270, 60%, 55%)' },
+            { label: 'Environment', value: 3200, color: 'hsl(174, 70%, 40%)' },
+            { label: 'Housing', value: 3000, color: 'hsl(38, 92%, 50%)' },
+            { label: 'Disaster Relief', value: 2300, color: 'hsl(0, 70%, 55%)' },
+          ];
+
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: sectorData.map(d => d.label),
+              datasets: [{
+                data: sectorData.map(d => d.value),
+                backgroundColor: sectorData.map(d => d.color),
+                borderWidth: 0,
+                hoverOffset: 4,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              cutout: '70%',
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'hsl(0, 0%, 9%)',
+                  titleFont: { family: 'Inter', weight: '500', size: 12 },
+                  bodyFont: { family: 'Inter', size: 12 },
+                  padding: { x: 12, y: 8 },
+                  cornerRadius: 6,
+                  displayColors: true,
+                  boxWidth: 8,
+                  boxHeight: 8,
+                  boxPadding: 4,
+                  callbacks: {
+                    label: function(context) {
+                      return ' $' + context.parsed.toLocaleString();
+                    }
+                  }
+                }
+              },
+            }
+          });
+
+          // Build custom legend
+          const legendEl = document.getElementById('sectorLegend');
+          if (legendEl) {
+            legendEl.innerHTML = sectorData.map(d =>
+              `<div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-sm flex-shrink-0" style="background:${d.color}"></span>
+                <span class="text-zinc-600 truncate">${d.label}</span>
+              </div>`
+            ).join('');
+          }
+        },
+
+        initYearChart() {
+          const ctx = document.getElementById('yearChart');
+          if (!ctx) return;
+
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ['2021', '2022', '2023', '2024', '2025', '2026'],
+              datasets: [{
+                label: 'Grants',
+                data: [18200, 22500, 31400, 38600, 42800, 28000],
+                backgroundColor: 'hsl(142, 76%, 36%)',
+                borderRadius: 4,
+                borderSkipped: false,
+                barPercentage: 0.6,
+                categoryPercentage: 0.7,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  backgroundColor: 'hsl(0, 0%, 9%)',
+                  titleFont: { family: 'Inter', weight: '500', size: 12 },
+                  bodyFont: { family: 'Inter', size: 12 },
+                  padding: { x: 12, y: 8 },
+                  cornerRadius: 6,
+                  callbacks: {
+                    label: function(context) {
+                      return '$' + context.parsed.y.toLocaleString();
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: {
+                    font: { family: 'Inter', size: 11, weight: '500' },
+                    color: '#a1a1aa',
+                  },
+                  border: { display: false },
+                },
+                y: {
+                  grid: {
+                    color: 'hsl(240, 5.9%, 90%)',
+                    drawTicks: false,
+                  },
+                  ticks: {
+                    font: { family: 'Inter', size: 11 },
+                    color: '#a1a1aa',
+                    padding: 8,
+                    callback: function(value) {
+                      return '$' + (value / 1000) + 'K';
+                    }
+                  },
+                  border: { display: false },
+                  beginAtZero: true,
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

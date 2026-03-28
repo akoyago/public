@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOfund Feature Gap Analysis — GOfund vNext Research</title>
+<style>
+  :root {
+    --primary: #0d9488;
+    --primary-light: #ccfbf1;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --bg: #ffffff;
+    --bg-alt: #f8fafc;
+    --border: #e2e8f0;
+    --code-bg: #f1f5f9;
+    --radius: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.7;
+    margin: 0;
+    padding: 0;
+  }
+  .top-bar {
+    background: var(--text);
+    color: white;
+    padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .top-bar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .top-bar a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.15s;
+  }
+  .top-bar a:hover { color: white; }
+  .top-bar .brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+  .top-bar .brand span { color: var(--primary); }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 8px;
+    color: var(--text);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 12px;
+  }
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 32px 0 12px;
+    color: var(--text);
+  }
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 24px 0 8px;
+    color: var(--text-muted);
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  blockquote {
+    border-left: 4px solid var(--primary);
+    margin: 16px 0;
+    padding: 12px 20px;
+    background: var(--primary-light);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+  }
+  blockquote p { margin: 0 0 8px; }
+  blockquote p:last-child { margin: 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+  }
+  pre {
+    background: var(--text);
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin: 0 0 16px;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: 0.85em;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 24px;
+    font-size: 0.9rem;
+    display: block;
+    overflow-x: auto;
+  }
+  thead { background: var(--bg-alt); }
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--bg-alt); }
+  del { opacity: 0.5; }
+  strong { font-weight: 600; }
+  hr {
+    border: none;
+    border-top: 2px solid var(--border);
+    margin: 40px 0;
+  }
+  .meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 768px) {
+    h1 { font-size: 1.5rem; }
+    h2 { font-size: 1.2rem; }
+    .container { padding: 24px 16px 60px; }
+    table { font-size: 0.8rem; }
+    th, td { padding: 8px 10px; }
+  }
+  @media print {
+    .top-bar { display: none; }
+    body { font-size: 11pt; }
+    table { display: table; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="top-bar" role="banner">
+  <div class="top-bar-inner">
+    <a href="index.html" class="brand">GO<span>fund</span> vNext Research</a>
+    <a href="index.html">&larr; Back to Index</a>
+  </div>
+</div>
+<main class="container" role="main">
+<h1>GOfund Feature Gap Analysis — Donor Portal Focus</h1>
+<blockquote>
+<p>What are competitors doing in their <strong>donor/fundholder portals</strong> that GOfund is not?
+Research date: 2026-03-27
+Updated: 2026-03-27 — Scoped to donor portal features only. Admin, grantee, and application features excluded (covered by GOapply, GOdonate, and akoyaGO CRM).</p>
+</blockquote>
+<h2>Scope</h2>
+<p>This analysis focuses exclusively on features that a <strong>donor or fundholder</strong> interacts with when logged into their portal. It excludes:</p>
+<ul>
+<li><strong>Staff/admin features</strong> (workflow builders, approval routing, batch operations, report builder tools) → these are CRM-side concerns</li>
+<li><strong>Grantee/applicant features</strong> (application intake, outcome reporting, progress reports) → covered by GOapply</li>
+<li><strong>Public giving features</strong> (giving hubs, donation storefronts) → covered by GOdonate</li>
+<li><strong>Board/reviewer portals</strong> → separate personas, not donor portal features</li>
+</ul>
+<hr>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#1-fund-visibility--financial-insights">1. Fund Visibility &amp; Financial Insights</a></li>
+<li><a href="#2-grant-recommendation-experience">2. Grant Recommendation Experience</a></li>
+<li><a href="#3-giving--contribution-management">3. Giving &amp; Contribution Management</a></li>
+<li><a href="#4-impact-visibility--reporting">4. Impact Visibility &amp; Reporting</a></li>
+<li><a href="#5-tax--compliance-self-service">5. Tax &amp; Compliance Self-Service</a></li>
+<li><a href="#6-ai-assisted-donor-features">6. AI-Assisted Donor Features</a></li>
+<li><a href="#7-communication--engagement">7. Communication &amp; Engagement</a></li>
+<li><a href="#8-mobile-access">8. Mobile Access</a></li>
+<li><a href="#9-portal-ux--personalization">9. Portal UX &amp; Personalization</a></li>
+<li><a href="#priority-summary">Priority Summary</a></li>
+<li><a href="#key-takeaway">Key Takeaway</a></li>
+<li><a href="#appendix-features-excluded-from-this-analysis">Appendix: Features Excluded From This Analysis</a></li>
+</ul>
+<hr>
+<h2>1. Fund Visibility &amp; Financial Insights</h2>
+<p>GOfund shows fund balances (from Business Central), spendable amounts, contribution history, and investment allocations. Competitors give donors richer financial visibility.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Investment performance over time</td>
+<td>Line/area chart showing how the fund&#39;s investment value has grown or declined over months/years — donors can see if their endowment is performing well</td>
+<td>Foundant CSuite, Give Interactive (Morningstar), Fidelity Charitable (pool performance views)</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Fund activity timeline</td>
+<td>Chronological feed of all fund activity (contributions received, grants disbursed, fees charged, investment earnings posted) — like a bank account transaction history</td>
+<td>Foundant CSuite, Give Interactive, Fidelity Charitable (recent grant activity feed)</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Investment pool management</td>
+<td>Donor views their current investment pool selections, reviews pool performance, changes allocations, and researches options — not just a static allocation display</td>
+<td>Fidelity Charitable</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Spendable balance breakdown</td>
+<td>Visual breakdown of what makes up the spendable balance — how much came from contributions, how much from investment earnings, how much was reduced by admin fees</td>
+<td>Foundant CSuite</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Multi-fund comparison view</td>
+<td>Donors connected to multiple funds can see a combined balance and switch between accounts with balances visible</td>
+<td>Foundant CSuite, Fidelity Charitable (multi-account selector with combined balance)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Downloadable fund statements</td>
+<td>Donor clicks a button and gets a formatted PDF fund statement for any date range — for their personal records or accountant</td>
+<td>Foundant CSuite, Fidelity Charitable (PDF statements with date filter)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Investment allocation visualization</td>
+<td>Pie or donut chart showing how the fund&#39;s assets are allocated (e.g., 60% equities, 30% fixed income, 10% alternatives)</td>
+<td>Foundant CSuite, Fidelity Charitable</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<h3>What these analytics mean to a donor</h3>
+<p>A donor opening their portal wants to answer these questions:</p>
+<ul>
+<li><strong>&quot;How much can I give right now?&quot;</strong> → Spendable balance (GOfund has this)</li>
+<li><strong>&quot;How is my fund doing?&quot;</strong> → Investment performance trend over time (GOfund lacks this)</li>
+<li><strong>&quot;What happened since I last checked?&quot;</strong> → Activity timeline showing contributions in, grants out, fees, earnings (GOfund lacks a unified timeline)</li>
+<li><strong>&quot;Where is my money invested?&quot;</strong> → Asset allocation breakdown (GOfund shows allocation but lacks visual breakdown)</li>
+<li><strong>&quot;Can I get a statement for my accountant?&quot;</strong> → Downloadable PDF statement (GOfund lacks self-service PDF export)</li>
+</ul>
+<hr>
+<h2>2. Grant Recommendation Experience</h2>
+<p>GOfund allows donors to recommend grants with scheduling, recurrence, restrictions, and org search (IRS Pub 78 / CRA). Competitors enhance the recommendation experience.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Grant recommendation status tracking</td>
+<td>After submitting a recommendation, donor sees real-time status: Pending Review → Approved → Payment Scheduled → Paid — instead of wondering &quot;did my grant go through?&quot;</td>
+<td>Foundant CSuite, Give Interactive, Fidelity Charitable (&quot;Under review&quot; status)</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Batch grant submissions</td>
+<td>Donor adds multiple charities to a grant list and submits them all in one transaction, rather than one at a time</td>
+<td>Fidelity Charitable (multi-charity grant list with running total sidebar)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Rich grant use taxonomy</td>
+<td>Donor selects the purpose of a grant from a rich set of options (Where it&#39;s needed most, Annual fund, In honor of, In memory of, Membership, Pledge, Tithe, Create your own)</td>
+<td>Fidelity Charitable (12 use types)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Grant acknowledgment options</td>
+<td>Donor controls how the charity acknowledges them — full name/address, account name only, or remain anonymous</td>
+<td>Fidelity Charitable</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Scheduled grant management</td>
+<td>Donor views, edits, and deletes their scheduled/recurring grants in a management table — not just set them up and forget</td>
+<td>Fidelity Charitable (table with ID, charity, frequency, amount, status, edit/delete)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Richer org search &amp; profiles</td>
+<td>When searching for an organization to grant to, donor sees more than just name/EIN — they see mission statement, program areas, financials, impact data</td>
+<td>Foundant CSuite (Candid), Fidelity Charitable (GuideStar link per result)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Grant history with impact context</td>
+<td>Donor sees their past grants enriched with what the recipient org achieved — not just &quot;you gave $5K to Org X&quot; but &quot;Org X served 500 families with your support&quot;</td>
+<td>Blackbaud (Impact metrics)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Grant catalog browsing</td>
+<td>Donor browses a curated list of vetted funding opportunities posted by nonprofits — &quot;here&#39;s what needs funding right now&quot;</td>
+<td>Foundant CSuite (Grant Catalog)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Grant pool allocation</td>
+<td>During grant recommendation, donor chooses which investment pools to draw from (e.g., 100% Money Market vs proportional across equity pools)</td>
+<td>Fidelity Charitable</td>
+<td>Nice-to-have</td>
+</tr>
+<tr>
+<td>Favorite / saved organizations</td>
+<td>Donor bookmarks organizations they frequently support for quick grant recommendations</td>
+<td>Foundant CSuite, Fidelity Charitable (&quot;favorite charities&quot; in nav)</td>
+<td>Nice-to-have</td>
+</tr>
+<tr>
+<td>Outside gift tracking</td>
+<td>Donor logs grants made outside the platform to maintain a complete giving record</td>
+<td>Fidelity Charitable (&quot;Add an outside gift&quot; on grant history page)</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Giving &amp; Contribution Management</h2>
+<p>GOfund accepts contributions via Stripe with designated giving and recurring support. Competitors provide deeper contribution management.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pledge tracking &amp; payments</td>
+<td>Donor sees their outstanding pledges, amounts remaining, and payment schedule — and can make a pledge payment directly from the portal</td>
+<td>Foundant CSuite</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Recurring donation management</td>
+<td>Donor can view, modify, pause, or cancel their recurring donations from within the portal — not just set them up</td>
+<td>Foundant CSuite</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Contribute appreciated securities</td>
+<td>Donor contributes stocks or other securities from their brokerage account — views holdings with cost basis, unrealized gains, and &quot;most appreciated securities&quot; sort for tax-smart giving</td>
+<td>Fidelity Charitable</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Giving history with year-over-year trends</td>
+<td>Donor sees a chart showing their total giving by year — &quot;$12K in 2024, $15K in 2025, $8K YTD in 2026&quot; — to understand their philanthropic trajectory</td>
+<td>Foundant CSuite, Fidelity Charitable (YTD + prior year KPI cards)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Contribution history with print/download</td>
+<td>Donor views, searches, prints, and downloads (Excel) their full contribution history with status tracking</td>
+<td>Fidelity Charitable</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Giving cards / charitable gift cards</td>
+<td>Donor purchases a digital giving card as a gift for someone — the recipient can then recommend grants to an org of their choice</td>
+<td>Foundant CSuite, Fidelity Charitable (Gift4Giving)</td>
+<td>Nice-to-have</td>
+</tr>
+<tr>
+<td>Contribution acknowledgment letters</td>
+<td>Donor downloads their contribution acknowledgment letters directly from the portal for each gift received</td>
+<td>Foundant CSuite</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>4. Impact Visibility &amp; Reporting</h2>
+<p>GOfund has basic GOfund Charts managed by CRM admins. Competitors give donors more visibility into the impact of their philanthropy.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Geographic grant distribution map</td>
+<td>Interactive map showing where the donor&#39;s grants went — pins on a map with org names and amounts. Answers &quot;where is my philanthropy making a difference?&quot;</td>
+<td>Fluxx, SmartSimple (Google Maps)</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Grants by focus area breakdown</td>
+<td>Pie or bar chart showing donor&#39;s grants categorized by cause area (Education 40%, Health 30%, Environment 20%, Arts 10%). Answers &quot;what causes am I supporting?&quot;</td>
+<td>Fidelity Charitable (donut chart by sector with top charities), Fluxx, Blackbaud, SmartSimple</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Year-over-year grant totals</td>
+<td>Line or bar chart showing total grants recommended and disbursed each year. Answers &quot;am I giving more or less than last year?&quot;</td>
+<td>Foundant CSuite, Fidelity Charitable (YTD + prior years)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Fund dashboard with key metrics</td>
+<td>At-a-glance donor homepage showing: current balance, YTD grants, YTD contributions, pending recommendations, recent activity — in card/widget format instead of just tables</td>
+<td>Fidelity Charitable (Available to Grant, YTD Contributions, YTD Grants KPI cards), Give Interactive, Foundant CSuite</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Grant status summary</td>
+<td>Visual summary of all grant recommendations: how many are pending, approved, paid, declined — as a status bar or pie chart. Answers &quot;what&#39;s happening with my recommendations?&quot;</td>
+<td>Foundant CSuite, Give Interactive</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Grant analysis page</td>
+<td>Dedicated page for grant analysis showing total granted, breakdown by sector/cause area, and top recipients ranked by amount</td>
+<td>Fidelity Charitable (&quot;Grant analysis&quot; with donut chart + top charities table)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Impact stories / org updates</td>
+<td>Foundation shares impact stories or grantee updates with the donor — &quot;here&#39;s what your $10K grant to Org X accomplished&quot; — surfaced in the portal, not just email</td>
+<td>Blackbaud</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<h3>What these analytics mean to a donor</h3>
+<p>A donor looking at their impact wants to answer:</p>
+<ul>
+<li><strong>&quot;Where is my money going?&quot;</strong> → Geographic map of grants + focus area breakdown</li>
+<li><strong>&quot;Am I giving more or less over time?&quot;</strong> → Year-over-year giving and grant trends</li>
+<li><strong>&quot;What&#39;s happening with my latest recommendations?&quot;</strong> → Grant status summary (pending/approved/paid)</li>
+<li><strong>&quot;What did my grants actually accomplish?&quot;</strong> → Impact stories and org outcome data</li>
+<li><strong>&quot;What&#39;s the quick snapshot?&quot;</strong> → At-a-glance dashboard with KPI cards (balance, YTD grants, YTD contributions)</li>
+</ul>
+<hr>
+<h2>5. Tax &amp; Compliance Self-Service</h2>
+<p>GOfund has no tax document self-service. This is a basic expectation for donors managing charitable funds.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Tax receipt generation &amp; download</td>
+<td>Donor clicks &quot;Download Tax Receipt&quot; for any contribution and gets a PDF receipt suitable for tax filing</td>
+<td>Foundant CSuite, Fidelity Charitable (&quot;Contributions (tax receipts) &amp; misc.&quot; tab)</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Year-end tax summary</td>
+<td>Donor downloads a consolidated annual summary of all contributions for tax preparation — total contributions, by fund, by date</td>
+<td>Foundant CSuite, Fidelity Charitable (Statements tab with date filter)</td>
+<td><strong>Critical</strong></td>
+</tr>
+<tr>
+<td>Grant confirmation letters</td>
+<td>Donor downloads confirmation letters for grant recommendations — proof of charitable intent for their records</td>
+<td>Foundant CSuite, Fidelity Charitable (&quot;Grant confirmations&quot; tab)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>IRS Form 8283 access</td>
+<td>Donor accesses IRS Form 8283 (Noncash Charitable Contributions) for non-cash asset donations</td>
+<td>Fidelity Charitable (&quot;IRS Form 8283&quot; tab)</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>6. AI-Assisted Donor Features</h2>
+<p>GOfund has no AI capabilities. Most competitor AI features are staff-facing (application scoring, board books, workflow automation) and not relevant to the donor portal. However, a few AI use cases directly benefit donors.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AI-powered org discovery</td>
+<td>Donor describes their philanthropic interests in plain language (&quot;I want to support food insecurity programs for families in the Pacific Northwest&quot;) and AI recommends matching organizations with impact data and fit explanations</td>
+<td>Blackbaud (Charity Discovery + True Impact), Instrumentl (Prospecting Assistant)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>AI grant impact summaries</td>
+<td>Donor sees an AI-generated plain-language summary of what their past grants achieved — synthesized from grantee reports into &quot;your $10K to Org X helped serve 500 families&quot;</td>
+<td>Fluxx (Report Extraction), SmartSimple (Report Narratives)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>AI-powered fund insights</td>
+<td>Donor asks a natural language question about their fund — &quot;How much did I give to education last year?&quot; — and gets a direct answer instead of navigating reports</td>
+<td>Blackbaud (Chat for AI)</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<h3>What&#39;s NOT relevant to the donor portal</h3>
+<p>The following AI features are widely marketed by competitors but are <strong>staff/admin tools</strong>, not donor portal features:</p>
+<ul>
+<li>AI application summarization → staff reviewing applications (GOapply concern)</li>
+<li>AI pre-screening &amp; scoring → staff evaluating eligibility (GOapply concern)</li>
+<li>AI board book generation → board members reviewing grants (CRM concern)</li>
+<li>AI award/declination letters → staff generating correspondence (CRM concern)</li>
+<li>AI document intelligence → staff processing invoices/PDFs (CRM concern)</li>
+<li>AI database auto-tagging → staff organizing records (CRM concern)</li>
+<li>Autonomous AI agents → staff donor cultivation (CRM concern)</li>
+</ul>
+<hr>
+<h2>7. Communication &amp; Engagement</h2>
+<p>GOfund has announcements, banners, and email templates. Competitors provide richer donor-facing communication.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>In-portal messaging with foundation staff</td>
+<td>Donor sends a message or question to their foundation contact directly from the portal — and sees the reply in-portal, not just via email</td>
+<td>GivingData, Fluxx</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Foundation event calendar &amp; RSVP</td>
+<td>Donor sees upcoming foundation events (galas, donor appreciation, community events) and can RSVP or buy tickets directly from the portal</td>
+<td>Foundant CSuite</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Curated guidance / educational content</td>
+<td>Donor accesses giving strategies, tax &amp; estate planning guides, family philanthropy resources, disaster relief info — curated by the foundation to help donors give more strategically</td>
+<td>Fidelity Charitable (Guidance section with 6 topics)</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Notification preferences</td>
+<td>Donor controls what notifications they receive (grant status updates, fund activity alerts, event invitations, impact reports) and how (email, in-portal, both)</td>
+<td>Foundant CSuite, SmartSimple</td>
+<td>Nice-to-have</td>
+</tr>
+<tr>
+<td>Donor community / peer visibility</td>
+<td>Donor sees aggregated community impact — &quot;Together, our fundholders granted $45M this year&quot; — creating a sense of shared purpose</td>
+<td>Foundant CSuite (Giving Hub)</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Mobile Access</h2>
+<p>GOfund is a responsive web application. One competitor offers a dedicated native app for fundholders.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Native mobile app</td>
+<td>Donor checks fund balance, submits grant recommendations, and reviews activity from a dedicated iOS/Android app — push notifications for grant approvals and fund activity</td>
+<td>Foundation Source (Impactfully Mobile)</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<p>Note: A well-built responsive web app can serve most mobile needs. A native app is a differentiator, not a gap for most foundations.</p>
+<hr>
+<h2>9. Portal UX &amp; Personalization</h2>
+<p>GOfund offers white-label branding (colors, logos, navbar). Competitors offer deeper personalization for the donor experience.</p>
+<table>
+<thead>
+<tr>
+<th>Missing Feature</th>
+<th>What the Donor Sees</th>
+<th>Competitors</th>
+<th>Importance</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Configurable donor homepage</td>
+<td>Donor chooses which widgets appear on their homepage — drag-and-drop cards for fund balance, recent activity, pending recommendations, giving trends, announcements</td>
+<td>Give Interactive, GivingData</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Quick actions from homepage</td>
+<td>Donor&#39;s homepage has prominent action buttons — &quot;Recommend a Grant&quot;, &quot;Make a Contribution&quot;, &quot;Download Statement&quot; — reducing clicks to common tasks</td>
+<td>Foundant CSuite</td>
+<td>Important</td>
+</tr>
+<tr>
+<td>Recently viewed organizations</td>
+<td>Donor sees a list of orgs they recently viewed or granted to, for quick re-access</td>
+<td>GivingData</td>
+<td>Nice-to-have</td>
+</tr>
+<tr>
+<td>Saved searches</td>
+<td>Donor saves frequently used org searches (e.g., &quot;education nonprofits in Oregon&quot;) for one-click re-use</td>
+<td>GivingData</td>
+<td>Nice-to-have</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Priority Summary</h2>
+<blockquote>
+<p><strong>Scope note:</strong> This summary only includes features relevant to the donor/fundholder portal experience. Staff, admin, grantee, and application features are excluded — see <a href="#appendix-features-excluded-from-this-analysis">Appendix</a>.</p>
+<p><strong>Target:</strong> The next GOfund release targets <strong>Community Foundations (CF)</strong>. Features are tagged:</p>
+<ul>
+<li><strong>CF</strong> = Community Foundation feature (priority)</li>
+<li><strong>DAF</strong> = Donor-Advised Fund feature (financial institution DAF programs)</li>
+<li><strong>CF+DAF</strong> = Applies to both (many DAF features are equally relevant to CF fundholders)</li>
+</ul>
+</blockquote>
+<h3>Tier 1: Critical — Baseline Donor Expectations</h3>
+<p>These are features donors expect from a modern fund portal. Their absence is noticed. Fidelity Charitable has all of these — and their donors are the same people who hold funds at community foundations.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><strong>Tax receipt &amp; year-end summary self-service</strong></td>
+<td><strong>CF+DAF</strong></td>
+<td>Foundant and Fidelity Charitable both offer tabbed document access. CF fundholders need tax receipts for contributions to their fund.</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Grant recommendation status tracking</strong></td>
+<td><strong>CF+DAF</strong></td>
+<td>Foundant, Give Interactive, and Fidelity Charitable all show status. CF fundholders submit grant recommendations the same way DAF donors do.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Grant analysis (by sector / cause area)</strong></td>
+<td><strong>CF+DAF</strong></td>
+<td>Fidelity Charitable shows donut chart by sector + top charities. Equally valuable for CF fundholders who want to see their giving patterns.</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Investment performance over time</strong></td>
+<td><strong>CF</strong></td>
+<td>CF endowed funds are invested by the foundation. Donors want to see how their fund is growing. Fidelity shows pool performance; Give Interactive has Morningstar.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Fund activity timeline</strong></td>
+<td><strong>CF+DAF</strong></td>
+<td>Unified chronological feed of all fund events. CF fundholders need to see contributions, grants, fees, and earnings in one view.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Geographic grant distribution map</strong></td>
+<td><strong>CF</strong></td>
+<td>No competitor has this in the donor portal. Especially valuable for CF fundholders whose grants often focus on a specific geographic community. Whitespace opportunity.</td>
+</tr>
+</tbody></table>
+<h3>Tier 2: Important — Competitive Differentiators</h3>
+<p>These features meaningfully improve the donor experience. Not all competitors have them, but they set leaders apart.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>7</td>
+<td>Fund dashboard with KPI cards</td>
+<td><strong>CF+DAF</strong></td>
+<td>Available to Grant, YTD Contributions, YTD Grants as at-a-glance cards. Universal.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Grant analysis page (total granted, sector breakdown, top recipients)</td>
+<td><strong>CF+DAF</strong></td>
+<td>Dedicated analysis page. Universal.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Batch grant submissions</td>
+<td><strong>DAF</strong></td>
+<td>Multiple charities in one transaction. More common in DAF workflows; CF fundholders typically grant one at a time.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Rich grant use taxonomy (honor/memory/tithe/pledge/membership/custom)</td>
+<td><strong>CF+DAF</strong></td>
+<td>CF fundholders frequently make grants &quot;in memory of&quot; or &quot;in honor of.&quot; Directly applicable.</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Grant acknowledgment options (named, account only, anonymous)</td>
+<td><strong>CF+DAF</strong></td>
+<td>CF fundholders value anonymity options. Directly applicable.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Scheduled/recurring grant management (view, edit, delete)</td>
+<td><strong>CF+DAF</strong></td>
+<td>CF fundholders set up annual grants to the same organizations. Need to manage them.</td>
+</tr>
+<tr>
+<td>13</td>
+<td>Richer org search with Candid/GuideStar profiles</td>
+<td><strong>CF+DAF</strong></td>
+<td>Helps CF fundholders make informed grant decisions. Universal.</td>
+</tr>
+<tr>
+<td>14</td>
+<td>Year-over-year giving trends</td>
+<td><strong>CF+DAF</strong></td>
+<td>CF fundholders want to see their philanthropic trajectory. Universal.</td>
+</tr>
+<tr>
+<td>15</td>
+<td>Downloadable PDF fund statements</td>
+<td><strong>CF</strong></td>
+<td>CF fundholders need statements for their personal records and accountants. Priority.</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Pledge tracking &amp; payment management</td>
+<td><strong>CF</strong></td>
+<td>CF-specific — pledges are common in community foundation giving (pledge campaigns, multi-year commitments). Not typical in DAF programs.</td>
+</tr>
+<tr>
+<td>17</td>
+<td>Recurring donation management (view/modify/pause/cancel)</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>18</td>
+<td>Contribution history with print/download</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>19</td>
+<td>Contribute appreciated securities</td>
+<td><strong>DAF</strong></td>
+<td>Primarily a DAF feature (Fidelity&#39;s core use case). Some CFs accept securities but it&#39;s less common and usually handled offline.</td>
+</tr>
+<tr>
+<td>20</td>
+<td>Curated guidance content (giving strategies, tax planning)</td>
+<td><strong>CF</strong></td>
+<td>CFs are uniquely positioned to offer community-specific guidance, local impact stories, and philanthropic education tailored to their region.</td>
+</tr>
+<tr>
+<td>21</td>
+<td>In-portal messaging with foundation staff</td>
+<td><strong>CF</strong></td>
+<td>CF-specific — CF fundholders have a personal relationship with foundation staff. DAF donors typically don&#39;t.</td>
+</tr>
+<tr>
+<td>22</td>
+<td>Foundation event calendar &amp; RSVP</td>
+<td><strong>CF</strong></td>
+<td>CF-specific — community foundations hold galas, donor appreciation events, site visits. Not applicable to DAFs.</td>
+</tr>
+<tr>
+<td>23</td>
+<td>Grant catalog browsing (curated funding opportunities)</td>
+<td><strong>CF</strong></td>
+<td>CF-specific — community foundations curate local grant opportunities for fundholders. This is a CF differentiator vs DAFs.</td>
+</tr>
+<tr>
+<td>24</td>
+<td>Configurable donor homepage</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>25</td>
+<td>AI-powered organization discovery</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal, but especially valuable for CFs — &quot;find local nonprofits in our community that match my interests.&quot;</td>
+</tr>
+<tr>
+<td>26</td>
+<td>AI grant impact summaries</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+</tbody></table>
+<h3>Tier 3: Nice-to-Have — Delighters</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Feature</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>27</td>
+<td>Grant pool allocation (choose investment pools to draw from)</td>
+<td><strong>DAF</strong></td>
+<td>DAF-specific — CF fundholders don&#39;t typically choose which pools to draw from; the foundation manages investment allocations.</td>
+</tr>
+<tr>
+<td>28</td>
+<td>Investment pool management (view, change, research options)</td>
+<td><strong>DAF</strong></td>
+<td>DAF-specific — same as above. CF fundholders may have an investment strategy but don&#39;t self-manage pool selections.</td>
+</tr>
+<tr>
+<td>29</td>
+<td>Giving cards / charitable gift cards</td>
+<td><strong>CF+DAF</strong></td>
+<td>CF-specific opportunity — &quot;Give a gift of philanthropy through our community foundation.&quot;</td>
+</tr>
+<tr>
+<td>30</td>
+<td>Contribution acknowledgment letter downloads</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>31</td>
+<td>IRS Form 8283 access</td>
+<td><strong>DAF</strong></td>
+<td>DAF-specific — for non-cash contributions of securities. Rare in CF portals.</td>
+</tr>
+<tr>
+<td>32</td>
+<td>Outside gift tracking</td>
+<td><strong>CF+DAF</strong></td>
+<td>Useful for CF fundholders who give through multiple channels.</td>
+</tr>
+<tr>
+<td>33</td>
+<td>Impact stories / org updates</td>
+<td><strong>CF</strong></td>
+<td>CF-specific opportunity — foundations can share local impact stories from grantees in the community.</td>
+</tr>
+<tr>
+<td>34</td>
+<td>Notification preferences</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>35</td>
+<td>Donor community / peer visibility</td>
+<td><strong>CF</strong></td>
+<td>CF-specific — &quot;Together, our fundholders granted $45M to our community this year.&quot; Builds community identity.</td>
+</tr>
+<tr>
+<td>36</td>
+<td>Saved organizations and saved searches</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>37</td>
+<td>Native mobile app</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+<tr>
+<td>38</td>
+<td>AI natural language fund queries</td>
+<td><strong>CF+DAF</strong></td>
+<td>Universal.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Key Takeaway</h2>
+<p>When filtered through the donor portal lens, the gap picture changes significantly. Most competitor &quot;features&quot; that looked critical (workflow builders, AI scoring, grantee reporting, application intake) are <strong>admin/staff tools or grantee features</strong> — not things a fundholder interacts with.</p>
+<p>The real donor portal gaps are more fundamental:</p>
+<ol>
+<li><p><strong>Tax &amp; compliance self-service</strong> — The #1 gap. Fidelity Charitable offers 4 document types as self-service PDFs (Statements, Tax receipts, Grant confirmations, IRS Form 8283). Foundant auto-generates tax receipts for every donation. GOfund offers none. Donors managing charitable funds expect this.</p>
+</li>
+<li><p><strong>Grant analysis</strong> — Fidelity Charitable shows donors a donut chart of grants by sector, top charities ranked by amount, and a &quot;Total Granted&quot; KPI. This is the single most impactful visual a donor portal can offer — it answers &quot;what causes am I supporting?&quot; at a glance. GOfund has nothing like this. Elevated to Critical.</p>
+</li>
+<li><p><strong>Transparency into what&#39;s happening</strong> — Donors submit grant recommendations into a black box. They can&#39;t see the status (pending/approved/paid). They can&#39;t see a unified activity feed. They can&#39;t see investment performance. Foundant, Give Interactive, and Fidelity Charitable all show this. Fidelity goes further with scheduled grant management (view, edit, delete with status).</p>
+</li>
+<li><p><strong>The grant recommendation experience needs depth</strong> — Fidelity Charitable&#39;s 3-step wizard lets donors batch multiple charities, choose from 12 use types (honor/memory/tithe/pledge/membership), select acknowledgment preferences (named/anonymous), and allocate across investment pools. GOfund&#39;s recommendation flow is functional but basic by comparison.</p>
+</li>
+<li><p><strong>The donor homepage needs to be a dashboard, not a menu</strong> — Fidelity Charitable&#39;s homepage shows Available to Grant, YTD Contributions, YTD Grants as KPI cards, plus recent grant activity and grant analysis — all without clicking. GOfund should answer &quot;what do I need to know right now?&quot; on first load.</p>
+</li>
+<li><p><strong>AI for donors is early but real</strong> — The most relevant AI is org discovery (&quot;help me find the right nonprofits&quot;) and impact summarization (&quot;what did my grants accomplish?&quot;). Give Interactive has AI grantmaking &quot;coming soon.&quot; This is a 12-24 month opportunity to leapfrog.</p>
+</li>
+<li><p><strong>Geographic grant mapping is unclaimed whitespace</strong> — No competitor shows donors an interactive map of where their grants went. This is a differentiator opportunity.</p>
+</li>
+<li><p><strong>Fidelity Charitable sets the UX bar</strong> — They aren&#39;t selling software to foundations, but their portal is what sophisticated donors use at home. When those donors log into GOfund, they notice every feature that&#39;s missing. The Fidelity experience is the benchmark GOfund is measured against, whether we like it or not.</p>
+</li>
+</ol>
+<hr>
+<h2>Appendix: Features Excluded From This Analysis</h2>
+<p>The following features were identified in competitor research but are <strong>not donor portal features</strong>. They belong to other parts of the akoyaGO suite or are staff-side tools.</p>
+<h3>Staff/Admin Features (CRM Concern)</h3>
+<ul>
+<li>Visual workflow builders with branching logic (SmartSimple, Fluxx, GivingData)</li>
+<li>Approval routing with percentage-based thresholds (Foundant, SmartSimple)</li>
+<li>Task management systems (GivingData, Foundation Source)</li>
+<li>AI application summarization and pre-screening (SmartSimple, Blackbaud, Submittable)</li>
+<li>AI board book generation (SmartSimple, Salesforce)</li>
+<li>AI award/declination letter drafting (SmartSimple)</li>
+<li>AI document intelligence / PDF extraction (Fluxx, Blackbaud)</li>
+<li>AI database auto-tagging (SmartSimple QuickTag)</li>
+<li>Autonomous AI agents for donor cultivation (Blackbaud Development Agent)</li>
+<li>Report Builder tools with drag-and-drop datasets (SmartSimple Report Builder Neo)</li>
+<li>Batch operations (GivingData)</li>
+<li>Docket management (GivingData)</li>
+<li>OFAC sanctions screening (Fluxx, GivingData)</li>
+<li>Compliance policy enforcement (Fluxx)</li>
+<li>E-signature on grant agreements (GivingData)</li>
+<li>Built-in fund accounting (Foundant — akoyaGO uses Business Central)</li>
+</ul>
+<h3>Grantee/Applicant Features (GOapply Concern)</h3>
+<ul>
+<li>Online grant application intake with conditional logic</li>
+<li>Application status tracking for applicants</li>
+<li>Post-award grantee portal (view awards, submit reports, track payments)</li>
+<li>Grantee progress/outcome reporting</li>
+<li>In-form commenting/collaboration</li>
+<li>Grant payment schedule visibility for grantees</li>
+<li>Grantee-initiated forms (amendments, contact updates)</li>
+<li>External reviewer portal with scoring</li>
+<li>Scholarship student portal</li>
+</ul>
+<h3>Public Giving Features (GOdonate Concern)</h3>
+<ul>
+<li>Public giving hub / charitable marketplace</li>
+<li>Campaign management</li>
+</ul>
+<h3>Other Portal Personas (Separate Products)</h3>
+<ul>
+<li>Board/committee portal with voting</li>
+<li>Vendor portal with voucher tracking</li>
+<li>Cross-funder unified identity (Blackbaud ID)</li>
+</ul>
+<h3>Platform/Architecture (Cross-Cutting)</h3>
+<ul>
+<li>WCAG 2.1 AA certification</li>
+<li>Open/public REST API</li>
+<li>Power BI / Looker Studio integration (relevant but primarily staff-facing)</li>
+<li>Pooled investment earnings allocation (accounting concern)</li>
+<li>Admin fee management (accounting concern)</li>
+</ul>
+
+</main>
+</body>
+</html>

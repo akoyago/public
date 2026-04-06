@@ -546,7 +546,7 @@ function Compare-WebResources {
                 $newWr = @{
                     name = $wr.Name
                     content = $wr.Base64Content
-                    webresourcetype = $wr.Type
+                    webresourcetype = New-Object Microsoft.Xrm.Sdk.OptionSetValue($wr.Type)
                     displayname = $wr.Name
                 }
                 

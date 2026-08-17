@@ -1,4 +1,5 @@
 # Grant-akoyaGOSharePointSitePermission.ps1
+# Version: 0.7
 #
 # Beginner-friendly usage directly from the akoyaGO public repository:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
@@ -78,10 +79,13 @@ function Get-GraphErrorGuidance {
 
     if ($statusCode -eq 403 -or $message -match "accessDenied|Access denied|Forbidden|Authorization_RequestDenied") {
         return @(
-            "Sign in with a Global Administrator or SharePoint Administrator account.",
+            "Check the 'Signed in as' account printed above. The browser account and the PowerShell account can be different.",
+            "Use a licensed account that is a Global Administrator or SharePoint Administrator and also has access to $NormalizedSiteUrl.",
+            "Global Administrator and SharePoint Administrator roles do not automatically grant access to every SharePoint site.",
+            "In the SharePoint admin center, open Active sites, select this site, open Membership, and add the signed-in account as a Site admin.",
+            "Make sure the account has a Microsoft 365 license that includes SharePoint Online.",
             "Approve/admin-consent the Microsoft Graph delegated permission $requiredGraphScope when prompted.",
-            "Verify that the signed-in account belongs to the tenant that owns $NormalizedSiteUrl.",
-            "If tenant consent policies block the request, have a Global Administrator grant consent and rerun the script."
+            "Run Disconnect-MgGraph, rerun the script, and select the licensed site-admin account in the sign-in window."
         )
     }
 

@@ -3,13 +3,21 @@
 # Beginner-friendly usage directly from the akoyaGO public repository:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
 #
+# Optional: supply the site URL on the same line instead of being prompted:
+#   $akoyaGOSiteUrl = 'https://contoso.sharepoint.com/sites/example'; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
+#
 # The script grants the fixed BCO akoyaGO Integration application Manage access
 # to one SharePoint site through the Sites.Selected permission model.
 # It runs in an isolated child scope so Invoke-Expression cannot collide with
 # variables or functions already present in the user's PowerShell session.
 
 & {
-$SiteUrl = $null
+$SiteUrl = [string](Get-Variable `
+    -Name "akoyaGOSiteUrl" `
+    -Scope 1 `
+    -ValueOnly `
+    -ErrorAction SilentlyContinue)
+Remove-Variable -Name "akoyaGOSiteUrl" -Scope 1 -ErrorAction SilentlyContinue
 $Force = $false
 
 Set-StrictMode -Version Latest

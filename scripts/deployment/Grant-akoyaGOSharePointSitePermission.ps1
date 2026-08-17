@@ -1,31 +1,16 @@
 # Grant-akoyaGOSharePointSitePermission.ps1
 #
-# Beginner-friendly usage from PowerShell 7 (pwsh):
-#   pwsh -NoProfile -File .\Grant-akoyaGOSharePointSitePermission.ps1 `
-#       -SiteUrl "https://contoso.sharepoint.com/sites/example"
-#
-# Beginner-friendly usage from Windows PowerShell 5.1 (powershell.exe):
-#   powershell.exe -NoProfile -File .\Grant-akoyaGOSharePointSitePermission.ps1 `
-#       -SiteUrl "https://contoso.sharepoint.com/sites/example"
-#
-# If Windows says running scripts is disabled, use this process-only bypass:
-#   pwsh -NoProfile -ExecutionPolicy Bypass -File .\Grant-akoyaGOSharePointSitePermission.ps1 `
-#       -SiteUrl "https://contoso.sharepoint.com/sites/example"
-# Or, after confirming you trust this file, run:
-#   Unblock-File .\Grant-akoyaGOSharePointSitePermission.ps1
+# Beginner-friendly usage directly from the akoyaGO public repository:
+#   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
 #
 # The script grants the fixed BCO akoyaGO Integration application Manage access
 # to one SharePoint site through the Sites.Selected permission model.
+# It runs in an isolated child scope so Invoke-Expression cannot collide with
+# variables or functions already present in the user's PowerShell session.
 
-[CmdletBinding()]
-param(
-    [Parameter(Mandatory = $true, Position = 0, HelpMessage = "Enter the complete SharePoint site URL.")]
-    [ValidateNotNullOrEmpty()]
-    [string]$SiteUrl,
-
-    # Skips the interactive confirmation. Intended for controlled automation.
-    [switch]$Force
-)
+& {
+$SiteUrl = $null
+$Force = $false
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
@@ -196,6 +181,21 @@ try {
 
     Write-Section "Validating the site URL"
 
+    if ([string]::IsNullOrWhiteSpace($SiteUrl)) {
+        Write-Host "Enter the complete SharePoint site URL." -ForegroundColor Yellow
+        Write-Host "Example: https://contoso.sharepoint.com/sites/foundation" -ForegroundColor DarkGray
+        $SiteUrl = Read-Host "SharePoint site URL"
+    }
+
+    if ([string]::IsNullOrWhiteSpace($SiteUrl)) {
+        Stop-WithInstructions `
+            -Problem "A SharePoint site URL was not provided." `
+            -Fix @(
+                "Run the command again and enter the complete SharePoint site URL when prompted.",
+                "Example: https://contoso.sharepoint.com/sites/foundation"
+            )
+    }
+
     $siteUri = $null
     if (-not [Uri]::TryCreate($SiteUrl.Trim(), [UriKind]::Absolute, [ref]$siteUri)) {
         Stop-WithInstructions `
@@ -364,7 +364,7 @@ try {
         $confirmation = Read-Host "Type GRANT to continue"
         if ($confirmation -cne "GRANT") {
             Write-Host "No changes were made." -ForegroundColor Yellow
-            exit 0
+            return
         }
     }
 
@@ -510,10 +510,11 @@ catch {
     Write-Host ""
     Write-Host "Technical error:" -ForegroundColor DarkRed
     Write-Host $_.Exception.Message -ForegroundColor DarkRed
-    exit 1
+    return
 }
 finally {
     if ($graphConnected) {
         Disconnect-MgGraph -ErrorAction SilentlyContinue | Out-Null
     }
+}
 }

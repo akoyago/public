@@ -1,5 +1,5 @@
 # Grant-akoyaGOSharePointSitePermission.ps1
-# Version: 0.7
+# Version: 0.10
 #
 # Beginner-friendly usage directly from the akoyaGO public repository:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
@@ -7,8 +7,8 @@
 # Optional: supply the site URL on the same line instead of being prompted:
 #   $global:akoyaGOSiteUrl = 'https://contoso.sharepoint.com/sites/example'; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
 #
-# The script grants the fixed BCO akoyaGO Integration application Manage access
-# to one SharePoint site through the Sites.Selected permission model.
+# The script grants the fixed target enterprise application identified below
+# Manage access to one SharePoint site through the Sites.Selected permission model.
 # It runs in an isolated child scope so Invoke-Expression cannot collide with
 # variables or functions already present in the user's PowerShell session.
 
@@ -26,12 +26,16 @@ $ErrorActionPreference = "Stop"
 
 $applicationId = "a86b9632-42bf-4dfe-83c8-bbc95145504b"
 $applicationDisplayName = "BCO akoyaGO Integration"
+$microsoftGraphResourceAppId = "00000003-0000-0000-c000-000000000000"
+$sitesSelectedApplicationPermissionId = "883ea226-0bf2-4a8f-9f9d-92c9162a727d"
+$sitesFullControlDelegatedPermissionId = "5a54b8b3-347c-476d-8f8e-42d5c7424d29"
 $requiredRole = "manage"
 $requiredGraphScope = "Sites.FullControl.All"
 $requiredModule = "Microsoft.Graph.Authentication"
 $minimumWindowsPowerShellVersion = [version]"5.1"
 $minimumPowerShellCoreVersion = [version]"7.0"
 $graphConnected = $false
+$graphClientId = $null
 
 function Write-Section {
     param([Parameter(Mandatory = $true)][string]$Text)
@@ -55,18 +59,77 @@ function Stop-WithInstructions {
     throw $Problem
 }
 
+function Get-ObjectPropertyValue {
+    param(
+        [AllowNull()][object]$InputObject,
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+
+    if ($null -eq $InputObject) {
+        return $null
+    }
+
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        if ($InputObject.Contains($Name)) {
+            return $InputObject[$Name]
+        }
+        return $null
+    }
+
+    $property = $InputObject.PSObject.Properties[$Name]
+    if ($null -ne $property) {
+        return $property.Value
+    }
+
+    return $null
+}
+
+function Write-GraphFailureDetails {
+    param(
+        [Parameter(Mandatory = $true)][System.Management.Automation.ErrorRecord]$ErrorRecord,
+        [Parameter(Mandatory = $true)][string]$Method,
+        [Parameter(Mandatory = $true)][string]$RequestUri
+    )
+
+    Write-Host "Graph request: $Method $RequestUri" -ForegroundColor DarkRed
+    if (-not [string]::IsNullOrWhiteSpace($graphClientId)) {
+        Write-Host "Sign-in client application ID: $graphClientId" -ForegroundColor DarkRed
+    }
+    Write-Host $ErrorRecord.Exception.Message -ForegroundColor Red
+
+    # Invoke-MgGraphRequest often puts Graph's JSON error body (including the
+    # request ID) in ErrorDetails instead of the exception message.
+    $errorBody = [string](Get-ObjectPropertyValue -InputObject $ErrorRecord.ErrorDetails -Name "Message")
+    if (-not [string]::IsNullOrWhiteSpace($errorBody) -and
+        $errorBody -ne $ErrorRecord.Exception.Message) {
+        Write-Host "Graph error body: $errorBody" -ForegroundColor DarkRed
+    }
+}
+
 function Get-GraphErrorGuidance {
     param(
         [Parameter(Mandatory = $true)][System.Management.Automation.ErrorRecord]$ErrorRecord,
-        [Parameter(Mandatory = $true)][string]$NormalizedSiteUrl
+        [Parameter(Mandatory = $true)][string]$NormalizedSiteUrl,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("FindSite", "ListPermissions", "CreatePermission")]
+        [string]$Operation
     )
 
-    $message = $ErrorRecord.Exception.Message
+    $message = $ErrorRecord.Exception.Message + " " + [string](Get-ObjectPropertyValue `
+        -InputObject $ErrorRecord.ErrorDetails `
+        -Name "Message")
     $statusCode = $null
 
-    if ($null -ne $ErrorRecord.Exception.Response -and
-        $null -ne $ErrorRecord.Exception.Response.StatusCode) {
-        $statusCode = [int]$ErrorRecord.Exception.Response.StatusCode
+    $response = Get-ObjectPropertyValue -InputObject $ErrorRecord.Exception -Name "Response"
+    $responseStatusCode = Get-ObjectPropertyValue -InputObject $response -Name "StatusCode"
+    if ($null -ne $responseStatusCode) {
+        $statusCode = [int]$responseStatusCode
+    }
+    else {
+        $exceptionStatusCode = Get-ObjectPropertyValue -InputObject $ErrorRecord.Exception -Name "ResponseStatusCode"
+        if ($null -ne $exceptionStatusCode) {
+            $statusCode = [int]$exceptionStatusCode
+        }
     }
 
     if ($statusCode -eq 401 -or $message -match "Unauthorized|InvalidAuthenticationToken") {
@@ -78,14 +141,23 @@ function Get-GraphErrorGuidance {
     }
 
     if ($statusCode -eq 403 -or $message -match "accessDenied|Access denied|Forbidden|Authorization_RequestDenied") {
+        if ($Operation -eq "FindSite") {
+            return @(
+                "The failure occurred while resolving the site, before Graph inspected or changed any grant for target application ID $applicationId.",
+                "The signed-in account is a tenant administrator but does not currently have access to the site collection containing $NormalizedSiteUrl.",
+                "In SharePoint admin center > Active sites, select the site collection, open Membership > Site admins, and add the exact account printed under 'Signed in as'.",
+                "Rerun this script after the site-admin change has propagated. The site-admin assignment can be removed after this script succeeds.",
+                "For unattended operation without temporarily granting the user site access, use a dedicated provisioning application with Microsoft Graph Sites.FullControl.All APPLICATION permission and certificate authentication; that is a separate, higher-privilege deployment model."
+            )
+        }
+
         return @(
             "Check the 'Signed in as' account printed above. The browser account and the PowerShell account can be different.",
-            "Use a licensed account that is a Global Administrator or SharePoint Administrator and also has access to $NormalizedSiteUrl.",
+            "Use an account that is a Global Administrator or SharePoint Administrator and also has site-admin access to the site collection containing $NormalizedSiteUrl.",
             "Global Administrator and SharePoint Administrator roles do not automatically grant access to every SharePoint site.",
             "In the SharePoint admin center, open Active sites, select this site, open Membership, and add the signed-in account as a Site admin.",
-            "Make sure the account has a Microsoft 365 license that includes SharePoint Online.",
             "Approve/admin-consent the Microsoft Graph delegated permission $requiredGraphScope when prompted.",
-            "Run Disconnect-MgGraph, rerun the script, and select the licensed site-admin account in the sign-in window."
+            "Run Disconnect-MgGraph, rerun the script, and select the site-admin account in the sign-in window."
         )
     }
 
@@ -98,10 +170,27 @@ function Get-GraphErrorGuidance {
     }
 
     if ($statusCode -eq 400 -or $message -match "BadRequest|invalidRequest") {
+        if ($Operation -eq "FindSite") {
+            return @(
+                "Verify that the exact request URL printed above contains only the SharePoint site path, with no page, document, query string, or sharing-link suffix.",
+                "Open $NormalizedSiteUrl and copy the site home-page URL, then rerun the script.",
+                "Give support the Graph error body and request ID printed above. This failure occurred before the target enterprise application was evaluated."
+            )
+        }
+
+        if ($Operation -eq "ListPermissions") {
+            return @(
+                "This GET request only reads existing site grants; the target application's permissions do not cause this request to return Bad Request.",
+                "The script resolved the entered URL to its containing site-collection root before making this request.",
+                "Retry once and give support the exact Graph request, error body, and request ID printed above. Changing the signed-in user's Entra role will not repair a malformed or unsupported request."
+            )
+        }
+
         return @(
-            "Verify that the BCO application exists in the target tenant.",
-            "Verify that application ID $applicationId is correct.",
-            "On the BCO application, grant the SharePoint application permission Sites.Selected and grant admin consent.",
+            "Target enterprise application: '$applicationDisplayName'; application (client) ID: $applicationId. Search Entra ID > Enterprise applications by this ID; its object ID is different in every tenant.",
+            "Required API permission on that target application: Microsoft Graph (resource app ID $microsoftGraphResourceAppId) > Sites.Selected APPLICATION permission (role ID $sitesSelectedApplicationPermissionId), with tenant admin consent.",
+            "The script's sign-in client is a separate enterprise application. Its application ID is printed above; it needs Microsoft Graph $requiredGraphScope DELEGATED permission (scope ID $sitesFullControlDelegatedPermissionId), with tenant admin consent.",
+            "Do not use an Entra object ID in place of application (client) ID $applicationId.",
             "Then rerun the script."
         )
     }
@@ -304,6 +393,7 @@ try {
     Write-Section "Signing in to Microsoft Graph"
     Write-Host "A browser window may open." -ForegroundColor Yellow
     Write-Host "Sign in with a Global Administrator or SharePoint Administrator for $($siteUri.Host)." -ForegroundColor Yellow
+    Write-Host "The account must also be a site admin for the target site collection; tenant admin roles alone do not grant site access." -ForegroundColor Yellow
 
     try {
         Connect-MgGraph `
@@ -335,20 +425,22 @@ try {
             )
     }
 
-    Write-Host "Signed in as: $($graphContext.Account)" -ForegroundColor Green
-    Write-Host "Tenant ID:    $($graphContext.TenantId)" -ForegroundColor Green
+    $graphClientId = [string]$graphContext.ClientId
+    Write-Host "Signed in as:      $($graphContext.Account)" -ForegroundColor Green
+    Write-Host "Tenant ID:         $($graphContext.TenantId)" -ForegroundColor Green
+    Write-Host "Sign-in client ID: $graphClientId" -ForegroundColor DarkGray
 
     Write-Section "Finding the SharePoint site"
 
-    $lookupUri = 'https://graph.microsoft.com/v1.0/sites/{0}:{1}?$select=id,displayName,webUrl' -f `
+    $lookupUri = 'https://graph.microsoft.com/v1.0/sites/{0}:{1}?$select=id,displayName,webUrl,siteCollection' -f `
         $siteUri.Host, $sitePath
 
     try {
         $site = Invoke-MgGraphRequest -Method GET -Uri $lookupUri -ErrorAction Stop
     }
     catch {
-        Write-Host $_.Exception.Message -ForegroundColor Red
-        $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl
+        Write-GraphFailureDetails -ErrorRecord $_ -Method "GET" -RequestUri $lookupUri
+        $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl -Operation "FindSite"
         Stop-WithInstructions -Problem "Microsoft Graph could not find or access the SharePoint site." -Fix $guidance
     }
 
@@ -364,13 +456,77 @@ try {
     Write-Host "Resolved site: $($site.webUrl)" -ForegroundColor Green
     Write-Host "Site ID:       $($site.id)" -ForegroundColor DarkGray
 
+    $requestedSite = $site
+    $requestedSiteWasSubsite = $false
+    $siteCollection = Get-ObjectPropertyValue -InputObject $site -Name "siteCollection"
+    if ($null -eq $siteCollection) {
+        # A Graph site ID is hostname,siteCollectionId,webId. Addressing a site
+        # with only hostname and siteCollectionId returns that collection's root.
+        $siteIdParts = ([string]$site.id).Split(",")
+        $siteCollectionId = [guid]::Empty
+        if ($siteIdParts.Count -ne 3 -or
+            -not [guid]::TryParse($siteIdParts[1], [ref]$siteCollectionId)) {
+            Stop-WithInstructions `
+                -Problem "The entered URL is a subsite, but its containing site collection could not be determined from Graph site ID '$($site.id)'." `
+                -Fix @(
+                    "Give support the entered URL and Graph site ID printed above.",
+                    "As a workaround, enter the containing site collection's root URL from SharePoint admin center > Active sites."
+                )
+        }
+
+        $siteCollectionLookupUri = 'https://graph.microsoft.com/v1.0/sites/{0},{1}?$select=id,displayName,webUrl,siteCollection' -f `
+            $siteUri.Host, $siteCollectionId
+
+        try {
+            $siteCollectionRoot = Invoke-MgGraphRequest `
+                -Method GET `
+                -Uri $siteCollectionLookupUri `
+                -ErrorAction Stop
+        }
+        catch {
+            Write-GraphFailureDetails -ErrorRecord $_ -Method "GET" -RequestUri $siteCollectionLookupUri
+            $guidance = Get-GraphErrorGuidance `
+                -ErrorRecord $_ `
+                -NormalizedSiteUrl $normalizedSiteUrl `
+                -Operation "FindSite"
+            Stop-WithInstructions `
+                -Problem "Microsoft Graph found the subsite but could not resolve its containing site-collection root." `
+                -Fix $guidance
+        }
+
+        $resolvedSiteCollection = Get-ObjectPropertyValue `
+            -InputObject $siteCollectionRoot `
+            -Name "siteCollection"
+        if ($null -eq $resolvedSiteCollection) {
+            Stop-WithInstructions `
+                -Problem "Microsoft Graph did not identify '$($siteCollectionRoot.webUrl)' as a site-collection root." `
+                -Fix @(
+                    "Give support the entered URL, resolved URL, and Graph site IDs printed above.",
+                    "As a workaround, enter the site collection's root URL from SharePoint admin center > Active sites."
+                )
+        }
+
+        $site = $siteCollectionRoot
+        $requestedSiteWasSubsite = $true
+        Write-Host "Entered URL is a SharePoint subsite." -ForegroundColor Yellow
+        Write-Host "Containing site collection: $($site.webUrl)" -ForegroundColor Yellow
+        Write-Host "Site collection ID:         $($site.id)" -ForegroundColor DarkGray
+    }
+
     if (-not $Force) {
         Write-Host ""
         Write-Host "This will grant the following application permission:" -ForegroundColor Yellow
-        Write-Host "  Application: $applicationDisplayName" -ForegroundColor Yellow
-        Write-Host "  App ID:      $applicationId" -ForegroundColor Yellow
-        Write-Host "  Site:        $($site.webUrl)" -ForegroundColor Yellow
+        Write-Host "  Target enterprise application: $applicationDisplayName" -ForegroundColor Yellow
+        Write-Host "  Application (client) ID:        $applicationId" -ForegroundColor Yellow
+        Write-Host "  Microsoft Graph Sites.Selected application role ID:" -ForegroundColor Yellow
+        Write-Host "                                $sitesSelectedApplicationPermissionId" -ForegroundColor Yellow
+        Write-Host "  Requested site:             $($requestedSite.webUrl)" -ForegroundColor Yellow
+        Write-Host "  Grant scope (site collection): $($site.webUrl)" -ForegroundColor Yellow
         Write-Host "  Permission:  Manage" -ForegroundColor Yellow
+        if ($requestedSiteWasSubsite) {
+            Write-Host "  IMPORTANT: Sites.Selected cannot be scoped to only this subsite." -ForegroundColor Yellow
+            Write-Host "             Manage access applies to the entire containing site collection." -ForegroundColor Yellow
+        }
         Write-Host ""
 
         $confirmation = Read-Host "Type GRANT to continue"
@@ -388,8 +544,8 @@ try {
         $permissionResponse = Invoke-MgGraphRequest -Method GET -Uri $permissionsUri -ErrorAction Stop
     }
     catch {
-        Write-Host $_.Exception.Message -ForegroundColor Red
-        $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl
+        Write-GraphFailureDetails -ErrorRecord $_ -Method "GET" -RequestUri $permissionsUri
+        $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl -Operation "ListPermissions"
         Stop-WithInstructions -Problem "Microsoft Graph could not read the site's application permissions." -Fix $guidance
     }
 
@@ -406,7 +562,7 @@ try {
 
     if ($existingPermissions.Count -gt 1) {
         Stop-WithInstructions `
-            -Problem "More than one existing permission was found for the BCO application. The script will not guess which record to change." `
+            -Problem "More than one existing permission was found for target application ID $applicationId. The script will not guess which record to change." `
             -Fix @(
                 "Have a SharePoint administrator review the permission records on $($site.webUrl).",
                 "Remove duplicate grants, leaving one grant for application ID $applicationId.",
@@ -422,27 +578,13 @@ try {
             Write-Host "The application already has Manage permission on this site. No change was needed." -ForegroundColor Green
         }
         else {
-            Write-Host "An existing grant was found with role(s): $($permission.roles -join ', '). Updating it to Manage..." -ForegroundColor Yellow
-            $updateBody = @{ roles = @($requiredRole) } | ConvertTo-Json -Depth 3
-
-            try {
-                $permissionId = $permission.id
-                Invoke-MgGraphRequest `
-                    -Method PATCH `
-                    -Uri "$permissionsUri/$permissionId" `
-                    -ContentType "application/json" `
-                    -Body $updateBody `
-                    -ErrorAction Stop | Out-Null
-
-                # Some Graph SDK versions return no body for PATCH. Retain the
-                # known permission ID and retrieve the authoritative result below.
-                $permission = @{ id = $permissionId }
-            }
-            catch {
-                Write-Host $_.Exception.Message -ForegroundColor Red
-                $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl
-                Stop-WithInstructions -Problem "The existing site permission could not be updated to Manage." -Fix $guidance
-            }
+            Stop-WithInstructions `
+                -Problem "Target application ID $applicationId already has role(s) '$($permission.roles -join ', ')' instead of Manage. Microsoft Graph does not support updating this grant with the script's delegated user token." `
+                -Fix @(
+                    "Have an administrator remove or update permission ID $($permission.id) using an app-only Microsoft Graph connection with Sites.FullControl.All APPLICATION permission.",
+                    "Target enterprise application: '$applicationDisplayName'; application (client) ID: $applicationId.",
+                    "After the old grant is removed, rerun this script to create the Manage grant."
+                )
         }
     }
     else {
@@ -469,22 +611,21 @@ try {
                 -ErrorAction Stop
         }
         catch {
-            Write-Host $_.Exception.Message -ForegroundColor Red
-            $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl
-            Stop-WithInstructions -Problem "Microsoft Graph could not grant Manage permission to the BCO application." -Fix $guidance
+            Write-GraphFailureDetails -ErrorRecord $_ -Method "POST" -RequestUri $permissionsUri
+            $guidance = Get-GraphErrorGuidance -ErrorRecord $_ -NormalizedSiteUrl $normalizedSiteUrl -Operation "CreatePermission"
+            Stop-WithInstructions -Problem "Microsoft Graph could not grant Manage permission to target application ID $applicationId." -Fix $guidance
         }
     }
 
     Write-Section "Verifying the result"
 
     try {
-        $verifiedPermission = Invoke-MgGraphRequest `
-            -Method GET `
-            -Uri "$permissionsUri/$($permission.id)" `
-            -ErrorAction Stop
+        # Listing the permission collection supports delegated
+        # Sites.FullControl.All. GET /permissions/{permission-id} does not.
+        $verificationResponse = Invoke-MgGraphRequest -Method GET -Uri $permissionsUri -ErrorAction Stop
     }
     catch {
-        Write-Host $_.Exception.Message -ForegroundColor Red
+        Write-GraphFailureDetails -ErrorRecord $_ -Method "GET" -RequestUri $permissionsUri
         Stop-WithInstructions `
             -Problem "The grant operation completed, but the script could not verify the saved permission." `
             -Fix @(
@@ -492,6 +633,28 @@ try {
                 "The script will detect the existing grant instead of creating a duplicate."
             )
     }
+
+    $verifiedMatches = @($verificationResponse.value | Where-Object {
+        $candidate = $_
+        $v2Match = @($candidate.grantedToIdentitiesV2) | Where-Object {
+            $null -ne $_.application -and $_.application.id -eq $applicationId
+        }
+        $legacyMatch = @($candidate.grantedToIdentities) | Where-Object {
+            $null -ne $_.application -and $_.application.id -eq $applicationId
+        }
+        $v2Match.Count -gt 0 -or $legacyMatch.Count -gt 0
+    })
+
+    if ($verifiedMatches.Count -ne 1) {
+        Stop-WithInstructions `
+            -Problem "Verification found $($verifiedMatches.Count) permission records for target application ID $applicationId; exactly one was expected." `
+            -Fix @(
+                "Rerun this script once; it is safe to rerun.",
+                "If the result is unchanged, have a SharePoint administrator review the site's application permission records."
+            )
+    }
+
+    $verifiedPermission = $verifiedMatches[0]
 
     $verifiedRoles = @($verifiedPermission.roles | ForEach-Object { ([string]$_).ToLowerInvariant() })
     $verifiedApplications = @($verifiedPermission.grantedToIdentitiesV2) + @($verifiedPermission.grantedToIdentities)
@@ -510,9 +673,10 @@ try {
 
     Write-Host ""
     Write-Host "SUCCESS" -ForegroundColor Green
-    Write-Host "  Site:        $($site.webUrl)" -ForegroundColor Green
-    Write-Host "  Application: $applicationDisplayName" -ForegroundColor Green
-    Write-Host "  App ID:      $applicationId" -ForegroundColor Green
+    Write-Host "  Requested site:            $($requestedSite.webUrl)" -ForegroundColor Green
+    Write-Host "  Granted site collection:   $($site.webUrl)" -ForegroundColor Green
+    Write-Host "  Target application:          $applicationDisplayName" -ForegroundColor Green
+    Write-Host "  Application (client) ID:     $applicationId" -ForegroundColor Green
     Write-Host "  Permission:  Manage" -ForegroundColor Green
     Write-Host "  Permission ID: $($verifiedPermission.id)" -ForegroundColor DarkGray
     Write-Host ""

@@ -135,7 +135,7 @@ $ErrorActionPreference = "Stop"
 
 $tenantId = reconnectGraph
 $context = Get-MgContext
-$spnDisplayName = "BCO akoyaGO Integration"
+$spnDisplayName = "akoyaGO Dataverse Integration (BCO)"
 $appId = "a86b9632-42bf-4dfe-83c8-bbc95145504b"
 
 if (!$DryRun) {

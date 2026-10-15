@@ -133,7 +133,7 @@ $ErrorActionPreference = "Stop"
 
 $tenantId = reconnectGraph
 $context = Get-MgContext
-$spnDisplayName = "BCO akoyaGO GOmanager User Connector"
+$spnDisplayName = "akoyaGO GOportals Entra Authentication (BCO)"
 $appId = "63b6e8df-e035-446b-938e-5173ebe4ac69"
 
 if (!$DryRun) {

@@ -184,6 +184,23 @@ function Normalize-DataverseAttributeString {
     return ($attrs -join ',')
 }
 
+function Select-TargetImage {
+    param(
+        [object[]]$Images,
+        [object]$SourceImage
+    )
+
+    # A step can end up with two images of the same name (a managed import adds a recreated image but never
+    # removes the old one). Always return a single image: the one whose attributes already match, else the first.
+    $candidates = @($Images | Where-Object { $_.name -eq $SourceImage.name })
+    if ($candidates.Count -le 1) { return $candidates | Select-Object -First 1 }
+
+    $expected = Convert-ImageAttributesToCommaString -Attributes $SourceImage.attributes
+    $best = $candidates | Where-Object { (Normalize-DataverseAttributeString -AttributeString $_.attributes) -eq $expected } | Select-Object -First 1
+    if ($best) { return $best }
+    return $candidates[0]
+}
+
 function Find-ArtifactDirectory {
     if ([string]::IsNullOrEmpty($ArtifactDirectory)) {
         Write-StatusMessage "No artifact directory provided, searching for artifacts..." -Type Info
@@ -874,10 +891,35 @@ function Update-PluginStepInEnvironment {
     Set-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstep -Id $TargetStep.sdkmessageprocessingstepid -Fields $updateFields
     
     # Handle images synchronization
+    # 0. Remove duplicate images (same name on one step), keeping the best match for the source image
+    if ($TargetStep.images -and $TargetStep.images.Count -gt 1) {
+        $keptImages = @()
+        foreach ($group in ($TargetStep.images | Group-Object { $_.name })) {
+            if ($group.Count -eq 1) {
+                $keptImages += $group.Group[0]
+                continue
+            }
+            $sourceImage = $SourceStep.images | Where-Object { $_.name -eq $group.Name } | Select-Object -First 1
+            $keep = if ($sourceImage) { Select-TargetImage -Images $group.Group -SourceImage $sourceImage } else { $group.Group[0] }
+            $keptImages += $keep
+            foreach ($duplicate in ($group.Group | Where-Object { $_.sdkmessageprocessingstepimageid -ne $keep.sdkmessageprocessingstepimageid })) {
+                Write-StatusMessage "  Removing duplicate image '$($duplicate.name)' ($($duplicate.sdkmessageprocessingstepimageid)) from step '$($SourceStep.name)'" -Type Info
+                try {
+                    Remove-CrmRecord -conn $Connection -EntityLogicalName sdkmessageprocessingstepimage -Id $duplicate.sdkmessageprocessingstepimageid
+                    Add-Fix "Removed duplicate image '$($duplicate.name)' ($($duplicate.sdkmessageprocessingstepimageid)) from step '$($SourceStep.name)'"
+                }
+                catch {
+                    Add-Failure "Failed to remove duplicate image '$($duplicate.name)' ($($duplicate.sdkmessageprocessingstepimageid)) from step '$($SourceStep.name)': $_"
+                }
+            }
+        }
+        $TargetStep.images = $keptImages
+    }
+
     # 2a. Update attributes on existing images that match by name
     if ($SourceStep.images -and $SourceStep.images.Count -gt 0 -and $TargetStep.images -and $TargetStep.images.Count -gt 0) {
         foreach ($sourceImage in $SourceStep.images) {
-            $targetImage = $TargetStep.images | Where-Object { $_.name -eq $sourceImage.name }
+            $targetImage = Select-TargetImage -Images $TargetStep.images -SourceImage $sourceImage
             if ($targetImage) {
                 $expectedImageAttrs = Convert-ImageAttributesToCommaString -Attributes $sourceImage.attributes
                 $actualImageAttrs = Normalize-DataverseAttributeString -AttributeString $targetImage.attributes
@@ -905,7 +947,7 @@ function Update-PluginStepInEnvironment {
             # Check if this image exists in the source
             $sourceImage = $null
             if ($SourceStep.images) {
-                $sourceImage = $SourceStep.images | Where-Object { $_.name -eq $targetImage.name }
+                $sourceImage = $SourceStep.images | Where-Object { $_.name -eq $targetImage.name } | Select-Object -First 1
             }
             
             if (-not $sourceImage) {
@@ -929,7 +971,7 @@ function Update-PluginStepInEnvironment {
             # Check if this image exists in the target
             $targetImage = $null
             if ($TargetStep.images) {
-                $targetImage = $TargetStep.images | Where-Object { $_.name -eq $sourceImage.name }
+                $targetImage = Select-TargetImage -Images $TargetStep.images -SourceImage $sourceImage
             }
             
             if (-not $targetImage) {
@@ -1174,7 +1216,12 @@ function Compare-PluginStepImages {
     # Compare each image
     foreach ($sourceImage in $SourceStep.images) {
         # Find matching image in target by name
-        $targetImage = $TargetStep.images | Where-Object { $_.name -eq $sourceImage.name }
+        $sameName = @($TargetStep.images | Where-Object { $_.name -eq $sourceImage.name })
+        if ($sameName.Count -gt 1) {
+            Add-Warning "Duplicate image '$($sourceImage.name)' on step '$($SourceStep.name)': found $($sameName.Count) images with this name"
+            $mismatch = $true
+        }
+        $targetImage = Select-TargetImage -Images $TargetStep.images -SourceImage $sourceImage
         
         if (-not $targetImage) {
             Add-Warning "Missing image '$($sourceImage.name)' on step '$($SourceStep.name)'"

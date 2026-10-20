@@ -264,7 +264,9 @@ try {
     # Build filter for plugin types
     $pluginTypeIdFilter = ($pluginTypeIds | ForEach-Object { "<value>$_</value>" }) -join ""
     
-    # Query for all steps related to these plugin types
+    # Query for all steps related to these plugin types.
+    # Stage 30 (MainOperation) steps are the ones Dataverse creates for a Custom API's plugintypeid. Each org gives
+    # them its own id, so they never match the export by GUID; they are not ours to remove.
     $stepsQuery = @"
 <fetch>
   <entity name='sdkmessageprocessingstep'>
@@ -278,6 +280,7 @@ try {
       <condition attribute='plugintypeid' operator='in'>
         $pluginTypeIdFilter
       </condition>
+      <condition attribute='stage' operator='ne' value='30' />
     </filter>
   </entity>
 </fetch>

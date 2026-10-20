@@ -1166,33 +1166,41 @@ function New-PluginStepInEnvironment {
     }
 }
 
-function Validate-PluginStepImages {
+function Test-CustomApiImplementation {
     param(
+        [object]$Connection,
         [object]$SourceStep
     )
-    
-    $issues = @()
-    
-    # Check if Update or Delete step requires PreImage
-    if ($SourceStep.message -eq 'Update' -or $SourceStep.message -eq 'Delete') {
-        # Check if images array exists and has at least one PreImage
-        $hasPreImage = $false
-        
-        if ($SourceStep.images -and $SourceStep.images.Count -gt 0) {
-            foreach ($image in $SourceStep.images) {
-                if ($image.name -eq 'PreImage') {
-                    $hasPreImage = $true
-                    break
-                }
-            }
-        }
-        
-        if (-not $hasPreImage) {
-            $issues += "Missing PreImage for $($SourceStep.message) step"
-        }
+
+    # The step's message name is the Custom API's unique name.
+    $uniqueName = [System.Security.SecurityElement]::Escape($SourceStep.message)
+    $fetchXml = @"
+<fetch>
+  <entity name='customapi'>
+    <attribute name='uniquename' />
+    <filter>
+      <condition attribute='uniquename' operator='eq' value='$uniqueName' />
+    </filter>
+    <link-entity name='plugintype' from='plugintypeid' to='plugintypeid' link-type='outer' alias='type'>
+      <attribute name='typename' />
+    </link-entity>
+  </entity>
+</fetch>
+"@
+
+    $result = Get-CrmRecordsByFetch -conn $Connection -Fetch $fetchXml
+    if ($result.CrmRecords.Count -eq 0) {
+        Add-Failure "Custom API '$($SourceStep.message)' not found in target environment"
+        return
     }
-    
-    return $issues
+
+    $actualType = $result.CrmRecords[0].'type.typename'
+    if ($actualType -ne $SourceStep.pluginTypeName) {
+        Add-Failure "Custom API '$($SourceStep.message)' implementation mismatch: Expected '$($SourceStep.pluginTypeName)', Found '$actualType'"
+        return
+    }
+
+    Add-Success "Custom API '$($SourceStep.message)' is implemented by '$actualType'"
 }
 
 function Compare-PluginStepImages {
@@ -1286,15 +1294,14 @@ function Compare-PluginSteps {
     foreach ($sourceStep in $jsonContent.pluginSteps) {
         $stepId = $sourceStep.sdkmessageprocessingstepid
         Write-StatusMessage "Checking plugin step: $($sourceStep.name)" -Type Info
-        
-        # Validate PreImage requirements for Update and Delete steps
-        $imageIssues = Validate-PluginStepImages -SourceStep $sourceStep
-        if ($imageIssues.Count -gt 0) {
-            foreach ($issue in $imageIssues) {
-                Add-Warning "$($sourceStep.name): $issue"
-            }
+
+        # Dataverse creates a Custom API's MainOperation step itself, with a new id in each org, and refuses to let
+        # anyone else create one. Check the Custom API's implementation instead; it ships in the solution.
+        if ($sourceStep.stage -like 'Main*') {
+            Test-CustomApiImplementation -Connection $Connection -SourceStep $sourceStep
+            continue
         }
-        
+
         $targetStep = Get-PluginStepFromEnvironment -Connection $Connection -StepId $stepId
 
         if ($null -eq $targetStep) {

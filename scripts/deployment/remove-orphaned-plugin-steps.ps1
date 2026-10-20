@@ -181,9 +181,14 @@ try {
     Write-Host "  Assembly version in export: $exportedAssemblyVersion" -ForegroundColor Gray
     
     # Extract step IDs from JSON and convert to lowercase strings for comparison
-    $exportedStepIds = $jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid.ToString().ToLower() }
-    
+    $exportedStepIds = @($jsonContent.pluginSteps | ForEach-Object { $_.sdkmessageprocessingstepid.ToString().ToLower() })
+
     Write-Host "  Extracted $($exportedStepIds.Count) step IDs from JSON" -ForegroundColor Gray
+
+    # Every target step missing from the export is deleted below, so an empty or truncated export must stop the run.
+    if ($exportedStepIds.Count -eq 0 -or $exportedStepIds.Count -ne [int]$totalStepsInExport) {
+        throw "Export lists $($exportedStepIds.Count) step IDs but its metadata says $totalStepsInExport; refusing to remove anything"
+    }
     
     # Extract unique plugin type names (not IDs) for comparison by logical name
     $exportedPluginTypeNames = @{}

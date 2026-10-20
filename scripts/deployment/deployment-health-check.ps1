@@ -767,7 +767,8 @@ function Get-PluginStepFromEnvironment {
         }
     }
     catch {
-        # Step doesn't exist
+        # A failed read must not look like a missing step: the caller would create a duplicate.
+        throw "Failed to read plugin step ${StepId}: $_"
     }
     
     return $null

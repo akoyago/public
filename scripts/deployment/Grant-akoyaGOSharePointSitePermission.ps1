@@ -1,5 +1,5 @@
 # Grant-akoyaGOSharePointSitePermission.ps1
-# Version: 0.10
+# Version: 0.11
 #
 # Beginner-friendly usage directly from the akoyaGO public repository:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
@@ -30,6 +30,9 @@ $microsoftGraphResourceAppId = "00000003-0000-0000-c000-000000000000"
 $sitesSelectedApplicationPermissionId = "883ea226-0bf2-4a8f-9f9d-92c9162a727d"
 $sitesFullControlDelegatedPermissionId = "5a54b8b3-347c-476d-8f8e-42d5c7424d29"
 $requiredRole = "manage"
+# Site roles that include everything Manage allows. An existing grant with one
+# of these is left as it is: more access than needed is not an error.
+$higherRoles = @("fullcontrol", "owner")
 $requiredGraphScope = "Sites.FullControl.All"
 $requiredModule = "Microsoft.Graph.Authentication"
 $minimumWindowsPowerShellVersion = [version]"5.1"
@@ -577,6 +580,17 @@ try {
         if ($currentRoles -contains $requiredRole) {
             Write-Host "The application already has Manage permission on this site. No change was needed." -ForegroundColor Green
         }
+        elseif (@($currentRoles | Where-Object { $higherRoles -contains $_ }).Count -gt 0) {
+            Write-Host "The application already has '$($permission.roles -join ', ')' on this site, which includes everything Manage allows." -ForegroundColor Green
+            Write-Host "No change was made. This is more access than akoyaGO needs; the site's administrator may lower it to Manage later." -ForegroundColor Yellow
+        }
+        elseif ($currentRoles.Count -eq 0) {
+            # Graph sometimes leaves 'roles' out when listing a site's permissions.
+            # This script only ever creates Manage grants, so an existing grant
+            # with no visible role is reported rather than treated as an error.
+            Write-Host "A grant for the application already exists, but Microsoft Graph did not return its role." -ForegroundColor Yellow
+            Write-Host "No change was made. akoyaGO support can confirm the access level from akoyaGO Tools (Support > Integration Setup Check)." -ForegroundColor Yellow
+        }
         else {
             Stop-WithInstructions `
                 -Problem "Target application ID $applicationId already has role(s) '$($permission.roles -join ', ')' instead of Manage. Microsoft Graph does not support updating this grant with the script's delegated user token." `
@@ -662,7 +676,10 @@ try {
         $null -ne $_.application -and $_.application.id -eq $applicationId
     }).Count -gt 0
 
-    if ($verifiedRoles -notcontains $requiredRole -or -not $applicationVerified) {
+    $verifiedRoleIsEnough = $verifiedRoles.Count -eq 0 -or
+        $verifiedRoles -contains $requiredRole -or
+        @($verifiedRoles | Where-Object { $higherRoles -contains $_ }).Count -gt 0
+    if (-not $verifiedRoleIsEnough -or -not $applicationVerified) {
         Stop-WithInstructions `
             -Problem "The saved permission did not match the expected application and Manage role." `
             -Fix @(
@@ -677,7 +694,8 @@ try {
     Write-Host "  Granted site collection:   $($site.webUrl)" -ForegroundColor Green
     Write-Host "  Target application:          $applicationDisplayName" -ForegroundColor Green
     Write-Host "  Application (client) ID:     $applicationId" -ForegroundColor Green
-    Write-Host "  Permission:  Manage" -ForegroundColor Green
+    $shownRoles = if ($verifiedRoles.Count -gt 0) { $verifiedPermission.roles -join ", " } else { "Manage (role not returned by Graph)" }
+    Write-Host "  Permission:  $shownRoles" -ForegroundColor Green
     Write-Host "  Permission ID: $($verifiedPermission.id)" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "The script is safe to rerun for this site." -ForegroundColor Green

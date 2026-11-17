@@ -1,5 +1,5 @@
 # Test-akoyaGOSharePointSitePermission.ps1
-# Version: 0.1
+# Version: 0.2
 #
 # Read-only companion to Grant-akoyaGOSharePointSitePermission.ps1.
 # It reports which applications have been granted access to one SharePoint
@@ -492,7 +492,8 @@ try {
     else {
         Write-Host "WRONG ROLE" -ForegroundColor Red
         Write-Host "  The application has role(s) '$($targetRoles -join ', ')' instead of Manage." -ForegroundColor Red
-        Write-Host "  Have an administrator remove permission ID $($targetRows[0].PermissionId), then rerun the grant script." -ForegroundColor Yellow
+        Write-Host "  A Global Administrator raises it to Manage with Update-akoyaGOSharePointSitePermission.ps1 (KA-01525):" -ForegroundColor Yellow
+        Write-Host "  iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Update-akoyaGOSharePointSitePermission.ps1'))" -ForegroundColor Yellow
     }
 
     if ($targetRows.Count -gt 1) {

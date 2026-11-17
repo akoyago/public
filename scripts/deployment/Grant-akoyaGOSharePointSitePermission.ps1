@@ -1,5 +1,5 @@
 # Grant-akoyaGOSharePointSitePermission.ps1
-# Version: 0.11
+# Version: 0.12
 #
 # Beginner-friendly usage directly from the akoyaGO public repository:
 #   iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Grant-akoyaGOSharePointSitePermission.ps1'))
@@ -595,9 +595,9 @@ try {
             Stop-WithInstructions `
                 -Problem "Target application ID $applicationId already has role(s) '$($permission.roles -join ', ')' instead of Manage. Microsoft Graph does not support updating this grant with the script's delegated user token." `
                 -Fix @(
-                    "Have an administrator remove or update permission ID $($permission.id) using an app-only Microsoft Graph connection with Sites.FullControl.All APPLICATION permission.",
-                    "Target enterprise application: '$applicationDisplayName'; application (client) ID: $applicationId.",
-                    "After the old grant is removed, rerun this script to create the Manage grant."
+                    "A Global Administrator runs Update-akoyaGOSharePointSitePermission.ps1 for this site. It raises the existing grant to Manage through a temporary app that it deletes afterwards:",
+                    "iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/akoyago/public/refs/heads/main/scripts/deployment/Update-akoyaGOSharePointSitePermission.ps1'))",
+                    "Target enterprise application: '$applicationDisplayName'; application (client) ID: $applicationId; permission ID: $($permission.id)."
                 )
         }
     }
